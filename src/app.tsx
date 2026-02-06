@@ -1,11 +1,8 @@
 import { useState } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
-
-interface OscalDocument {
-  type: 'catalog' | 'profile' | 'component-definition' | 'system-security-plan' | 'unknown'
-  version: string
-  data: unknown
-}
+import type { OscalDocument } from '@/types/oscal'
+import { parseOscalDocument } from '@/parser'
+import { DocumentViewer } from '@/components/document-viewer'
 
 export const App: FunctionComponent = () => {
   const [document, setDocument] = useState<OscalDocument | null>(null)
@@ -17,11 +14,14 @@ export const App: FunctionComponent = () => {
       const text = await file.text()
       const json = JSON.parse(text)
 
-      // Detect document type
-      const type = detectDocumentType(json)
-      const version = detectVersion(json)
+      const result = parseOscalDocument(json)
+      if (!result.success) {
+        setError(result.error)
+        setDocument(null)
+        return
+      }
 
-      setDocument({ type, version, data: json })
+      setDocument(result.data)
       setError(null)
     } catch (e) {
       setError(`Failed to parse file: ${e instanceof Error ? e.message : 'Unknown error'}`)
@@ -105,14 +105,13 @@ export const App: FunctionComponent = () => {
               </button>
             </div>
             <div class="document-content">
-              {/* Renderer will go here based on document type */}
-              <pre>{JSON.stringify(document.data, null, 2)}</pre>
+              <DocumentViewer data={document.data} />
             </div>
           </div>
         )}
 
         {error && (
-          <div class="error-message">
+          <div class="error-message" role="alert">
             {error}
           </div>
         )}
@@ -125,36 +124,4 @@ export const App: FunctionComponent = () => {
       </footer>
     </div>
   )
-}
-
-function detectDocumentType(json: unknown): OscalDocument['type'] {
-  if (typeof json !== 'object' || json === null) return 'unknown'
-
-  const obj = json as Record<string, unknown>
-
-  if ('catalog' in obj) return 'catalog'
-  if ('profile' in obj) return 'profile'
-  if ('component-definition' in obj) return 'component-definition'
-  if ('system-security-plan' in obj) return 'system-security-plan'
-
-  return 'unknown'
-}
-
-function detectVersion(json: unknown): string {
-  if (typeof json !== 'object' || json === null) return 'unknown'
-
-  const obj = json as Record<string, unknown>
-
-  // Try to find version in common locations
-  for (const key of ['catalog', 'profile', 'component-definition', 'system-security-plan']) {
-    const doc = obj[key] as Record<string, unknown> | undefined
-    if (doc?.metadata) {
-      const metadata = doc.metadata as Record<string, unknown>
-      if (metadata['oscal-version']) {
-        return String(metadata['oscal-version'])
-      }
-    }
-  }
-
-  return 'unknown'
 }

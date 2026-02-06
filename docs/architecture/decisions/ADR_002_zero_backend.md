@@ -1,7 +1,8 @@
 # ADR-002: Zero-Backend Architektur
 
 **Status**: Accepted
-**Datum**: 2024
+**Datum**: 2026-02-06
+**Issue**: #1
 
 ---
 

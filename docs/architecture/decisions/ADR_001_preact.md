@@ -1,7 +1,8 @@
 # ADR-001: Preact als UI Framework
 
 **Status**: Accepted
-**Datum**: 2024
+**Datum**: 2026-02-06
+**Issue**: #1
 
 ---
 

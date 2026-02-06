@@ -1,23 +1,34 @@
 # System Architecture - OSCAL Viewer
 
-**Version**: 1.0.0
+**Version**: 1.1.0
+**Letzte Aktualisierung**: 2026-02-06
 
 ---
 
-## 1. Übersicht
+## 1. Uebersicht
 
 ### 1.1 Mission
 
-Der OSCAL Viewer ermöglicht die Anzeige von OSCAL-Dokumenten (Catalog, Profile, Component Definition, SSP) aller Versionen von 1.0.x bis zur aktuellen Version im Browser - ohne Backend.
+Der OSCAL Viewer ermoeglicht die Anzeige von OSCAL-Dokumenten (Catalog, Profile, Component Definition, SSP) aller Versionen von 1.0.x bis zur aktuellen Version im Browser - ohne Backend.
 
 ### 1.2 Architektur-Prinzipien
 
 | Prinzip | Beschreibung |
 |---------|--------------|
-| **Zero Backend** | Alle Logik läuft im Browser |
+| **Zero Backend** | Alle Logik laeuft im Browser (ADR-002) |
 | **Privacy by Design** | Keine Daten verlassen den Client |
-| **Offline-Capable** | Kernfunktionalität ohne Internet |
+| **Offline-Capable** | Kernfunktionalitaet ohne Internet |
 | **Multi-Version Support** | OSCAL 1.0.x bis 1.1.2+ |
+| **Dreischichtig** | Domain / Application / Presentation (ADR-003) |
+
+### 1.3 Architecture Decision Records
+
+| ADR | Entscheidung | Status |
+|-----|-------------|--------|
+| [ADR-001](decisions/ADR_001_preact.md) | Preact als UI Framework | Accepted |
+| [ADR-002](decisions/ADR_002_zero_backend.md) | Zero-Backend Architektur | Accepted |
+| [ADR-003](decisions/ADR_003_component_architecture.md) | Dreischichtige Komponentenarchitektur | Accepted |
+| [ADR-004](decisions/ADR_004_build_tooling.md) | Vite als Build-Tool | Accepted |
 
 ---
 
@@ -340,4 +351,4 @@ function validateOscalDocument(json: unknown): Result<OscalDocument> {
 
 ---
 
-**Letzte Aktualisierung**: 2024
+**Letzte Aktualisierung**: 2026-02-06
