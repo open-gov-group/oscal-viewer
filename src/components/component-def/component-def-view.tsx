@@ -51,14 +51,22 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
           <aside class="compdef-sidebar" aria-label="Component list">
             <ul class="compdef-component-list" role="listbox" aria-label="Components">
               {componentDef.components.map(comp => (
-                <li key={comp.uuid} role="option" aria-selected={selectedComponentId === comp.uuid}>
-                  <button
-                    class={`compdef-component-item ${selectedComponentId === comp.uuid ? 'selected' : ''}`}
-                    onClick={() => setSelectedComponentId(comp.uuid)}
-                  >
-                    <span class="compdef-type-badge">{comp.type}</span>
-                    <span class="compdef-component-title">{comp.title}</span>
-                  </button>
+                <li
+                  key={comp.uuid}
+                  role="option"
+                  aria-selected={selectedComponentId === comp.uuid}
+                  class={`compdef-component-item ${selectedComponentId === comp.uuid ? 'selected' : ''}`}
+                  tabIndex={0}
+                  onClick={() => setSelectedComponentId(comp.uuid)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setSelectedComponentId(comp.uuid)
+                    }
+                  }}
+                >
+                  <span class="compdef-type-badge">{comp.type}</span>
+                  <span class="compdef-component-title">{comp.title}</span>
                 </li>
               ))}
             </ul>

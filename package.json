@@ -34,15 +34,20 @@
   "homepage": "https://open-gov-group.github.io/oscal-viewer",
   "devDependencies": {
     "@preact/preset-vite": "^2.8.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/preact": "^3.2.4",
     "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "@vitest/coverage-v8": "^1.2.2",
+    "axe-core": "^4.11.1",
+    "eslint": "^8.56.0",
+    "jsdom": "^28.0.0",
+    "prettier": "^3.2.4",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
     "vitest": "^1.2.2",
-    "@vitest/coverage-v8": "^1.2.2",
-    "eslint": "^8.56.0",
-    "@typescript-eslint/eslint-plugin": "^6.19.0",
-    "@typescript-eslint/parser": "^6.19.0",
-    "prettier": "^3.2.4"
+    "vitest-axe": "^0.1.0"
   },
   "dependencies": {
     "preact": "^10.19.3"

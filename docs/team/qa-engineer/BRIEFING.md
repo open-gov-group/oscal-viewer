@@ -169,9 +169,143 @@ it('has no accessibility violations', async () => {
 
 ---
 
+## Phase 2 - QA Ergebnis-Report
+
+### Umsetzungsstatus
+
+| Aufgabe | Status | Details |
+|---------|--------|---------|
+| Echte OSCAL Fixtures | DONE | 4 NIST-Dateien (Catalog, Profile, CompDef, SSP) |
+| Vitest-Config erweitert | DONE | jsdom, setup.ts, coverage thresholds |
+| Fixture-Tests | DONE | 31 Tests mit echten NIST OSCAL-Dateien |
+| Komponenten-Tests | DONE | 7 Test-Suiten fuer alle Renderer + Shared |
+| Accessibility-Tests | DONE | 9 axe-core Tests, 0 Violations |
+| Coverage >= 80% | DONE | 86.88% Statements, 81.77% Branches |
+
+### Test-Metriken
+
+| Metrik | Phase 1 | Phase 2 | Delta |
+|--------|---------|---------|-------|
+| Test-Dateien | 2 | 11 | +9 |
+| Tests gesamt | 70 | 254 | +184 |
+| Statement Coverage | 94.78% (Parser) | 86.88% (Gesamt) | Gesamt-Coverage neu |
+| Branch Coverage | - | 81.77% | Neu |
+| Function Coverage | - | 92.18% | Neu |
+
+### Coverage pro Bereich
+
+| Bereich | Statements | Branches | Functions |
+|---------|-----------|----------|-----------|
+| Parser | 94.78% | 84.16% | 100% |
+| Catalog Components | 90.97% | 83.69% | 93.33% |
+| Profile Components | 93.30% | 71.64% | 100% |
+| CompDef Components | 86.60% | 80.00% | 83.33% |
+| SSP Components | 98.03% | 87.03% | 85.71% |
+| Shared Components | 100% | 89.65% | 100% |
+| Search Hook | 87.09% | 76.19% | 87.50% |
+| DocumentViewer | 100% | 100% | 100% |
+| **app.tsx** | **0%** | **0%** | **0%** |
+
+### Accessibility Findings (BEHOBEN)
+
+Zwei WCAG-Violations wurden durch axe-core gefunden und direkt behoben:
+
+1. **PropertyList `aria-required-children`** (Severity: Critical)
+   - Problem: `role="list"` erfordert `role="listitem"` Children
+   - Fix: PropertyBadge-Elemente in `<span role="listitem">` gewrappt
+   - Datei: `src/components/shared/property-badge.tsx`
+
+2. **ComponentDefView `nested-interactive`** (Severity: Serious)
+   - Problem: `<button>` innerhalb `<li role="option">` = verschachtelte interactive controls
+   - Fix: `<button>` entfernt, `onClick`/`onKeyDown`/`tabIndex` direkt auf `<li>` gesetzt
+   - Datei: `src/components/component-def/component-def-view.tsx`
+
+### Neue Test-Dateien
+
+```
+tests/
+├── setup.ts                              # Test-Setup (jest-dom, cleanup)
+├── parser.test.ts                        # 43 Parser-Tests (bestehend)
+├── search.test.ts                        # 27 Search-Tests (bestehend)
+├── fixtures.test.ts                      # 31 Tests mit echten NIST OSCAL-Dateien
+├── accessibility.test.tsx                # 9 axe-core Accessibility-Tests
+├── fixtures/
+│   ├── catalog-nist-example.json         # NIST OSCAL Catalog (1.1.3)
+│   ├── profile-nist-example.json         # NIST OSCAL Profile (1.1.3)
+│   ├── component-def-nist-example.json   # NIST OSCAL CompDef (1.1.2)
+│   └── ssp-nist-example.json            # NIST OSCAL SSP (1.1.3)
+└── components/
+    ├── shared.test.tsx                   # 21 Tests (MetadataPanel, PropertyBadge/List)
+    ├── catalog-view.test.tsx             # 30 Tests (CatalogView, GroupTree, ControlDetail)
+    ├── profile-view.test.tsx             # 24 Tests (ProfileView, Imports, Merge, Modify)
+    ├── component-def-view.test.tsx       # 16 Tests (ComponentDefView, Detail, CIs)
+    ├── ssp-view.test.tsx                 # 32 Tests (SspView, Tabs, alle 3 Panels)
+    ├── document-viewer.test.tsx          # 5 Tests (Router-Dispatch)
+    └── search-bar.test.tsx              # 16 Tests (SearchBar, Input, Results)
+```
+
+### Neue Dependencies
+
+| Paket | Version | Zweck |
+|-------|---------|-------|
+| @testing-library/preact | latest | Komponenten-Rendering in Tests |
+| @testing-library/jest-dom | latest | Custom Matchers (toBeInTheDocument, etc.) |
+| jsdom | latest | DOM-Umgebung fuer Vitest |
+| vitest-axe | latest | axe-core Integration fuer Vitest |
+| axe-core | latest | WCAG Accessibility-Testing Engine |
+
+### Offene Punkte fuer naechste Phase
+
+1. **app.tsx 0% Coverage** - Drag&Drop und File-Input brauchen E2E-Tests (Playwright)
+2. **Cross-Browser Testing** - Noch nicht umgesetzt, Playwright-Setup noetig
+3. **Performance-Benchmarks** - Parse-Zeiten fuer grosse Dokumente messen
+4. **OSCAL 1.0.x Fixtures** - Nur 1.1.x Versionen getestet, aeltere Versionen noch beschaffen
+
+---
+
+## Bestehende Test-Infrastruktur
+
+| Tool | Status | Zweck |
+|------|--------|-------|
+| Vitest | Konfiguriert | Unit & Integration Tests |
+| @vitest/coverage-v8 | Konfiguriert | Coverage Reporting |
+| @testing-library/preact | Installiert | Komponenten-Tests |
+| vitest-axe + axe-core | Installiert | Accessibility Tests |
+| Playwright | Noch nicht | E2E Tests (Phase 3) |
+
+### Bestehende Guidelines
+- `docs/qa/TESTING_STRATEGY.md`
+- `docs/qa/QUALITY_GATES.md`
+
+### Coverage-Ziele (aktualisiert)
+
+| Bereich | Ziel | Aktuell | Status |
+|---------|------|---------|--------|
+| Parser | >= 90% | 94.78% | PASS |
+| Renderer | >= 80% | 86-100% | PASS |
+| Gesamt Statements | >= 80% | 86.88% | PASS |
+| Gesamt Branches | >= 70% | 81.77% | PASS |
+| Gesamt Functions | >= 80% | 92.18% | PASS |
+
+---
+
+## Zusammenarbeit
+
+| Mit | Thema |
+|-----|-------|
+| Frontend Developer | Test-Coverage, Testdaten, Renderer-Tests |
+| Tech Lead | Test-Strategie Abstimmung |
+| DevOps Engineer | CI/CD Test-Integration |
+| UI/UX Designer | Accessibility Anforderungen |
+
+---
+
 ## Kommunikationslog
 
 | Datum | Von | An | Thema | Status |
 |-------|-----|-----|-------|--------|
 | 2026-02-06 | Architect | QA Engineer | Initiales Briefing | Erstellt |
 | 2026-02-06 | Architect | QA Engineer | Phase 2 Briefing: Fixtures, Komponenten-Tests, axe-core | Aktiv |
+| 2026-02-06 | QA Engineer | Architect | Phase 2 QA Report: 254 Tests, 86.88% Coverage, 2 a11y Fixes | Abgeschlossen |
+| 2026-02-06 | QA Engineer | Frontend Dev | 2 Accessibility-Fixes (PropertyList, ComponentDefView) | Behoben |
+| 2026-02-06 | QA Engineer | UI/UX Designer | axe-core Audit: 0 Violations nach Fix | Info |

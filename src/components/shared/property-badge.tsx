@@ -24,7 +24,9 @@ export const PropertyList: FunctionComponent<PropertyListProps> = ({ props }) =>
   return (
     <div class="property-list" role="list" aria-label="Properties">
       {props.map((prop, i) => (
-        <PropertyBadge key={`${prop.name}-${i}`} prop={prop} />
+        <span key={`${prop.name}-${i}`} role="listitem">
+          <PropertyBadge prop={prop} />
+        </span>
       ))}
     </div>
   )
