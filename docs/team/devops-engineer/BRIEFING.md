@@ -156,3 +156,51 @@ updates:
 |-------|-----|-----|-------|--------|
 | 2026-02-06 | Architect | DevOps Engineer | Initiales Briefing | Erstellt |
 | 2026-02-06 | Architect | DevOps Engineer | Phase 2 Briefing: CI Gates, Dependabot, Caching | Aktiv |
+| 2026-02-06 | DevOps Engineer | Architect | Phase 2 Umsetzung: Bundle Size Gate, CI/CD, Dependabot | Erledigt |
+
+---
+
+## Phase 2 - Umsetzungsbericht
+
+### Erledigte Aufgaben
+
+#### Prioritaet 1: Bundle Size CI-Gate [DONE]
+- Bundle Size Check als CI-Step in `deploy.yml` und `ci.yml` eingebaut
+- Iteriert ueber alle JS/CSS-Dateien einzeln (korrekte Per-File Gzip-Messung)
+- **Warnung** ab 75 KB (76.800 bytes), **Failure** ab 100 KB (102.400 bytes)
+- Ergebnis wird als GitHub Step Summary (Markdown-Tabelle) angezeigt
+- Aktueller Stand: **18.83 KB total** (14.44 KB JS + 4.39 KB CSS) - 81% unter Limit
+
+#### Prioritaet 2: Dependabot [DONE]
+- `.github/dependabot.yml` erstellt
+- **npm**: Woechentliche Updates (Montag), max 5 offene PRs
+- Grouping: dev-dependencies (minor+patch) und production-dependencies (minor+patch) gebündelt
+- **github-actions**: Woechentliche Updates fuer Workflow-Actions
+- Labels: `dependencies` + `ci`
+
+#### Prioritaet 3: CI/CD Pipeline erweitert [DONE]
+
+**deploy.yml (Push to main)** - Neue Steps:
+1. `tsc --noEmit` - Separater TypeScript-Check (klarere Fehlermeldungen)
+2. `npm run test:coverage` - Tests mit Coverage statt nur `npm test`
+3. Bundle Size Gate - Automatische Pruefung nach Build
+4. Coverage-Report Upload - 14 Tage als Artifact verfuegbar
+5. Caching: `actions/setup-node` mit `cache: 'npm'` (bereits vorhanden, optimal)
+
+**ci.yml (Pull Requests)** - Neuer Workflow:
+1. Concurrency: Alte PR-Runs werden bei neuem Push abgebrochen
+2. TypeScript Check, Lint, Tests mit Coverage, Build, Bundle Size Gate
+3. Coverage-Report als Artifact
+4. Alle Checks muessen bestehen bevor Merge moeglich
+
+#### Prioritaet 4: Preview Deployments [OFFEN]
+- Fuer Woche 12 / Phase 3 geplant
+
+#### Prioritaet 5: Security & Performance [OFFEN]
+- Fuer Phase 3 geplant (Lighthouse CI, CSP Headers, PWA)
+
+### Verifizierung
+- TypeScript: 0 Errors
+- Tests: 254 bestanden, 86.88% Coverage
+- Build: 18.83 KB total gzipped (Limit: 100 KB)
+- Alle Workflows syntaktisch korrekt
