@@ -3,7 +3,7 @@
 **Rolle**: UI/UX Designer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: 2 - Erweiterung (KW 10-12)
+**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -387,3 +387,78 @@ Muessen als CSS Custom Properties formalisiert werden.
 | 2026-02-06 | Architect | UI/UX Designer | Initiales Briefing | Erstellt |
 | 2026-02-06 | Architect | UI/UX Designer | Phase 2 Briefing: Design-Spezifikationen fuer alle Renderer | Aktiv |
 | 2026-02-06 | UI/UX Designer | Architect | Design-Review Phase 2: alle 5 Aufgaben bewertet, 1 Bug gefunden, Accessibility-Audit, Design-Entscheidungen beantwortet | Abgeschlossen |
+| 2026-02-06 | Architect | UI/UX Designer | UI/UX Overhaul umgesetzt (Commit a567973) - siehe "Behobene Findings" Sektion | Info |
+| 2026-02-06 | UI/UX Designer | Architect | Review des Overhauls: 2 Nachbesserungen (aria-haspopup, Kontrast-Fix) - behoben | Abgeschlossen |
+
+---
+
+## UI/UX Overhaul - Behobene Findings (ABGESCHLOSSEN)
+
+**Commit**: `a567973` | **Bundle**: 20.69 KB gzipped
+
+### Status aller Phase 2 Findings
+
+#### Kritische Findings (ALLE BEHOBEN)
+
+| Finding | Status | Umsetzung |
+|---------|--------|-----------|
+| `--color-surface` nicht in `:root` definiert (Bug) | BEHOBEN | `--color-surface: #ffffff` (Light), `#1f2937` (Dark) |
+| `:focus-visible` fehlt global | BEHOBEN | Globale `:focus-visible` und `:focus:not(:focus-visible)` Regeln |
+
+#### Hohe Prioritaet (ALLE BEHOBEN)
+
+| Finding | Status | Umsetzung |
+|---------|--------|-----------|
+| 23 hardcoded Farben (kein Dark Mode) | BEHOBEN | 21 semantische CSS-Variablen mit Dark Mode Varianten extrahiert |
+| SSP Tabs: aria-controls/tabindex/Pfeiltasten fehlen | BEHOBEN | WAI-ARIA Tabs Pattern komplett: `tabDefs`-Array, Arrow/Home/End, `aria-controls`, tabIndex-Roving |
+| Skip-Links fehlen | BEHOBEN | `<a href="#main-content" class="skip-link">` als erstes Kind |
+| SearchBar: Keyboard-Navigation fehlt | BEHOBEN | ArrowUp/Down/Escape, `role="combobox"`, `aria-haspopup="listbox"`, `aria-activedescendant` |
+
+#### Zusaetzliche Verbesserungen (UI/UX Overhaul)
+
+| Massnahme | Details |
+|-----------|---------|
+| Material AppBar | Sticky Header, `--color-primary` Background, weisse Schrift, Document-Controls integriert |
+| Source Sans 3 Font | Google Fonts (0 KB JS-Impact), professioneller Look |
+| Responsive Design | Mobile sidebar toggle (FAB 56px), slide-in Overlay mit Backdrop |
+| Touch Targets | `min-height: 44px` auf allen interaktiven Elementen (mobile) |
+| Responsive Typografie | 14px (<480px) / 15px (<768px) / 16px (Desktop) |
+| Material Transitions | `cubic-bezier(0.4, 0, 0.2, 1)` auf allen Animationen |
+| Print Styles | Alle neuen UI-Elemente (skip-link, FAB, backdrop) korrekt ausgeblendet |
+
+#### Review-Nachbesserungen (BEHOBEN)
+
+| Finding | Severity | Umsetzung |
+|---------|----------|-----------|
+| `aria-haspopup="listbox"` fehlte auf Search-Combobox | MITTEL | Attribut auf Input hinzugefuegt |
+| `.document-version` Kontrast unter WCAG AA | MITTEL | Opacity von 0.7 auf 0.85 erhoeht |
+
+### Aktueller Stand der CSS Custom Properties
+
+```css
+/* Basis-Token (in :root + Dark Mode Override) */
+--color-primary, --color-primary-hover, --color-bg, --color-bg-secondary,
+--color-surface, --color-text, --color-text-secondary, --color-border,
+--color-error, --color-success
+
+/* Semantische Status-Token (21 Variablen, alle mit Dark Mode) */
+--color-accent-amber, --color-accent-amber-bg, --color-accent-amber-text
+--color-status-success-bg, --color-status-success-text, --color-status-success-border
+--color-status-error-bg, --color-status-error-text, --color-status-error-border
+--color-status-warning-bg, --color-status-warning-text
+--color-status-orange-bg, --color-status-orange-text
+--color-status-info-bg, --color-status-info-text
+--color-accent-purple-bg, --color-accent-purple-text, --color-accent-purple-border
+--color-accent-orange
+--color-error-bg, --color-error-border
+```
+
+### Verbleibende Design-Aufgaben (Phase 3+)
+
+| # | Aufgabe | Prioritaet |
+|---|---------|------------|
+| 1 | Sidebar Close-Animation (aktuell: instant wg. display:none) | Niedrig |
+| 2 | Search: Klick auf Ergebnis navigiert zum Element | Mittel |
+| 3 | Komponenten-Typ-Icons (Software, Hardware, etc.) | Niedrig |
+| 4 | Dokumenttyp-spezifische Farbvariablen (--color-catalog, etc.) | Niedrig |
+| 5 | Manueller Dark Mode Toggle (fuer PWA, Issue #8) | Mittel |

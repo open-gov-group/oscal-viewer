@@ -3,7 +3,7 @@
 **Rolle**: Frontend Developer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: 2 ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -73,6 +73,32 @@
 
 **Bugfix**: `vite.config.ts` Path-Alias von `'/src'` zu `resolve(__dirname, 'src')` geaendert (Windows-Kompatibilitaet fuer Vitest)
 
+## UI/UX Overhaul - Zusammenfassung (ABGESCHLOSSEN)
+
+**Commit**: `a567973` | **Bundle**: 20.69 KB gzipped (< 100 KB Limit)
+
+Alle kritischen UI/UX Findings aus Phase 2 wurden behoben + Material Design + Responsive.
+
+### Geaenderte Dateien (dein Code betroffen)
+
+| Datei | Aenderungen |
+|-------|-------------|
+| `src/styles/base.css` | +21 semantische CSS-Variablen, `--color-surface` Bug-Fix, alle hardcoded Farben ersetzt, Material AppBar, responsive Breakpoints, FAB + Sidebar-Overlay, touch targets, print styles |
+| `src/app.tsx` | Skip-Link hinzugefuegt, Header zu Material AppBar umgebaut (Document-Controls in `header-actions`), `id="main-content"` auf `<main>` |
+| `src/components/ssp/ssp-view.tsx` | Tab-Array (`tabDefs`), `handleTabKeyDown` fuer Arrow/Home/End, `aria-controls`, `tabIndex`-Roving, `id` auf Tabs und Panels |
+| `src/components/shared/search-bar.tsx` | `role="combobox"`, `aria-haspopup="listbox"`, `aria-activedescendant`, ArrowUp/Down/Escape Handler, aktives Highlighting |
+| `src/components/catalog/catalog-view.tsx` | `sidebarOpen` State, `handleControlSelect` (schliesst Sidebar), FAB-Button, Backdrop-Overlay |
+| `src/components/component-def/component-def-view.tsx` | `sidebarOpen` State, `handleComponentSelect` (schliesst Sidebar), FAB-Button, Backdrop-Overlay |
+| `index.html` | Google Fonts Link (Source Sans 3) |
+
+### Neue Patterns (fuer kuenftige Entwicklung beachten)
+
+1. **Sidebar Toggle Pattern**: `useState(false)` + FAB-Button (nur mobile via CSS `display: none/flex`) + `.sidebar-backdrop` + `.open` Klasse auf Sidebar
+2. **CSS-Variablen statt hardcoded Farben**: Immer `var(--color-...)` nutzen, nie direkte Hex-Werte ausserhalb `:root`
+3. **WAI-ARIA Tabs Pattern**: `tabDefs`-Array, `handleTabKeyDown`, `aria-controls`, `tabIndex`-Roving
+4. **Material Transitions**: `cubic-bezier(0.4, 0, 0.2, 1)` statt `ease`
+5. **Touch Targets**: `min-height: 44px` auf interaktiven Elementen (mobile)
+
 ---
 
 ## Aktuelle Code-Struktur
@@ -107,7 +133,7 @@ src/
 │   └── ssp/
 │       └── ssp-view.tsx         # SSP: Tabbed (Chars, Impl, Controls)
 ├── styles/
-│   └── base.css                 # Alle Styles (1810 Zeilen)
+│   └── base.css                 # Alle Styles (~2170 Zeilen)
 ├── app.tsx                      # Hauptapp mit Search-Integration
 └── main.tsx
 tests/
@@ -136,3 +162,4 @@ tests/
 | 2026-02-06 | Architect | Frontend Developer | Issue #3: Catalog Renderer komplett | Erledigt |
 | 2026-02-06 | Architect | Frontend Developer | Phase 2 Briefing: Issues #4-#7 | Erledigt |
 | 2026-02-06 | Frontend Developer | Architect | Phase 2 komplett: alle 4 Issues implementiert, 70 Tests, 14.39 KB Bundle | Erledigt |
+| 2026-02-06 | Architect | Frontend Developer | UI/UX Overhaul: Material Design, a11y, Responsive (Commit a567973). Neue Patterns beachten: CSS-Variablen, Sidebar-Toggle, ARIA Tabs | Info |

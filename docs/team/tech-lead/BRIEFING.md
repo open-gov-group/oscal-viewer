@@ -3,7 +3,7 @@
 **Rolle**: Tech Lead
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: 2 - Erweiterung (KW 10-12)
+**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -141,3 +141,41 @@ src/
 | 2026-02-06 | Tech Lead | Frontend Dev | Coding Standards in `docs/CODING_STANDARDS.md` dokumentiert | Erledigt |
 | 2026-02-06 | Tech Lead | Alle | PR-Template in `.github/pull_request_template.md` erstellt | Erledigt |
 | 2026-02-06 | Tech Lead | Alle | ADR-005 Performance-Strategie dokumentiert | Erledigt |
+| 2026-02-06 | Architect | Tech Lead | UI/UX Overhaul umgesetzt (Commit a567973). Neue Code-Patterns eingefuehrt | Info |
+
+---
+
+## UI/UX Overhaul - Architektur-Relevante Aenderungen
+
+**Commit**: `a567973` | **Bundle**: 20.69 KB gzipped | **Tests**: 254 bestanden
+
+### Neue Code-Patterns (in CODING_STANDARDS.md aufnehmen)
+
+1. **CSS-Variablen-Pflicht**: Keine hardcoded Farbwerte ausserhalb `:root`. Immer `var(--color-...)` nutzen.
+   - 21 semantische Variablen mit Dark Mode Varianten in `base.css:3-75`
+
+2. **WAI-ARIA Tabs Pattern** (Referenz: `ssp-view.tsx`):
+   - `tabDefs`-Array ausserhalb der Komponente
+   - `handleTabKeyDown()` fuer ArrowLeft/Right/Home/End
+   - `aria-controls`, `tabIndex`-Roving (aktiv=0, andere=-1)
+
+3. **Combobox Pattern** (Referenz: `search-bar.tsx`):
+   - `role="combobox"`, `aria-haspopup="listbox"`, `aria-expanded`
+   - `aria-activedescendant` mit `useState` fuer `activeIndex`
+   - Keyboard: ArrowUp/Down/Escape
+
+4. **Mobile Sidebar Toggle Pattern** (Referenz: `catalog-view.tsx`):
+   - `useState(false)` fuer `sidebarOpen`
+   - FAB-Button (56px, rund, `display: none` auf Desktop, `flex` auf Mobile)
+   - `.sidebar-backdrop` + `.open` Klasse auf `<aside>`
+   - Handler schliesst Sidebar bei Auswahl: `setSidebarOpen(false)`
+
+5. **Material Transition Easing**: `cubic-bezier(0.4, 0, 0.2, 1)` statt `ease`
+
+### Layer-Konformitaet
+
+Die Aenderungen respektieren die Dreischicht-Architektur:
+- **Presentation Layer** (components/): State-Management fuer Sidebar + Keyboard nur in Components
+- **Application Layer** (hooks/): Keine Aenderungen noetig
+- **Domain Layer** (types/, parser/): Keine Aenderungen noetig
+- **Styles**: Alle visuellen Aenderungen in `base.css`, keine Inline-Styles

@@ -3,7 +3,7 @@
 **Rolle**: DevOps Engineer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: 2 - Erweiterung (KW 10-12)
+**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -133,7 +133,7 @@ updates:
 
 | Metrik | Limit | Aktuell | Status |
 |--------|-------|---------|--------|
-| Bundle Size (gzipped) | < 100 KB | 12.54 KB | OK |
+| Bundle Size (gzipped) | < 100 KB | 20.69 KB | OK |
 | First Contentful Paint | < 1.5s | Nicht gemessen | Einrichten |
 | Lighthouse Score | > 90 | Nicht gemessen | Einrichten |
 
@@ -157,6 +157,32 @@ updates:
 | 2026-02-06 | Architect | DevOps Engineer | Initiales Briefing | Erstellt |
 | 2026-02-06 | Architect | DevOps Engineer | Phase 2 Briefing: CI Gates, Dependabot, Caching | Aktiv |
 | 2026-02-06 | DevOps Engineer | Architect | Phase 2 Umsetzung: Bundle Size Gate, CI/CD, Dependabot | Erledigt |
+| 2026-02-06 | Architect | DevOps Engineer | UI/UX Overhaul deployed (Commit a567973), Bundle 20.69 KB | Info |
+
+---
+
+## UI/UX Overhaul - Deployment (ABGESCHLOSSEN)
+
+**Commit**: `a567973` auf `main` gepusht | **Datum**: 2026-02-06
+
+### Bundle-Groesse nach Overhaul
+
+| Asset | Roh | Gzipped |
+|-------|-----|---------|
+| JS (app) | 43.21 KB | 10.71 KB |
+| JS (preact) | 10.32 KB | 4.43 KB |
+| CSS | 31.76 KB | 5.51 KB |
+| **Total** | **85.29 KB** | **20.69 KB** |
+
+**Delta zu Phase 2**: +1.86 KB gzipped (+602 Zeilen Code, -128 entfernt)
+**Budget-Nutzung**: 20.69 / 100 KB = 20.7%
+
+### Aenderungen im Deployment
+
+- Google Fonts extern geladen (Source Sans 3) - kein JS-Bundle-Impact
+- Keine neuen Dependencies
+- Keine Aenderungen an CI/CD Workflows noetig
+- GitHub Pages Auto-Deploy via bestehender `deploy.yml`
 
 ---
 
