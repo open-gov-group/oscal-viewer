@@ -6,9 +6,11 @@ Dieses Verzeichnis enthält Architecture Decision Records (ADRs) für den OSCAL 
 
 | Nr. | Titel | Status | Datum |
 |-----|-------|--------|-------|
-| 001 | Preact als UI Framework | Accepted | 2024 |
-| 002 | Zero-Backend Architektur | Accepted | 2024 |
-| 003 | Multi-Version OSCAL Support | Accepted | 2024 |
+| 001 | [Preact als UI Framework](ADR_001_preact.md) | Accepted | 2026-02-06 |
+| 002 | [Zero-Backend Architektur](ADR_002_zero_backend.md) | Accepted | 2026-02-06 |
+| 003 | [Dreischichtige Komponentenarchitektur](ADR_003_component_architecture.md) | Accepted | 2026-02-06 |
+| 004 | [Vite Build-Konfiguration](ADR_004_build_tooling.md) | Accepted | 2026-02-06 |
+| 005 | [Performance-Strategie](ADR_005_performance_strategy.md) | Accepted | 2026-02-06 |
 
 ## Neues ADR erstellen
 

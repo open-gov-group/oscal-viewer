@@ -2,12 +2,15 @@ import { useState } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { OscalDocument } from '@/types/oscal'
 import { parseOscalDocument } from '@/parser'
+import { useSearch } from '@/hooks/use-search'
 import { DocumentViewer } from '@/components/document-viewer'
+import { SearchBar } from '@/components/shared/search-bar'
 
 export const App: FunctionComponent = () => {
   const [document, setDocument] = useState<OscalDocument | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const { query, setQuery, results, isSearching } = useSearch(document?.data ?? null)
 
   const handleFile = async (file: File) => {
     try {
@@ -97,6 +100,12 @@ export const App: FunctionComponent = () => {
             <div class="document-header">
               <span class="document-type">{document.type}</span>
               <span class="document-version">OSCAL {document.version}</span>
+              <SearchBar
+                query={query}
+                onQueryChange={setQuery}
+                results={results}
+                isSearching={isSearching}
+              />
               <button
                 class="btn-clear"
                 onClick={() => setDocument(null)}

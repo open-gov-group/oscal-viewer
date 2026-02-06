@@ -42,25 +42,32 @@
 
 ## Aktueller Auftrag - Phase 2
 
-### Prioritaet 1: Code Review & Standards durchsetzen
+### Prioritaet 1: Code Review & Standards durchsetzen - ERLEDIGT
 
-**ESLint Layer-Regeln konfigurieren**
-- Import-Regeln die verhindern, dass `src/types/` oder `src/parser/` aus `src/components/` importieren
-- `no-restricted-imports` Regel fuer Layer-Verletzungen
-- Empfehlung: `eslint-plugin-import` mit `import/no-restricted-paths`
+**ESLint Layer-Regeln konfigurieren** - ERLEDIGT
+- `.eslintrc.cjs` erstellt mit `no-restricted-imports` Overrides pro Verzeichnis
+- `types/` darf nicht aus parser/, hooks/, components/ importieren
+- `parser/` darf nicht aus hooks/, components/ importieren
+- `hooks/` darf nicht aus components/ importieren
+- Tests relaxed (kein `no-restricted-imports`, `any` erlaubt)
+- `consistent-type-imports` Regel fuer `import type` Syntax
+- Verifiziert: Layer-Verletzungen werden als Fehler erkannt
 
-**TypeScript Patterns fuer neue Renderer**
-- Neue Renderer (Profile, CompDef, SSP) muessen dem Catalog-Renderer-Pattern folgen:
-  - Eigenes Verzeichnis unter `src/components/<type>/`
-  - Hauptkomponente: `<Type>View` (z.B. `ProfileView`)
-  - Integration in `DocumentViewer` via neuen `case` im Switch
-  - Nutzung von Shared Components (MetadataPanel, PropertyBadge)
-- Referenz-Implementation: `src/components/catalog/catalog-view.tsx`
+**TypeScript Patterns fuer neue Renderer** - ERLEDIGT
+- `docs/CODING_STANDARDS.md` erstellt mit:
+  - Renderer-Template (Verzeichnisstruktur, Props-Interface, useMemo)
+  - Import-Reihenfolge und Konventionen
+  - Checkliste fuer neue Renderer
+  - CSS- und Branch-Naming-Konventionen
 
-**Review-Prozess fuer PRs etablieren**
-- PR-Template erstellen (`.github/pull_request_template.md`)
-- Checkliste: Tests, Coverage, Accessibility, Bundle Size
-- Branch-Naming-Konvention: `feature/<issue-nr>-<beschreibung>`
+**Review-Prozess fuer PRs etablieren** - ERLEDIGT
+- `.github/pull_request_template.md` erstellt mit Checkliste:
+  - Code Quality (ESLint, TypeScript, Layer-Regeln)
+  - Testing (Tests, Coverage >= 80%)
+  - Accessibility (ARIA, Keyboard-Navigation)
+  - Bundle Size
+  - Renderer-spezifische Checks
+- Branch-Naming: `feature/<issue-nr>-<beschreibung>`
 
 ### Prioritaet 2: Code Reviews Phase 2 Renderer
 
@@ -73,12 +80,14 @@ Folgende Issues werden vom Frontend Developer implementiert - du reviewst:
 | #6 | SSP Renderer | Hoch | Viele Sektionen, Performance |
 | #7 | Suchfunktion | Hoch | Generisches Interface, Indexierung |
 
-### Prioritaet 3: Performance-Ueberlegungen
+### Prioritaet 3: Performance-Ueberlegungen - ERLEDIGT
 
-- Grosse OSCAL-Dokumente (z.B. NIST 800-53 mit 1000+ Controls) koennen langsam rendern
-- Evaluate: `useMemo` fuer teure Berechnungen (bereits in CatalogView genutzt)
-- Virtual Scrolling fuer lange Listen (z.B. `@tanstack/virtual`)
-- Code Splitting per Dokumenttyp (Vite dynamic imports)
+**ADR-005 erstellt** (`docs/architecture/decisions/ADR_005_performance_strategy.md`):
+- **Stufe 1 (sofort)**: `useMemo` Pflicht fuer alle Renderer (Maps, Aggregationen, Filter)
+- **Stufe 2 (sofort)**: Code Splitting per Dokumenttyp via `lazy()` + `Suspense`
+- **Stufe 3 (bei Bedarf)**: Virtual Scrolling mit `@tanstack/react-virtual` (Trigger: >100ms Render)
+- Identifiziertes Problem: `GroupTree.countGroupControls()` ohne Memoization
+- Identifiziertes Problem: `DocumentViewer` statische Imports → Code Splitting einbauen
 
 ---
 
@@ -128,3 +137,7 @@ src/
 | 2026-02-06 | Architect | Tech Lead | Initiales Briefing | Erstellt |
 | 2026-02-06 | Architect | Tech Lead | Issue #1: ADR-003 + ADR-004 erstellt | Erledigt |
 | 2026-02-06 | Architect | Tech Lead | Phase 2 Briefing: Code Review + Standards | Aktiv |
+| 2026-02-06 | Tech Lead | Alle | ESLint Layer-Regeln in `.eslintrc.cjs` konfiguriert | Erledigt |
+| 2026-02-06 | Tech Lead | Frontend Dev | Coding Standards in `docs/CODING_STANDARDS.md` dokumentiert | Erledigt |
+| 2026-02-06 | Tech Lead | Alle | PR-Template in `.github/pull_request_template.md` erstellt | Erledigt |
+| 2026-02-06 | Tech Lead | Alle | ADR-005 Performance-Strategie dokumentiert | Erledigt |
