@@ -3,7 +3,7 @@
 **Rolle**: Frontend Developer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: UX Redesign ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -163,3 +163,39 @@ tests/
 | 2026-02-06 | Architect | Frontend Developer | Phase 2 Briefing: Issues #4-#7 | Erledigt |
 | 2026-02-06 | Frontend Developer | Architect | Phase 2 komplett: alle 4 Issues implementiert, 70 Tests, 14.39 KB Bundle | Erledigt |
 | 2026-02-06 | Architect | Frontend Developer | UI/UX Overhaul: Material Design, a11y, Responsive (Commit a567973). Neue Patterns beachten: CSS-Variablen, Sidebar-Toggle, ARIA Tabs | Info |
+| 2026-02-06 | Architect | Frontend Developer | UX Redesign: Full-Width Layout + Sticky Sidebar (CSS-only, keine TSX-Aenderungen). Neues Layout-Pattern beachten | Info |
+
+---
+
+## UX Redesign: Full-Width Layout + Sticky Sidebar (ABGESCHLOSSEN)
+
+**Typ**: Reines CSS-Refactoring | **Datei**: `src/styles/base.css` | **TSX-Aenderungen**: Keine
+
+Der UI/UX Designer hat nach Vergleich mit viewer.oscal.io ein Full-Width Layout umgesetzt.
+
+### Was sich geaendert hat (nur CSS)
+
+| Bereich | Vorher | Nachher |
+|---------|--------|---------|
+| `.main` | `padding: 2rem`, `align-items: center` | `padding: 0`, `align-items: stretch` |
+| `.document-view` | `max-width: 1200px` | `width: 100%` (kein max-width) |
+| `.catalog-layout` | `gap: 1rem`, `min-height: 60vh` | `gap: 0`, `min-height: calc(100vh - 64px)`, Full-Bleed |
+| `.catalog-sidebar` | `border`, `border-radius`, `max-height: 75vh` | `position: sticky`, `top: 64px`, `height: calc(100vh - 64px)` |
+| `.catalog-content` | `border`, `border-radius`, Container-Scroll | `padding: 2rem 2.5rem`, natuerlicher Page-Scroll |
+| `.compdef-*` | Analog boxed | Analog Full-Width + Sticky |
+| `.profile-view` | Kein eigenes Padding | `padding: 1.5rem 2.5rem` |
+| `.ssp-view` | Kein eigenes Padding | `padding: 1.5rem 2.5rem` |
+| `.metadata-panel` | `border: 1px solid`, `border-radius` | `border-bottom` only (subtle Divider) |
+
+### Neue Layout-Patterns (fuer kuenftige Entwicklung)
+
+1. **Full-Width statt boxed**: Kein `max-width` auf `.document-view`, Inhalte nutzen vollen Viewport
+2. **Sticky Sidebar**: `position: sticky`, `top: 64px` (Header-Hoehe), `height: calc(100vh - 64px)`
+3. **Full-Bleed Grids**: Negative Margins + `width: calc(100% + 5rem)` fuer Rand-zu-Rand Layouts
+4. **Page Scroll statt Container Scroll**: Content scrollt mit der Seite (kein `overflow-y: auto`)
+5. **Borderless Desktop**: Subtile Divider (`border-right`, `border-bottom`) statt Box-Borders
+
+### Build-Ergebnis
+
+- Bundle: 10.71 KB JS + 5.59 KB CSS gzipped (kein Logik-Impact)
+- Tests: 254/254 bestanden (keine Regressionen)

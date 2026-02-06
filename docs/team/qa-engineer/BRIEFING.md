@@ -3,7 +3,7 @@
 **Rolle**: QA Engineer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: UX Redesign ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -311,6 +311,7 @@ tests/
 | 2026-02-06 | QA Engineer | UI/UX Designer | axe-core Audit: 0 Violations nach Fix | Info |
 | 2026-02-06 | Architect | QA Engineer | UI/UX Overhaul (Commit a567973): Material Design, a11y Fixes, Responsive. QA-Verifikation angefordert | Info |
 | 2026-02-06 | QA Engineer | Architect | UI/UX Overhaul QA: 254 Tests bestanden, 0 TS Errors, 9/9 axe-core, Bundle 20.69 KB - FREIGEGEBEN | Abgeschlossen |
+| 2026-02-06 | Architect | QA Engineer | UX Redesign: Full-Width + Sticky Sidebar (CSS-only, 254 Tests bestanden). Neue Test-Luecken beachten | Info |
 
 ---
 
@@ -356,3 +357,46 @@ tests/
 | Responsive Layout | Nicht testbar in jsdom | Playwright E2E mit viewport Simulation |
 | FAB Sidebar Toggle | Kein Test (CSS-abhaengig) | Playwright mit `setViewportSize(375, 667)` |
 | Keyboard-Navigation | Teilweise via userEvent | Playwright fuer komplette Tab-Flows |
+
+---
+
+## UX Redesign: Full-Width Layout + Sticky Sidebar - QA Info
+
+**Typ**: Reines CSS-Refactoring | **Tests**: 254/254 bestanden | **TSX-Aenderungen**: Keine
+
+### Verifikations-Status
+
+| Pruefung | Ergebnis |
+|----------|----------|
+| TypeScript strict | 0 Errors (keine TSX-Aenderungen) |
+| Tests | 254/254 bestanden, 0 Regressionen |
+| Build | Erfolgreich |
+| Bundle JS (gzip) | 10.71 KB (unveraendert, kein Logik-Code) |
+| Bundle CSS (gzip) | 5.59 KB (+0.08 KB) |
+
+### Bundle-Entwicklung (aktualisiert)
+
+| Phase | JS (gzip) | CSS (gzip) | Total |
+|-------|-----------|------------|-------|
+| Phase 1 | 12.54 KB | - | 12.54 KB |
+| Phase 2 | 14.44 KB | 4.39 KB | 18.83 KB |
+| UI/UX Overhaul | 15.14 KB | 5.51 KB | 20.69 KB |
+| **UX Redesign** | **10.71 KB** | **5.59 KB** | **16.30 KB** |
+
+### Geaenderte Layout-Bereiche (visuell zu pruefen)
+
+| Element | Aenderung | Test-Fokus |
+|---------|-----------|------------|
+| `.main` | Full-Width statt zentriert | Dropzone muss weiterhin zentriert sein (`:has()` Selektor) |
+| `.catalog-sidebar` | `position: sticky` statt static | Bleibt beim Scrollen sichtbar, Mobile weiterhin Overlay |
+| `.catalog-content` | Page-Scroll statt Container-Scroll | Kein `overflow-y: auto`, natuerlicher Scroll |
+| `.compdef-*` | Analog zu Catalog | Gleiche Pruefung |
+| `.metadata-panel` | Nur `border-bottom` | Kein Box-Border mehr auf Desktop |
+
+### Neue Test-Luecken (Playwright noetig)
+
+| Bereich | Problem | Empfehlung |
+|---------|---------|------------|
+| Sticky Sidebar | `position: sticky` nicht in jsdom testbar | Playwright E2E: scrollen und pruefen ob Sidebar sichtbar bleibt |
+| Full-Width Layout | CSS Layout nicht in jsdom | Playwright: `page.evaluate(() => getComputedStyle(...))` |
+| `:has()` Selektor | Dropzone-Zentrierung | Playwright: Datei laden/entladen, Layout pruefen |

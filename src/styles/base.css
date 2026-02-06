@@ -214,13 +214,15 @@ body {
 /* Main */
 .main {
   flex: 1;
-  padding: 2rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
 }
 
 .main:has(.dropzone) {
+  padding: 2rem;
+  align-items: center;
   justify-content: center;
 }
 
@@ -285,7 +287,6 @@ body {
 /* Document View */
 .document-view {
   width: 100%;
-  max-width: 1200px;
 }
 
 .document-type {
@@ -364,8 +365,7 @@ body {
 /* Metadata Panel */
 .metadata-panel {
   margin-bottom: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
+  border-bottom: 1px solid var(--color-border);
   overflow: hidden;
 }
 
@@ -436,6 +436,7 @@ body {
 /* Catalog View */
 .catalog-view {
   width: 100%;
+  padding: 1.5rem 2.5rem 0;
 }
 
 .catalog-stats {
@@ -452,23 +453,30 @@ body {
 
 .catalog-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 1rem;
-  min-height: 60vh;
+  grid-template-columns: 300px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 64px);
+  margin: 0 -2.5rem;
+  width: calc(100% + 5rem);
 }
 
 @media (max-width: 768px) {
   .catalog-layout {
     grid-template-columns: 1fr;
+    margin: 0;
+    width: 100%;
+    min-height: auto;
   }
 }
 
 /* Catalog Sidebar */
 .catalog-sidebar {
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
   overflow-y: auto;
-  max-height: 75vh;
+  border-right: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
 }
 
 /* Group Tree */
@@ -613,11 +621,7 @@ body {
 
 /* Catalog Content & Placeholder */
 .catalog-content {
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  padding: 1.5rem;
-  overflow-y: auto;
-  max-height: 75vh;
+  padding: 2rem 2.5rem;
 }
 
 .catalog-placeholder {
@@ -856,6 +860,7 @@ body {
 
 .profile-view {
   width: 100%;
+  padding: 1.5rem 2.5rem;
 }
 
 .profile-stats {
@@ -1072,6 +1077,7 @@ body {
 
 .compdef-view {
   width: 100%;
+  padding: 1.5rem 2.5rem 0;
 }
 
 .compdef-stats {
@@ -1089,22 +1095,29 @@ body {
 .compdef-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
-  gap: 1rem;
-  min-height: 50vh;
+  gap: 0;
+  min-height: calc(100vh - 64px);
+  margin: 0 -2.5rem;
+  width: calc(100% + 5rem);
 }
 
 @media (max-width: 768px) {
   .compdef-layout {
     grid-template-columns: 1fr;
+    margin: 0;
+    width: 100%;
+    min-height: auto;
   }
 }
 
 /* CompDef Sidebar */
 .compdef-sidebar {
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
   overflow-y: auto;
-  max-height: 75vh;
+  border-right: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
 }
 
 .compdef-component-list {
@@ -1161,11 +1174,7 @@ body {
 
 /* CompDef Content */
 .compdef-content {
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  padding: 1.5rem;
-  overflow-y: auto;
-  max-height: 75vh;
+  padding: 2rem 2.5rem;
 }
 
 .compdef-placeholder {
@@ -1365,6 +1374,7 @@ body {
 
 .ssp-view {
   width: 100%;
+  padding: 1.5rem 2.5rem;
 }
 
 .ssp-system-header {
@@ -2032,11 +2042,13 @@ body {
     top: 0;
     left: 0;
     bottom: 0;
+    height: auto;
     width: 300px;
     max-width: 85vw;
     z-index: 45;
     max-height: none;
     border: none;
+    border-right: none;
     border-radius: 0;
     background-color: var(--color-surface);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
@@ -2054,11 +2066,13 @@ body {
     top: 0;
     left: 0;
     bottom: 0;
+    height: auto;
     width: 300px;
     max-width: 85vw;
     z-index: 45;
     max-height: none;
     border: none;
+    border-right: none;
     border-radius: 0;
     background-color: var(--color-surface);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
@@ -2067,6 +2081,23 @@ body {
 
   .compdef-sidebar.open {
     display: block;
+  }
+
+  /* View padding: reduce on mobile (main already has 1rem) */
+  .catalog-view,
+  .compdef-view {
+    padding: 0.5rem 0 0;
+  }
+
+  .profile-view,
+  .ssp-view {
+    padding: 0.5rem 0;
+  }
+
+  /* Content padding: reduce on mobile */
+  .catalog-content,
+  .compdef-content {
+    padding: 1rem;
   }
 
   /* Touch-friendly targets */
@@ -2158,6 +2189,8 @@ body {
   .catalog-layout,
   .compdef-layout {
     grid-template-columns: 1fr;
+    margin: 0;
+    width: 100%;
   }
 
   .document-content {

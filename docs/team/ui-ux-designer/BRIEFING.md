@@ -3,7 +3,7 @@
 **Rolle**: UI/UX Designer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: UX Redesign (Full-Width Layout) ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -389,6 +389,8 @@ Muessen als CSS Custom Properties formalisiert werden.
 | 2026-02-06 | UI/UX Designer | Architect | Design-Review Phase 2: alle 5 Aufgaben bewertet, 1 Bug gefunden, Accessibility-Audit, Design-Entscheidungen beantwortet | Abgeschlossen |
 | 2026-02-06 | Architect | UI/UX Designer | UI/UX Overhaul umgesetzt (Commit a567973) - siehe "Behobene Findings" Sektion | Info |
 | 2026-02-06 | UI/UX Designer | Architect | Review des Overhauls: 2 Nachbesserungen (aria-haspopup, Kontrast-Fix) - behoben | Abgeschlossen |
+| 2026-02-06 | Architect | UI/UX Designer | UX Redesign: Full-Width + Sticky Sidebar (Vergleich mit viewer.oscal.io) | Aktiv |
+| 2026-02-06 | UI/UX Designer | Architect | UX Redesign umgesetzt: CSS-only Refactoring, 254 Tests bestanden, 0 TSX-Aenderungen | Abgeschlossen |
 
 ---
 
@@ -452,6 +454,57 @@ Muessen als CSS Custom Properties formalisiert werden.
 --color-accent-orange
 --color-error-bg, --color-error-border
 ```
+
+---
+
+## UX Redesign: Full-Width Layout + Sticky Sidebar (ABGESCHLOSSEN)
+
+**Ausloeser**: Vergleich mit viewer.oscal.io (EasyDynamics, React+MUI, Full-Width)
+**Ziel**: State-of-the-Art UX - kein boxed Layout auf Desktop, verbesserte Scroll-Usability
+
+### Referenz-Analyse: viewer.oscal.io
+- React + MUI (Material Design 3), Full-Width Layout
+- Card/List View Toggle fuer Controls
+- Accordion-Pattern fuer Control-Sektionen
+- EasyDynamics oscal-react-library
+
+### Umgesetzte Aenderungen (reines CSS-Refactoring, keine TSX-Aenderungen)
+
+| Bereich | Vorher | Nachher |
+|---------|--------|---------|
+| `.main` | `padding: 2rem`, `align-items: center` | `padding: 0`, `align-items: stretch` (Full-Width) |
+| `.document-view` | `max-width: 1200px` | `width: 100%` (kein max-width) |
+| `.catalog-layout` | `gap: 1rem`, `min-height: 60vh` | `gap: 0`, `min-height: calc(100vh - 64px)`, Full-Bleed via negative Margins |
+| `.catalog-sidebar` | `border`, `border-radius`, `max-height: 75vh` | `position: sticky`, `top: 64px`, `height: calc(100vh - 64px)`, `border-right` Divider |
+| `.catalog-content` | `border`, `border-radius`, `max-height: 75vh`, `overflow-y: auto` | `padding: 2rem 2.5rem`, natuerlicher Page-Scroll |
+| `.compdef-*` | Analog zu Catalog (boxed) | Analog zu Catalog (Full-Width + Sticky) |
+| `.profile-view` | Keine eigene Padding | `padding: 1.5rem 2.5rem` |
+| `.ssp-view` | Keine eigene Padding | `padding: 1.5rem 2.5rem` |
+| `.metadata-panel` | `border: 1px solid`, `border-radius` | `border-bottom` only (subtle Divider) |
+| Dropzone | Zentriert | Bleibt zentriert (`.main:has(.dropzone)` Sonderregel) |
+
+### Design-Prinzipien
+
+1. **Full-Width**: Inhalte nutzen den vollen Viewport statt `max-width: 1200px`
+2. **Sticky Sidebar**: Navigation bleibt beim Scrollen sichtbar (`position: sticky`)
+3. **Page Scroll**: Content scrollt mit der Seite (kein Container-Scroll mit max-height)
+4. **Borderless Desktop**: Keine Box-Borders auf Desktop, subtile Divider stattdessen
+5. **Responsive Mobile**: Keine Aenderung am Mobile-Layout (Sidebar bleibt Overlay)
+
+### Responsive-Anpassungen
+
+- **Mobile (max-width: 768px)**: Layout-Margins zurueckgesetzt, View-Padding reduziert
+- **Sidebars**: `position: fixed` Overlay bleibt, `height: auto`, kein `border-right`
+- **Print**: Layout-Margins zurueckgesetzt
+- **Dropzone**: Weiterhin zentriert via `:has()` Selektor
+
+### Verifikation
+
+- Build: 0 TypeScript-Fehler, Bundle 10.71 KB JS + 5.59 KB CSS gzipped
+- Tests: 254/254 bestanden (keine Logik-Aenderungen)
+- Keine TSX-Datei geaendert - reines CSS-Refactoring
+
+---
 
 ### Verbleibende Design-Aufgaben (Phase 3+)
 

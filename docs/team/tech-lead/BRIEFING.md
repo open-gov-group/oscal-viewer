@@ -3,7 +3,7 @@
 **Rolle**: Tech Lead
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: UX Redesign ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -142,6 +142,7 @@ src/
 | 2026-02-06 | Tech Lead | Alle | PR-Template in `.github/pull_request_template.md` erstellt | Erledigt |
 | 2026-02-06 | Tech Lead | Alle | ADR-005 Performance-Strategie dokumentiert | Erledigt |
 | 2026-02-06 | Architect | Tech Lead | UI/UX Overhaul umgesetzt (Commit a567973). Neue Code-Patterns eingefuehrt | Info |
+| 2026-02-06 | Architect | Tech Lead | UX Redesign: Full-Width + Sticky Sidebar (CSS-only). Neue Layout-Patterns eingefuehrt | Info |
 
 ---
 
@@ -179,3 +180,37 @@ Die Aenderungen respektieren die Dreischicht-Architektur:
 - **Application Layer** (hooks/): Keine Aenderungen noetig
 - **Domain Layer** (types/, parser/): Keine Aenderungen noetig
 - **Styles**: Alle visuellen Aenderungen in `base.css`, keine Inline-Styles
+
+---
+
+## UX Redesign: Full-Width Layout + Sticky Sidebar (ABGESCHLOSSEN)
+
+**Typ**: Reines CSS-Refactoring in `base.css` | **TSX-Aenderungen**: Keine | **Tests**: 254 bestanden
+
+### Architektur-Bewertung
+
+**Layer-Konformitaet**: Vollstaendig konform. Alle Aenderungen ausschliesslich im Stylesheet (Presentation Layer). Keine Logik-, Hook- oder Parser-Aenderungen.
+
+### Neue CSS-Layout-Patterns (in CODING_STANDARDS.md aufnehmen)
+
+6. **Full-Width Layout**: Kein `max-width` auf View-Container, Inhalte nutzen vollen Viewport
+   - `.document-view { width: 100% }` statt `max-width: 1200px`
+
+7. **Sticky Sidebar Pattern** (Referenz: `base.css` `.catalog-sidebar`, `.compdef-sidebar`):
+   - `position: sticky`, `top: 64px` (Header-Hoehe), `height: calc(100vh - 64px)`
+   - `overflow-y: auto` fuer eigenen Scroll-Kontext
+   - `border-right: 1px solid var(--color-border)` als Divider
+
+8. **Full-Bleed Grid Pattern** (Referenz: `base.css` `.catalog-layout`):
+   - `margin: 0 -2.5rem`, `width: calc(100% + 5rem)` fuer Rand-zu-Rand Layouts
+   - `grid-template-columns: 300px 1fr`, `gap: 0`
+   - `min-height: calc(100vh - 64px)` fuer Viewport-fuellende Layouts
+
+9. **Page Scroll statt Container Scroll**: Content scrollt mit der Seite
+   - Kein `max-height` + `overflow-y: auto` auf Content-Bereichen
+   - Natuerliches Browser-Scroll-Verhalten beibehalten
+
+10. **Borderless Desktop Design**: Subtile Divider statt Box-Borders
+    - Sidebar: `border-right` statt `border` + `border-radius`
+    - Metadata: `border-bottom` only
+    - `.main:has(.dropzone)` Sonderregel fuer zentrierte Dropzone

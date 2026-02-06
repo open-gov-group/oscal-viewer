@@ -3,7 +3,7 @@
 **Rolle**: DevOps Engineer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: UI/UX Overhaul ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: UX Redesign ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -133,7 +133,7 @@ updates:
 
 | Metrik | Limit | Aktuell | Status |
 |--------|-------|---------|--------|
-| Bundle Size (gzipped) | < 100 KB | 20.69 KB | OK |
+| Bundle Size (gzipped) | < 100 KB | 16.30 KB | OK |
 | First Contentful Paint | < 1.5s | Nicht gemessen | Einrichten |
 | Lighthouse Score | > 90 | Nicht gemessen | Einrichten |
 
@@ -158,6 +158,32 @@ updates:
 | 2026-02-06 | Architect | DevOps Engineer | Phase 2 Briefing: CI Gates, Dependabot, Caching | Aktiv |
 | 2026-02-06 | DevOps Engineer | Architect | Phase 2 Umsetzung: Bundle Size Gate, CI/CD, Dependabot | Erledigt |
 | 2026-02-06 | Architect | DevOps Engineer | UI/UX Overhaul deployed (Commit a567973), Bundle 20.69 KB | Info |
+| 2026-02-06 | Architect | DevOps Engineer | UX Redesign: Full-Width + Sticky Sidebar (CSS-only). Bundle auf 16.30 KB aktualisiert | Info |
+
+---
+
+## UX Redesign: Full-Width Layout + Sticky Sidebar (ABGESCHLOSSEN)
+
+**Typ**: Reines CSS-Refactoring | **TSX-Aenderungen**: Keine | **Tests**: 254 bestanden
+
+### Bundle-Groesse nach UX Redesign
+
+| Asset | Roh | Gzipped |
+|-------|-----|---------|
+| JS (app) | ~43 KB | 10.71 KB |
+| JS (preact) | ~10 KB | 4.43 KB |
+| CSS | ~34 KB | 5.59 KB |
+| **Total** | **~87 KB** | **~16.30 KB** |
+
+**Delta zum UI/UX Overhaul**: CSS +0.08 KB gzipped (Layout-Aenderungen)
+**Budget-Nutzung**: 16.30 / 100 KB = 16.3%
+
+### Deployment-Relevanz
+
+- Reines CSS-Refactoring, keine neuen Dependencies
+- Keine Aenderungen an CI/CD Workflows noetig
+- GitHub Pages Auto-Deploy via bestehender `deploy.yml`
+- Google Fonts weiterhin extern geladen
 
 ---
 
