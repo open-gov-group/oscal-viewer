@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest'
 import { detectDocumentType, detectVersion } from '@/parser/detect'
 import { parseCatalog, countControls } from '@/parser/catalog'
 import { parseProfile } from '@/parser/profile'

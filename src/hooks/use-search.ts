@@ -43,11 +43,11 @@ export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
   }
 }
 
-interface IndexEntry extends SearchResult {
+export interface IndexEntry extends SearchResult {
   searchText: string
 }
 
-function buildIndex(data: OscalDocumentData): IndexEntry[] {
+export function buildIndex(data: OscalDocumentData): IndexEntry[] {
   switch (data.type) {
     case 'catalog':
       return indexCatalog(data.document)
