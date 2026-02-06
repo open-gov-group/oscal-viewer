@@ -10,6 +10,12 @@ interface SspViewProps {
 
 type SspTab = 'characteristics' | 'implementation' | 'controls'
 
+const tabDefs: Array<{ id: SspTab; label: string }> = [
+  { id: 'characteristics', label: 'System Characteristics' },
+  { id: 'implementation', label: 'System Implementation' },
+  { id: 'controls', label: 'Control Implementation' },
+]
+
 export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
   const [activeTab, setActiveTab] = useState<SspTab>('characteristics')
 
@@ -18,6 +24,28 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
     components: ssp['system-implementation'].components.length,
     requirements: ssp['control-implementation']['implemented-requirements'].length,
   }), [ssp])
+
+  const handleTabKeyDown = (e: KeyboardEvent, currentTab: SspTab) => {
+    const tabIds = tabDefs.map(t => t.id)
+    const currentIndex = tabIds.indexOf(currentTab)
+    let newIndex = currentIndex
+
+    if (e.key === 'ArrowRight') {
+      newIndex = (currentIndex + 1) % tabIds.length
+    } else if (e.key === 'ArrowLeft') {
+      newIndex = (currentIndex - 1 + tabIds.length) % tabIds.length
+    } else if (e.key === 'Home') {
+      newIndex = 0
+    } else if (e.key === 'End') {
+      newIndex = tabIds.length - 1
+    } else {
+      return
+    }
+
+    e.preventDefault()
+    setActiveTab(tabIds[newIndex])
+    document.getElementById(`ssp-tab-${tabIds[newIndex]}`)?.focus()
+  }
 
   return (
     <div class="ssp-view">
@@ -52,33 +80,29 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
       </div>
 
       <nav class="ssp-tabs" role="tablist" aria-label="SSP Sections">
-        <button
-          role="tab"
-          aria-selected={activeTab === 'characteristics'}
-          class={`ssp-tab ${activeTab === 'characteristics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('characteristics')}
-        >
-          System Characteristics
-        </button>
-        <button
-          role="tab"
-          aria-selected={activeTab === 'implementation'}
-          class={`ssp-tab ${activeTab === 'implementation' ? 'active' : ''}`}
-          onClick={() => setActiveTab('implementation')}
-        >
-          System Implementation
-        </button>
-        <button
-          role="tab"
-          aria-selected={activeTab === 'controls'}
-          class={`ssp-tab ${activeTab === 'controls' ? 'active' : ''}`}
-          onClick={() => setActiveTab('controls')}
-        >
-          Control Implementation
-        </button>
+        {tabDefs.map((tab) => (
+          <button
+            key={tab.id}
+            id={`ssp-tab-${tab.id}`}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`ssp-tabpanel-${tab.id}`}
+            tabIndex={activeTab === tab.id ? 0 : -1}
+            class={`ssp-tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+            onKeyDown={(e) => handleTabKeyDown(e as unknown as KeyboardEvent, tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </nav>
 
-      <div class="ssp-tab-content" role="tabpanel">
+      <div
+        id={`ssp-tabpanel-${activeTab}`}
+        class="ssp-tab-content"
+        role="tabpanel"
+        aria-labelledby={`ssp-tab-${activeTab}`}
+      >
         {activeTab === 'characteristics' && (
           <CharacteristicsPanel characteristics={ssp['system-characteristics']} />
         )}

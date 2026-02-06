@@ -12,10 +12,16 @@ interface CatalogViewProps {
 
 export const CatalogView: FunctionComponent<CatalogViewProps> = ({ catalog }) => {
   const [selectedControlId, setSelectedControlId] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const controlMap = useMemo(() => buildControlMap(catalog), [catalog])
   const totalControls = useMemo(() => countControls(catalog), [catalog])
   const selectedControl = selectedControlId ? controlMap.get(selectedControlId) ?? null : null
+
+  const handleControlSelect = (id: string) => {
+    setSelectedControlId(id)
+    setSidebarOpen(false)
+  }
 
   return (
     <div class="catalog-view">
@@ -31,12 +37,13 @@ export const CatalogView: FunctionComponent<CatalogViewProps> = ({ catalog }) =>
       </div>
 
       <div class="catalog-layout">
-        <aside class="catalog-sidebar" aria-label="Control navigation">
+        <div class={`sidebar-backdrop ${sidebarOpen ? 'visible' : ''}`} onClick={() => setSidebarOpen(false)} />
+        <aside class={`catalog-sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Control navigation">
           <GroupTree
             groups={catalog.groups}
             controls={catalog.controls}
             selectedControlId={selectedControlId}
-            onSelectControl={setSelectedControlId}
+            onSelectControl={handleControlSelect}
           />
         </aside>
 
@@ -50,6 +57,21 @@ export const CatalogView: FunctionComponent<CatalogViewProps> = ({ catalog }) =>
           )}
         </main>
       </div>
+
+      <button
+        class="sidebar-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={sidebarOpen}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          {sidebarOpen ? (
+            <path d="M18 6L6 18M6 6l12 12" />
+          ) : (
+            <path d="M3 12h18M3 6h18M3 18h18" />
+          )}
+        </svg>
+      </button>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { SearchResult } from '@/hooks/use-search'
 
@@ -9,6 +10,30 @@ interface SearchBarProps {
 }
 
 export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryChange, results, isSearching }) => {
+  const [activeIndex, setActiveIndex] = useState(-1)
+
+  useEffect(() => {
+    if (!isSearching) setActiveIndex(-1)
+  }, [isSearching])
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!isSearching || results.length === 0) return
+    const max = Math.min(results.length, 50) - 1
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActiveIndex(prev => Math.min(prev + 1, max))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveIndex(prev => Math.max(prev - 1, -1))
+    } else if (e.key === 'Escape') {
+      onQueryChange('')
+      setActiveIndex(-1)
+    }
+  }
+
+  const showResults = isSearching && results.length > 0
+
   return (
     <div class="search-bar">
       <div class="search-input-wrapper">
@@ -18,12 +43,21 @@ export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryCha
         </svg>
         <input
           type="search"
+          role="combobox"
           class="search-input"
           placeholder="Search controls, components, parameters..."
           value={query}
-          onInput={(e) => onQueryChange((e.target as HTMLInputElement).value)}
+          onInput={(e) => {
+            onQueryChange((e.target as HTMLInputElement).value)
+            setActiveIndex(-1)
+          }}
+          onKeyDown={(e) => handleKeyDown(e as unknown as KeyboardEvent)}
           aria-label="Search document"
-          aria-expanded={isSearching && results.length > 0}
+          aria-haspopup="listbox"
+          aria-expanded={showResults}
+          aria-controls={showResults ? 'search-results-listbox' : undefined}
+          aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
+          autocomplete="off"
         />
         {query && (
           <button
@@ -37,14 +71,20 @@ export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryCha
       </div>
 
       {isSearching && (
-        <div class="search-results" role="listbox" aria-label="Search results">
+        <div id="search-results-listbox" class="search-results" role="listbox" aria-label="Search results">
           {results.length === 0 ? (
             <div class="search-no-results">No results found</div>
           ) : (
             <>
               <div class="search-results-count">{results.length} result{results.length !== 1 ? 's' : ''}</div>
               {results.slice(0, 50).map((result, i) => (
-                <div key={`${result.id}-${i}`} class="search-result-item" role="option">
+                <div
+                  key={`${result.id}-${i}`}
+                  id={`search-result-${i}`}
+                  class={`search-result-item ${i === activeIndex ? 'search-result-active' : ''}`}
+                  role="option"
+                  aria-selected={i === activeIndex}
+                >
                   <span class="search-result-type">{result.type}</span>
                   <div class="search-result-content">
                     <span class="search-result-id">{result.id}</span>

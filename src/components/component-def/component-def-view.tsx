@@ -10,6 +10,7 @@ interface ComponentDefViewProps {
 
 export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ componentDef }) => {
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const stats = useMemo(() => {
     const components = componentDef.components ?? []
@@ -27,6 +28,11 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
     if (!selectedComponentId) return null
     return componentDef.components?.find(c => c.uuid === selectedComponentId) ?? null
   }, [componentDef, selectedComponentId])
+
+  const handleComponentSelect = (uuid: string) => {
+    setSelectedComponentId(uuid)
+    setSidebarOpen(false)
+  }
 
   return (
     <div class="compdef-view">
@@ -48,7 +54,8 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
 
       {componentDef.components && componentDef.components.length > 0 && (
         <div class="compdef-layout">
-          <aside class="compdef-sidebar" aria-label="Component list">
+          <div class={`sidebar-backdrop ${sidebarOpen ? 'visible' : ''}`} onClick={() => setSidebarOpen(false)} />
+          <aside class={`compdef-sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Component list">
             <ul class="compdef-component-list" role="listbox" aria-label="Components">
               {componentDef.components.map(comp => (
                 <li
@@ -57,11 +64,11 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
                   aria-selected={selectedComponentId === comp.uuid}
                   class={`compdef-component-item ${selectedComponentId === comp.uuid ? 'selected' : ''}`}
                   tabIndex={0}
-                  onClick={() => setSelectedComponentId(comp.uuid)}
+                  onClick={() => handleComponentSelect(comp.uuid)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
-                      setSelectedComponentId(comp.uuid)
+                      handleComponentSelect(comp.uuid)
                     }
                   }}
                 >
@@ -105,6 +112,21 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
           </div>
         </section>
       )}
+
+      <button
+        class="sidebar-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={sidebarOpen}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          {sidebarOpen ? (
+            <path d="M18 6L6 18M6 6l12 12" />
+          ) : (
+            <path d="M3 12h18M3 6h18M3 18h18" />
+          )}
+        </svg>
+      </button>
     </div>
   )
 }

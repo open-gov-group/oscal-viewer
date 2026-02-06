@@ -61,12 +61,33 @@ export const App: FunctionComponent = () => {
 
   return (
     <div class="app">
-      <header class="header">
-        <h1>OSCAL Viewer</h1>
-        <p>Universal viewer for OSCAL 1.0.x to latest</p>
+      <a href="#main-content" class="skip-link">Skip to main content</a>
+      <header class="header" role="banner">
+        <div class="header-content">
+          <h1 class="header-title">OSCAL Viewer</h1>
+          <span class="header-subtitle">Universal viewer for OSCAL 1.0.x to latest</span>
+        </div>
+        {document && (
+          <div class="header-actions">
+            <span class="document-type">{document.type}</span>
+            <span class="document-version">OSCAL {document.version}</span>
+            <SearchBar
+              query={query}
+              onQueryChange={setQuery}
+              results={results}
+              isSearching={isSearching}
+            />
+            <button
+              class="btn-clear"
+              onClick={() => setDocument(null)}
+            >
+              Load another file
+            </button>
+          </div>
+        )}
       </header>
 
-      <main class="main">
+      <main id="main-content" class="main">
         {!document ? (
           <div
             class={`dropzone ${isDragging ? 'dragging' : ''}`}
@@ -97,22 +118,6 @@ export const App: FunctionComponent = () => {
           </div>
         ) : (
           <div class="document-view">
-            <div class="document-header">
-              <span class="document-type">{document.type}</span>
-              <span class="document-version">OSCAL {document.version}</span>
-              <SearchBar
-                query={query}
-                onQueryChange={setQuery}
-                results={results}
-                isSearching={isSearching}
-              />
-              <button
-                class="btn-clear"
-                onClick={() => setDocument(null)}
-              >
-                Load another file
-              </button>
-            </div>
             <div class="document-content">
               <DocumentViewer data={document.data} />
             </div>
