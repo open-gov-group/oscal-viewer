@@ -1,0 +1,53 @@
+{
+  "name": "oscal-viewer",
+  "version": "0.1.0",
+  "description": "Universal OSCAL Viewer - Supports all OSCAL versions from 1.0.x to latest",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/open-gov-group/oscal-viewer.git"
+  },
+  "keywords": [
+    "oscal",
+    "nist",
+    "compliance",
+    "security",
+    "privacy",
+    "gdpr",
+    "viewer",
+    "catalog"
+  ],
+  "author": "OpenGov Privacy Project",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/open-gov-group/oscal-viewer/issues"
+  },
+  "homepage": "https://open-gov-group.github.io/oscal-viewer",
+  "devDependencies": {
+    "@preact/preset-vite": "^2.8.2",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vitest": "^1.2.2",
+    "@vitest/coverage-v8": "^1.2.2",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "prettier": "^3.2.4"
+  },
+  "dependencies": {
+    "preact": "^10.19.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
