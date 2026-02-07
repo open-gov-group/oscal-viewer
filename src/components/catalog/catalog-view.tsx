@@ -7,6 +7,8 @@ import { useFilter } from '@/hooks/use-filter'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { FilterBar } from '@/components/shared/filter-bar'
 import type { FilterCategory } from '@/components/shared/filter-bar'
+import { Accordion } from '@/components/shared/accordion'
+import { ParameterItem } from '@/components/shared/parameter-item'
 import { GroupTree } from './group-tree'
 import { ControlDetail } from './control-detail'
 
@@ -51,6 +53,21 @@ export const CatalogView: FunctionComponent<CatalogViewProps> = ({ catalog }) =>
   return (
     <div class="catalog-view">
       <MetadataPanel metadata={catalog.metadata} />
+
+      {catalog.params && catalog.params.length > 0 && (
+        <Accordion
+          id="catalog-params"
+          title="Catalog Parameters"
+          count={catalog.params.length}
+          headingLevel={3}
+        >
+          <div class="params-list">
+            {catalog.params.map(param => (
+              <ParameterItem key={param.id} param={param} />
+            ))}
+          </div>
+        </Accordion>
+      )}
 
       <div class="catalog-stats">
         <span class="stat">

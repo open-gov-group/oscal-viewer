@@ -1,0 +1,12 @@
+{
+  "presets": [
+    {
+      "title": "NIST SP 800-53 Rev5",
+      "url": "https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json"
+    },
+    {
+      "title": "FedRAMP High Baseline",
+      "url": "https://raw.githubusercontent.com/GSA/fedramp-automation/master/dist/content/rev5/baselines/json/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.json"
+    }
+  ]
+}

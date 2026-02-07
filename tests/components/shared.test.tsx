@@ -88,13 +88,15 @@ describe('MetadataPanel', () => {
 
   it('renders parties when present', () => {
     render(<MetadataPanel metadata={fullMetadata} />)
-    expect(screen.getByText('Parties')).toBeInTheDocument()
-    expect(screen.getByText('NIST, DHS')).toBeInTheDocument()
+    expect(screen.getByText(/Parties/)).toBeInTheDocument()
+    expect(screen.getByText('NIST')).toBeInTheDocument()
+    expect(screen.getByText('DHS')).toBeInTheDocument()
+    expect(screen.getAllByText('organization')).toHaveLength(2)
   })
 
   it('does not render parties when absent', () => {
     render(<MetadataPanel metadata={minimalMetadata} />)
-    expect(screen.queryByText('Parties')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Parties/)).not.toBeInTheDocument()
   })
 
   it('uses details element for collapsible panel', () => {
