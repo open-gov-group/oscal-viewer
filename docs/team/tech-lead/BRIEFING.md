@@ -3,7 +3,7 @@
 **Rolle**: Tech Lead
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: UX Redesign ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: Stakeholder-Feedback (Nested Accordion Pattern, IFG/BITV Standards)
 
 ---
 
@@ -147,6 +147,12 @@ src/
 | 2026-02-07 | Tech Lead | Alle | Code Review: 6 neue Dateien (useDeepLink, useFilter, FilterBar, StatusBadge, Accordion, CopyLinkButton) - alle layer-konform | Erledigt |
 | 2026-02-07 | Tech Lead | Alle | ESLint-Fix: `filter-bar.tsx:61` ASI-Safety Semikolon entfernt | Erledigt |
 | 2026-02-07 | Tech Lead | Alle | CODING_STANDARDS.md v3.0.0: Deep-Link, Filter, Accordion Patterns + Shared Components Uebersicht | Erledigt |
+| 2026-02-07 | Architect | Tech Lead | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel, S2: Nested Part-Akkordions + Pattern 16, S3: IFG/BITV Standards). Details im Abschnitt "AKTUELLER AUFTRAG" | Aktiv |
+| 2026-02-07 | Tech Lead | Alle | S1 Review OK: CSS multi-line wrapping, kein Truncation auf `.nav-doc-title` | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | S2 Review OK: PartView rekursiv, h4→h5→h6, dotted border. 1 CSS-Fix (`.part-children` border-left) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | S3 Review OK: `lang="en"` vorhanden, `aria-live="polite"` vorhanden, Kontrast-Audit 22/22 PASS | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | CODING_STANDARDS.md v3.1.0: Pattern 16 (Nested Accordion, 5.7-5.8) + BITV 2.0 Sektion (8.1-8.6) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | Validierung: ESLint 0 Fehler, TypeScript 0 Fehler, 350/350 Tests, 13 axe-core | Erledigt |
 
 ---
 
@@ -218,3 +224,103 @@ Die Aenderungen respektieren die Dreischicht-Architektur:
     - Sidebar: `border-right` statt `border` + `border-radius`
     - Metadata: `border-bottom` only
     - `.main:has(.dropzone)` Sonderregel fuer zentrierte Dropzone
+
+---
+
+## AKTUELLER AUFTRAG: Stakeholder-Feedback (2026-02-07)
+
+**Prioritaet**: HOCH | **Quelle**: Fachverantwortliche nach Review der Live-Version
+**Gesamtbewertung**: "Geht absolut in die richtige Richtung"
+
+Die Fachverantwortlichen haben 3 Verbesserungswuensche identifiziert:
+
+---
+
+### Anforderung S1: Navigation — Gesamttitel sichtbar machen [HOCH]
+
+**Architektur-Relevanz**: Keine. Reines CSS-Refactoring (Entfernung von `text-overflow: ellipsis` und `white-space: nowrap`). Keine Auswirkung auf Layer-Architektur oder Komponenten-Interfaces.
+
+**Code-Review-Fokus**: CSS-only Aenderung in `base.css`. Pruefen dass Touch-Targets (44px) und Mobile-Layout nicht beeintraechtigt werden.
+
+---
+
+### Anforderung S2: Parts als verschachtelte Akkordions [HOCH]
+
+**Architektur-Relevanz**: Mittel. Betrifft `PartView` in `control-detail.tsx` (Presentation Layer).
+
+**Zu pruefen und in CODING_STANDARDS.md dokumentieren**:
+
+#### Pattern 16: Nested Accordion (Recursive Parts)
+
+**Referenz**: `control-detail.tsx` → `PartView`
+
+```tsx
+// Rekursive Accordion-Verschachtelung fuer OSCAL Parts
+const PartView = ({ part, depth = 0 }) => {
+  const headingLevel = Math.min(4 + depth, 6) as 4 | 5 | 6
+  return (
+    <Accordion headingLevel={headingLevel} defaultOpen={depth === 0}>
+      {/* prose, props, links */}
+      {part.parts?.map(child => (
+        <PartView part={child} depth={depth + 1} />
+      ))}
+    </Accordion>
+  )
+}
+```
+
+**Regeln**:
+1. `headingLevel` MUSS mit der Tiefe inkrementieren: h4 → h5 → h6
+2. HTML erlaubt maximal `<h6>` — bei `depth >= 3` bleibt heading level bei 6
+3. `defaultOpen={depth === 0}` — nur Top-Level Parts offen
+4. Parts ohne Titel (z.B. `name="item"` mit leerem Label) werden FLACH gerendert (kein Accordion)
+5. `Accordion`-Komponente muss `headingLevel` 4, 5, 6 unterstuetzen (aktuell: 2-6 — OK)
+6. Accordion-ID-Schema: `{partId ?? partName}-{depth}` — eindeutig innerhalb eines Controls
+
+**Heading-Hierarchie-Konsistenz** (WCAG 1.3.1):
+```
+<h2> Control Title         (control-detail.tsx)
+  <h3> Content             (Accordion, bestehend)
+    <h4> Statement         (PartView, depth=0)
+      <h5> Item a          (PartView, depth=1)
+      <h5> Item b          (PartView, depth=1)
+    <h4> Guidance           (PartView, depth=0)
+  <h3> Parameters           (Accordion, bestehend)
+  <h3> Links                (Accordion, bestehend)
+  <h3> Control Enhancements (Accordion, bestehend)
+```
+
+→ Keine Hierarchie-Spruenge, konsistent von h2 bis h6.
+
+**Layer-Konformitaet**: Vollstaendig konform. Aenderung betrifft nur Presentation Layer. Kein neuer Hook oder Parser noetig. Bestehende `Accordion`-Komponente wird wiederverwendet.
+
+**Performance-Ueberlegung** (ADR-005 relevant):
+- Bei grossen NIST-Catalogen (z.B. 800-53: ~400 Controls mit je 3-5 Parts und 2-10 Sub-Parts) koennte die Anzahl der Accordion-Instanzen steigen
+- Accordion-State via `sessionStorage` — bei vielen Items evtl. sessionStorage-Quota beachten
+- Empfehlung: Monitoring nach Umsetzung, bei Performance-Problemen `useMemo` auf PartView-Rendering
+
+---
+
+### Anforderung S3: Barrierefreiheit / IFG-Konformitaet [HOCH]
+
+**Architektur-Relevanz**: Mittel. IFG erfordert BITV 2.0 Compliance, die auf WCAG 2.1 AA basiert.
+
+**Zu pruefen**:
+
+| BITV 2.0 Anforderung | WCAG | Status | Aktion |
+|----------------------|------|--------|--------|
+| Sprache des Dokuments | 3.1.1 | FEHLT | `lang="en"` auf `<html>` in `index.html` |
+| Konsistente Heading-Hierarchie | 1.3.1 | Wird durch S2 verbessert | Review nach Umsetzung |
+| Status Messages programmatisch | 4.1.3 | LUECKE | `aria-live="polite"` auf CopyLinkButton Feedback |
+| Tastatur vollstaendig | 2.1.1 | DONE | Nested Accordions erben Keyboard-Pattern |
+| Fokus-Reihenfolge logisch | 2.4.3 | PRUEFEN | Tab-Order bei verschachtelten Accordions verifizieren |
+
+**CODING_STANDARDS.md Update**:
+- Pattern 16: Nested Accordion (s.o.)
+- Abschnitt "Barrierefreiheit / BITV 2.0" hinzufuegen:
+  - `lang`-Attribut auf `<html>` Pflicht
+  - Heading-Hierarchie lueckenlos (keine Spruenge h2 → h4)
+  - `aria-live` fuer Status-Meldungen (Clipboard, Loading)
+  - Kontrast >= 4.5:1 fuer allen Text (keine Ausnahmen)
+
+**Keine ADR noetig**: Die Aenderungen sind inkrementell und folgen bestehenden Patterns.

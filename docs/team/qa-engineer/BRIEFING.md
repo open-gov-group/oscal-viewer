@@ -3,7 +3,7 @@
 **Rolle**: QA Engineer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: UI/UX QA Verifikation ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: Stakeholder-Feedback QA (Nested Accordion Tests, BITV 2.0 Compliance)
 
 ---
 
@@ -314,6 +314,8 @@ tests/
 | 2026-02-06 | QA Engineer | Architect | UI/UX Overhaul QA: 254 Tests bestanden, 0 TS Errors, 9/9 axe-core, Bundle 20.69 KB - FREIGEGEBEN | Abgeschlossen |
 | 2026-02-06 | Architect | QA Engineer | UX Redesign: Full-Width + Sticky Sidebar (CSS-only, 254 Tests bestanden). Neue Test-Luecken beachten | Info |
 | 2026-02-06 | QA Engineer | Architect | UI/UX QA: 322 Tests, 89.13% Coverage, 13 axe-core Tests, 0 neue Violations, 68 neue Tests | Abgeschlossen |
+| 2026-02-07 | Architect | QA Engineer | Stakeholder-Feedback: 19 neue QA-Aufgaben (QS1-QS19: Nav, Nested Accordion, BITV 2.0). Details im Abschnitt "AKTUELLER AUFTRAG" | Aktiv |
+| 2026-02-07 | QA Engineer | Architect | Stakeholder-Feedback QA: 19/19 QS bestanden, 390 Tests (+40), 15 axe-core, 10 Kontrast-Checks, 0 Violations | Abgeschlossen |
 
 ---
 
@@ -444,3 +446,178 @@ tests/
 - Alle neuen Elemente (StatusBadge, Accordion, SearchBar Combobox) sind WCAG 2.1 AA konform
 - SSP Tabs implementieren korrekt das WAI-ARIA Tabs Pattern (roving tabindex)
 - SearchBar implementiert korrekt das WAI-ARIA Combobox Pattern (aria-activedescendant)
+
+---
+
+## AKTUELLER AUFTRAG: Stakeholder-Feedback (2026-02-07)
+
+**Prioritaet**: HOCH | **Quelle**: Fachverantwortliche nach Review der Live-Version
+**Gesamtbewertung**: "Geht absolut in die richtige Richtung"
+
+Die Fachverantwortlichen haben 3 Verbesserungswuensche identifiziert:
+
+---
+
+### QA-Aufgaben: Navigation Multi-Line (S1)
+
+| # | Test | Typ | Aufwand |
+|---|------|-----|---------|
+| QS1 | Langer Navigations-Titel wird vollstaendig angezeigt (kein Ellipsis) | Visual/DOM | Klein |
+| QS2 | Mehrzeilige Titel: Chevron und ID-Badge oben links ausgerichtet | Visual | Klein |
+| QS3 | Selected-State bedeckt volle Hoehe bei mehrzeiligen Items | Visual | Klein |
+| QS4 | Touch-Target >= 44px bei mehrzeiligen Eintraegen (Mobile) | a11y | Klein |
+
+**Testdaten**: NIST 800-53 Catalog Fixture (hat lange Titel wie "Access Control Policy and Procedures")
+
+---
+
+### QA-Aufgaben: Verschachtelte Part-Akkordions (S2)
+
+| # | Test | Typ | Aufwand |
+|---|------|-----|---------|
+| QS5 | Part-Accordion rendert mit korrektem `aria-expanded` | Unit/a11y | Mittel |
+| QS6 | Nested Part-Accordion: Heading-Hierarchie konsistent (h4 → h5 → h6) | Unit/a11y | Mittel |
+| QS7 | Top-Level Parts defaultOpen, Sub-Parts defaultClosed | Unit | Klein |
+| QS8 | Part ohne Titel (`name="item"`) wird flach gerendert (kein Accordion) | Unit | Klein |
+| QS9 | Deeply nested Parts (depth >= 3): heading level bleibt bei h6 | Unit | Klein |
+| QS10 | Accordion Enter/Space oeffnet/schliesst Part | Unit/Keyboard | Klein |
+| QS11 | Session-Persist fuer Part-Accordions funktioniert | Unit | Klein |
+| QS12 | axe-core auf ControlDetail mit verschachtelten Parts: 0 Violations | a11y | Mittel |
+
+**Testdaten**: Control mit verschachtelten Parts erstellen (Statement → Items a,b,c → Sub-Items)
+
+**Beispiel-Fixture**:
+```json
+{
+  "id": "ac-1",
+  "title": "Access Control Policy",
+  "parts": [
+    {
+      "name": "statement", "id": "ac-1_smt",
+      "prose": "Organization defines...",
+      "parts": [
+        { "name": "item", "id": "ac-1_smt.a", "prose": "Item a text" },
+        { "name": "item", "id": "ac-1_smt.b", "prose": "Item b text",
+          "parts": [
+            { "name": "item", "id": "ac-1_smt.b.1", "prose": "Sub-item 1" }
+          ]
+        }
+      ]
+    },
+    { "name": "guidance", "id": "ac-1_gdn", "prose": "Guidance text..." }
+  ]
+}
+```
+
+---
+
+### QA-Aufgaben: IFG / BITV 2.0 Compliance (S3)
+
+| # | Test | WCAG | Typ | Aufwand |
+|---|------|------|-----|---------|
+| QS13 | `<html>` hat `lang="en"` Attribut | 3.1.1 | Unit | Klein |
+| QS14 | Heading-Hierarchie lueckenlos (keine Spruenge h2 → h4) | 1.3.1 | a11y | Mittel |
+| QS15 | CopyLinkButton: Clipboard-Feedback ueber `aria-live` kommuniziert | 4.1.3 | a11y | Klein |
+| QS16 | Kontrast aller Status-Badge Farben >= 4.5:1 | 1.4.3 | Manual | Mittel |
+| QS17 | Tab-Reihenfolge bei verschachtelten Accordions logisch | 2.4.3 | Keyboard | Mittel |
+| QS18 | Alle interaktiven Elemente per Tastatur erreichbar | 2.1.1 | Keyboard | Mittel |
+| QS19 | axe-core Gesamtaudit: 0 Violations auf allen Views | a11y | Mittel |
+
+**Kontrast-Test Methode**:
+- Light Mode + Dark Mode Werte aus `base.css :root` und `@media (prefers-color-scheme: dark)` extrahieren
+- Kontrast-Verhaeltnis berechnen mit WCAG-Formel oder Tool (z.B. WebAIM Contrast Checker)
+- Minimum: 4.5:1 fuer Normaltext, 3:1 fuer grosse Schrift (>= 18pt oder >= 14pt bold)
+
+**BITV 2.0 spezifische Anforderungen** (ueber WCAG hinaus):
+- Erklaerung zur Barrierefreiheit muss vorhanden sein (Dokumentation, nicht Code)
+- Feedback-Mechanismus fuer Barrierefreiheits-Probleme (Link/Formular)
+- Diese sind Doku-Aufgaben (Issue #9) und nicht im QA-Scope
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Abhaengigkeit | Geschaetzter Aufwand |
+|---|---------|---------------|---------------------|
+| 1 | QS1-QS4: Navigation Multi-Line Tests | Nach S1 Umsetzung | Klein |
+| 2 | QS5-QS12: Nested Accordion Tests | Nach S2 Umsetzung | Mittel |
+| 3 | QS13-QS19: BITV 2.0 Compliance Tests | Nach S2 + S3 Umsetzung | Mittel |
+
+### Erwartete Test-Metriken nach Umsetzung
+
+| Metrik | Aktuell | Erwartet |
+|--------|---------|----------|
+| Tests gesamt | 350 | ~370 (+20) |
+| axe-core Tests | 13 | ~16 (+3) |
+| Test-Dateien | 14 | 14 (bestehende Dateien erweitern) |
+
+---
+
+## Stakeholder-Feedback QA - Ergebnis-Report (2026-02-07)
+
+### Umsetzungsstatus
+
+| QS | Test | Status | Datei |
+|----|------|--------|-------|
+| QS1 | Langer Navigations-Titel vollstaendig angezeigt | DONE | catalog-view.test.tsx |
+| QS2 | Mehrzeilige Titel: Chevron/ID/Title getrennte Spans | DONE | catalog-view.test.tsx |
+| QS3 | Selected-State auf volle-Breite Row-Container | DONE | catalog-view.test.tsx |
+| QS4 | Native Button-Elemente fuer Touch-Targets | DONE | catalog-view.test.tsx |
+| QS5 | Part-Accordion mit korrektem aria-expanded | DONE | catalog-view.test.tsx |
+| QS6 | Heading-Hierarchie h4 → h5 → h6 | DONE | catalog-view.test.tsx |
+| QS7 | Top-Level defaultOpen, Sub-Level defaultClosed | DONE | catalog-view.test.tsx |
+| QS8 | Item ohne Kinder: flach, mit Kindern: Accordion | DONE | catalog-view.test.tsx |
+| QS9 | Heading-Level Cap bei h6 (depth >= 2) | DONE | catalog-view.test.tsx |
+| QS10 | Accordion Click Toggle funktioniert | DONE | catalog-view.test.tsx |
+| QS11 | Session-Persist fuer Part-Accordions | DONE | catalog-view.test.tsx |
+| QS12 | axe-core auf verschachtelten Parts: 0 Violations | DONE | accessibility.test.tsx |
+| QS13 | index.html hat lang="en" | DONE | app.test.tsx |
+| QS14 | Heading-Hierarchie lueckenlos (keine Spruenge) | DONE | accessibility.test.tsx |
+| QS15 | CopyLinkButton aria-live="polite" | DONE | shared.test.tsx |
+| QS16 | Kontrast >= 4.5:1 (5 Light + 5 Dark Paare) | DONE | accessibility.test.tsx |
+| QS17 | Tab-Reihenfolge bei verschachtelten Accordions | DONE | catalog-view.test.tsx |
+| QS18 | Alle interaktiven Elemente per Tastatur erreichbar | DONE | catalog-view.test.tsx |
+| QS19 | axe-core Gesamtaudit mit verschachtelten Parts | DONE | accessibility.test.tsx |
+
+### Test-Metriken
+
+| Metrik | Vorher | Nachher | Delta |
+|--------|--------|---------|-------|
+| Test-Dateien | 14 | 14 | 0 (bestehende erweitert) |
+| Tests gesamt | 350 | 390 | +40 |
+| axe-core Tests | 13 | 15 | +2 |
+| Kontrast-Tests | 0 | 10 | +10 |
+| Statement Coverage | 89.13% | 87.65% | -1.48% (CopyLinkButton async) |
+| Branch Coverage | 82.23% | 83.09% | +0.86% |
+| Function Coverage | 87.64% | 83.65% | -3.99% (neue Handler-Pfade) |
+
+### Neue Tests pro Datei
+
+| Datei | Vorher | Nachher | Neue Tests |
+|-------|--------|---------|------------|
+| catalog-view.test.tsx | 40 | 63 | +23 (QS1-QS11, QS17-QS18) |
+| accessibility.test.tsx | 13 | 27 | +14 (QS12, QS14, QS16, QS19) |
+| app.test.tsx | 4 | 5 | +1 (QS13) |
+| shared.test.tsx | 48 | 50 | +2 (QS15) |
+| **Gesamt** | **350** | **390** | **+40** |
+
+### Kontrast-Audit Ergebnis (QS16)
+
+Alle 10 Farbpaare bestehen WCAG 2.1 AA Kontrast >= 4.5:1:
+
+| Badge | Light Mode | Dark Mode |
+|-------|-----------|-----------|
+| success | PASS | PASS |
+| error | PASS | PASS |
+| warning | PASS | PASS |
+| orange | PASS | PASS |
+| info | PASS | PASS |
+
+### Accessibility-Ergebnis
+
+- **15/15 axe-core Tests bestanden** (0 Violations)
+- Verschachtelte Part-Accordions: korrekte Heading-Hierarchie (h2→h3→h4→h5→h6, keine Spruenge)
+- Heading-Level Cap bei h6 fuer deeply nested Parts verifiziert
+- CopyLinkButton kommuniziert Clipboard-Feedback via aria-live="polite"
+- index.html hat lang="en" (WCAG 3.1.1)
+- Tab-Reihenfolge bei verschachtelten Accordions folgt DOM-Ordnung

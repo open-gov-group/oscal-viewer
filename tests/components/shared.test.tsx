@@ -3,6 +3,7 @@ import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyBadge, PropertyList } from '@/components/shared/property-badge'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Accordion, AccordionGroup } from '@/components/shared/accordion'
+import { CopyLinkButton } from '@/components/shared/copy-link-button'
 import type { Metadata, Property } from '@/types/oscal'
 
 // ============================================================
@@ -408,5 +409,23 @@ describe('AccordionGroup', () => {
     fireEvent.click(screen.getByText('Expand all'))
     expect(container.querySelector('#a1-content')?.hasAttribute('hidden')).toBe(false)
     expect(container.querySelector('#a2-content')?.hasAttribute('hidden')).toBe(false)
+  })
+})
+
+// ============================================================
+// CopyLinkButton Tests (QS15)
+// ============================================================
+
+describe('CopyLinkButton (QS15)', () => {
+  it('QS15: has aria-live="polite" for clipboard feedback', () => {
+    const { container } = render(<CopyLinkButton viewType="catalog" elementId="ac-1" />)
+    const btn = container.querySelector('.copy-link-btn')
+    expect(btn?.getAttribute('aria-live')).toBe('polite')
+  })
+
+  it('QS15: has descriptive aria-label', () => {
+    const { container } = render(<CopyLinkButton viewType="catalog" elementId="ac-1" />)
+    const btn = container.querySelector('.copy-link-btn')
+    expect(btn?.getAttribute('aria-label')).toBe('Copy link to ac-1')
   })
 })

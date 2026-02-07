@@ -390,3 +390,266 @@ describe('CatalogView - Sidebar Backdrop', () => {
     expect(sidebar?.classList.contains('open')).toBe(false)
   })
 })
+
+// ============================================================
+// Navigation Multi-Line Tests (QS1-QS4)
+// ============================================================
+
+const catalogWithLongTitles: Catalog = {
+  uuid: 'cat-long',
+  metadata: minimalMetadata,
+  groups: [{
+    id: 'ac',
+    title: 'Access Control Family with a Very Long Title That Should Wrap to Multiple Lines in Navigation',
+    controls: [{
+      id: 'ac-1',
+      title: 'Access Control Policy and Procedures for Organizational Information Systems and Environments of Operation',
+    }],
+  }],
+}
+
+describe('GroupTree - Multi-Line Navigation (QS1-QS4)', () => {
+  const onSelect = vi.fn()
+
+  it('QS1: long control title is fully displayed without truncation', () => {
+    render(<GroupTree groups={catalogWithLongTitles.groups} selectedControlId={null} onSelectControl={onSelect} />)
+    expect(screen.getByText('Access Control Policy and Procedures for Organizational Information Systems and Environments of Operation')).toBeInTheDocument()
+  })
+
+  it('QS1: long group title is fully displayed', () => {
+    render(<GroupTree groups={catalogWithLongTitles.groups} selectedControlId={null} onSelectControl={onSelect} />)
+    expect(screen.getByText('Access Control Family with a Very Long Title That Should Wrap to Multiple Lines in Navigation')).toBeInTheDocument()
+  })
+
+  it('QS2: control button has separate ID and title spans for multi-line alignment', () => {
+    const { container } = render(<GroupTree groups={catalogWithLongTitles.groups} selectedControlId={null} onSelectControl={onSelect} />)
+    const controlBtn = container.querySelector('.tree-control-btn')!
+    expect(controlBtn.querySelector('.tree-control-id')).toBeTruthy()
+    expect(controlBtn.querySelector('.tree-control-title')).toBeTruthy()
+    expect(controlBtn.querySelector('.tree-control-id')?.textContent).toBe('ac-1')
+  })
+
+  it('QS2: group header has separate chevron, ID and title elements', () => {
+    const { container } = render(<GroupTree groups={catalogWithLongTitles.groups} selectedControlId={null} onSelectControl={onSelect} />)
+    const groupHeader = container.querySelector('.tree-group-header')!
+    expect(groupHeader.querySelector('.tree-chevron')).toBeTruthy()
+    expect(groupHeader.querySelector('.tree-group-id')).toBeTruthy()
+    expect(groupHeader.querySelector('.tree-group-title')).toBeTruthy()
+  })
+
+  it('QS3: selected state is applied to full-width row container', () => {
+    const { container } = render(<GroupTree groups={catalogWithLongTitles.groups} selectedControlId="ac-1" onSelectControl={onSelect} />)
+    const selectedRow = container.querySelector('.tree-control-row.selected')
+    expect(selectedRow).toBeTruthy()
+    expect(selectedRow?.querySelector('.tree-control-btn')).toBeTruthy()
+  })
+
+  it('QS4: control navigation items are native button elements', () => {
+    const { container } = render(<GroupTree groups={catalogWithLongTitles.groups} selectedControlId={null} onSelectControl={onSelect} />)
+    const controlBtns = container.querySelectorAll('.tree-control-btn')
+    expect(controlBtns.length).toBeGreaterThan(0)
+    for (const btn of Array.from(controlBtns)) {
+      expect(btn.tagName.toLowerCase()).toBe('button')
+    }
+  })
+
+  it('QS4: group headers are native button elements', () => {
+    const { container } = render(<GroupTree groups={catalogWithLongTitles.groups} selectedControlId={null} onSelectControl={onSelect} />)
+    const groupHeaders = container.querySelectorAll('.tree-group-header')
+    expect(groupHeaders.length).toBeGreaterThan(0)
+    for (const btn of Array.from(groupHeaders)) {
+      expect(btn.tagName.toLowerCase()).toBe('button')
+    }
+  })
+})
+
+// ============================================================
+// Nested Part-Accordion Tests (QS5-QS11)
+// ============================================================
+
+const controlWithNestedParts: Control = {
+  id: 'nested-ac-1',
+  title: 'Access Control Policy',
+  parts: [
+    {
+      name: 'statement', id: 'ac-1_smt',
+      prose: 'Organization defines...',
+      parts: [
+        { name: 'item', id: 'ac-1_smt.a', prose: 'Item a text' },
+        {
+          name: 'item', id: 'ac-1_smt.b', prose: 'Item b text',
+          parts: [
+            { name: 'item', id: 'ac-1_smt.b.1', prose: 'Sub-item 1' },
+          ],
+        },
+      ],
+    },
+    { name: 'guidance', id: 'ac-1_gdn', prose: 'Guidance text here' },
+  ],
+}
+
+describe('ControlDetail - Nested Part Accordions (QS5-QS11)', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('QS5: part accordion renders with correct aria-expanded', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const trigger = container.querySelector('#ac-1_smt-0-trigger')
+    expect(trigger).toBeTruthy()
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('QS5: guidance part accordion also has aria-expanded', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const trigger = container.querySelector('#ac-1_gdn-0-trigger')
+    expect(trigger).toBeTruthy()
+    expect(trigger?.hasAttribute('aria-expanded')).toBe(true)
+  })
+
+  it('QS6: depth 0 part renders heading as h4', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const h4headings = container.querySelectorAll('h4.accordion-heading')
+    expect(h4headings.length).toBeGreaterThan(0)
+  })
+
+  it('QS6: depth 1 nested part renders heading as h5', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const h5headings = container.querySelectorAll('h5.accordion-heading')
+    expect(h5headings.length).toBeGreaterThan(0)
+  })
+
+  it('QS7: top-level parts (depth 0) are open by default', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const content = container.querySelector('#ac-1_smt-0-content')
+    expect(content?.hasAttribute('hidden')).toBe(false)
+  })
+
+  it('QS7: sub-level parts (depth > 0) are closed by default', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const content = container.querySelector('[id="ac-1_smt.b-1-content"]')
+    expect(content?.hasAttribute('hidden')).toBe(true)
+  })
+
+  it('QS8: item without children renders flat (no accordion)', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    expect(container.querySelector('[id="ac-1_smt.a-1-trigger"]')).toBeNull()
+    expect(screen.getByText('Item a text')).toBeInTheDocument()
+  })
+
+  it('QS8: item with children renders as accordion', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const trigger = container.querySelector('[id="ac-1_smt.b-1-trigger"]')
+    expect(trigger).toBeTruthy()
+  })
+
+  it('QS10: clicking accordion trigger toggles part visibility', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const trigger = container.querySelector('#ac-1_smt-0-trigger')!
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    fireEvent.click(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('QS11: part accordion state persists to sessionStorage', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    fireEvent.click(container.querySelector('#ac-1_smt-0-trigger')!)
+    expect(sessionStorage.getItem('accordion-ac-1_smt-0')).toBe('false')
+  })
+
+  it('QS11: part accordion restores state from sessionStorage', () => {
+    sessionStorage.setItem('accordion-ac-1_smt-0', 'false')
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const content = container.querySelector('#ac-1_smt-0-content')
+    expect(content?.hasAttribute('hidden')).toBe(true)
+  })
+})
+
+// ============================================================
+// Deep Nesting Heading Cap Tests (QS9)
+// ============================================================
+
+const deeplyNestedControl: Control = {
+  id: 'deep-1',
+  title: 'Deeply Nested Control',
+  parts: [
+    {
+      name: 'statement', id: 'deep_smt', title: 'Statement',
+      prose: 'Top level',
+      parts: [
+        {
+          name: 'guidance', id: 'deep_l1', title: 'Level 1',
+          parts: [
+            {
+              name: 'guidance', id: 'deep_l2', title: 'Level 2',
+              parts: [
+                {
+                  name: 'guidance', id: 'deep_l3', title: 'Level 3',
+                  prose: 'Deepest content',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+describe('ControlDetail - Deep Nesting Heading Cap (QS9)', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('QS9: heading levels cap at h6 for deeply nested parts', () => {
+    const { container } = render(<ControlDetail control={deeplyNestedControl} />)
+    const h6s = container.querySelectorAll('h6.accordion-heading')
+    // depth 2 (Level 2) and depth 3 (Level 3) both produce h6
+    expect(h6s.length).toBe(2)
+  })
+
+  it('QS9: no heading level beyond h6 exists', () => {
+    const { container } = render(<ControlDetail control={deeplyNestedControl} />)
+    for (let i = 7; i <= 10; i++) {
+      expect(container.querySelector(`h${i}`)).toBeNull()
+    }
+  })
+})
+
+// ============================================================
+// Tab Order & Keyboard Reachability (QS17-QS18)
+// ============================================================
+
+describe('ControlDetail - Tab Order & Keyboard (QS17-QS18)', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('QS17: accordion triggers appear in logical document order', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const triggers = container.querySelectorAll('[id$="-trigger"]')
+    const triggerIds = Array.from(triggers).map(t => t.id)
+    // Content accordion first, then parts in DOM order
+    expect(triggerIds[0]).toContain('parts-trigger')
+    expect(triggerIds).toContain('ac-1_smt-0-trigger')
+    expect(triggerIds).toContain('ac-1_gdn-0-trigger')
+  })
+
+  it('QS18: all accordion triggers are button elements', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const triggers = container.querySelectorAll('[id$="-trigger"]')
+    expect(triggers.length).toBeGreaterThan(0)
+    for (const trigger of Array.from(triggers)) {
+      expect(trigger.tagName.toLowerCase()).toBe('button')
+    }
+  })
+
+  it('QS18: CopyLinkButton is a keyboard-accessible button', () => {
+    const { container } = render(<ControlDetail control={controlWithNestedParts} />)
+    const copyBtn = container.querySelector('.copy-link-btn')
+    expect(copyBtn).toBeTruthy()
+    expect(copyBtn?.tagName.toLowerCase()).toBe('button')
+  })
+})

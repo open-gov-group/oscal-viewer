@@ -3,7 +3,7 @@
 **Rolle**: UI/UX Designer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-07
-**Phase**: Dashboard-Redesign (Briefing 01-04 Integration) - Gap-Analyse + ToDos
+**Phase**: Stakeholder-Feedback (Navigation, Nested Parts, IFG/BITV 2.0)
 
 ---
 
@@ -397,6 +397,8 @@ Muessen als CSS Custom Properties formalisiert werden.
 | 2026-02-07 | UI/UX Designer | Architect | Tech Lead Review: CODING_STANDARDS.md v2.0.0 mit 10 Patterns GUT. TL2 (Deep-Linking ADR) kein Blocker - Spec U11 reicht. Empfehlung: Accordion-Pattern + Deep-Link-Pattern nachtraeglich in Standards aufnehmen | Abgeschlossen |
 | 2026-02-07 | UI/UX Designer | Architect | Sprint 2 Design Review: 6/6 FE-Tasks SEHR GUT. 1 CSS-Cleanup (63 Zeilen Dead Code), 2 Minor Issues. 11/24 Gaps geschlossen. Sprint 3 Plan erstellt | Abgeschlossen |
 | 2026-02-07 | UI/UX Designer | Architect | Sprint 3 Design Review: 5/5 Tasks GUT-SEHR GUT. 2 CSS-Fixes (cursor, rgba), 1 Info (AccordionGroup nicht integriert). 13/24 Gaps geschlossen. Alle MUST-Gaps erledigt — bereit fuer Phase 3 | Abgeschlossen |
+| 2026-02-07 | Architect | UI/UX Designer | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel sichtbar, S2: Nested Part-Akkordions, S3: IFG/BITV Kontrast-Audit). Details im Abschnitt "AKTUELLER AUFTRAG" | Aktiv |
+| 2026-02-07 | UI/UX Designer | Architect | Stakeholder-Feedback Review: S1 OK, S2 OK (1 CSS-Fix R12), S3 OK. Kontrast-Audit: 22/22 PASS. B5+B6 Reviews bestanden. Bundle: 14.20 KB JS + 6.36 KB CSS | Abgeschlossen |
 
 ---
 
@@ -1138,3 +1140,274 @@ Alle **MUST-Gaps (G1-G8)** sind geschlossen. Alle **SHOULD-Gaps** ausser G9/G11 
 | 5 | Komponenten-Typ-Icons (Software, Hardware, etc.) | Niedrig | SVG inline |
 | 6 | Dokumenttyp-spezifische Farbvariablen | Niedrig | `--color-catalog`, `--color-profile`, etc. |
 | 7 | Loading State / Skeleton Screens (G11) | Niedrig | Sinnvoll erst bei async Laden (z.B. URL-Import) |
+
+---
+
+## AKTUELLER AUFTRAG: Stakeholder-Feedback (2026-02-07)
+
+**Prioritaet**: HOCH | **Quelle**: Fachverantwortliche nach Review der Live-Version
+**Gesamtbewertung**: "Geht absolut in die richtige Richtung"
+
+Die Fachverantwortlichen haben 3 Verbesserungswuensche identifiziert:
+
+---
+
+### Anforderung S1: Navigation — Gesamttitel sichtbar machen [HOCH]
+
+**Stakeholder-Feedback**: "Navigation immer noch einzeilig — hier Gesamttitel in jeden Eintrag sichtbar machen"
+
+**Ist-Zustand**:
+- `.tree-group-title` und `.tree-control-title`: `text-overflow: ellipsis; white-space: nowrap`
+- Bei langen Titeln (z.B. "Access Control Policy and Procedures") wird der Text abgeschnitten
+- Gleiche Problematik bei `.compdef-component-title`
+
+**Design-Aufgabe**:
+
+1. **CSS-Aenderungen spezifizieren**: Multi-line Wrapping statt Ellipsis
+   - `white-space: normal` statt `nowrap`
+   - `word-wrap: break-word` fuer Umbruch
+   - `align-items: flex-start` auf Parent-Containern (Chevron/ID oben ausrichten)
+   - Vertikaler Abstand zwischen Eintraegen pruefen (padding-bottom ggf. erhoehen)
+
+2. **Visuelles Layout pruefen**:
+   - Tree-Eintraege mit 2-3 Zeilen Titel: Chevron und ID-Badge links oben fixiert
+   - Ausreichender vertikaler Abstand zwischen Eintraegen
+   - Mobile: Touch-Target (44px min-height) weiterhin eingehalten
+   - Selected-State auf mehrzeilige Items anwenden (background-color auf gesamte Hoehe)
+
+3. **Betroffene CSS-Klassen**:
+   - `.tree-group-title` (Catalog Sidebar)
+   - `.tree-control-title` (Catalog Sidebar)
+   - `.compdef-component-title` (CompDef Sidebar)
+   - `.tree-group-header` / `.tree-control-btn` (Parent-Container)
+
+---
+
+### Anforderung S2: Parts als verschachtelte Akkordions [HOCH]
+
+**Stakeholder-Feedback**: "Parts sind noch nicht als Unterakkordions umgesetzt — Control (Akkordion) — darunter Parts (ebenfalls als Akkordion) — genauso Parts in Parts (Unterpart innerhalb des Parent Parts)"
+
+**Ist-Zustand**:
+- `PartView` in `control-detail.tsx` rendert Parts als flache `<div>` Elemente
+- Sub-Parts werden rekursiv gerendert, aber NICHT als Accordions
+- Parts haben keinen Collapse/Expand-Mechanismus
+
+**Design-Spezifikation: Nested Part Accordions**
+
+**Hierarchie**:
+```
+Control "AC-1: Access Control Policy"
+└── [Accordion h3] Content (3 parts)  ← BESTEHEND
+    ├── [Accordion h4] Statement       ← NEU
+    │   ├── [Accordion h5] Item a      ← NEU
+    │   ├── [Accordion h5] Item b      ← NEU
+    │   └── [Accordion h5] Item c      ← NEU
+    ├── [Accordion h4] Guidance        ← NEU
+    └── [Accordion h4] Assessment Objective  ← NEU
+        ├── [Accordion h5] Objective 1  ← NEU
+        └── [Accordion h5] Objective 2  ← NEU
+```
+
+**Visuelle Gestaltung**:
+
+| Ebene | Heading | Einrueckung | Default-State | Visueller Stil |
+|-------|---------|-------------|---------------|----------------|
+| Part depth=0 | h4 | 0 (innerhalb Content-Accordion) | Offen | Standard Accordion (Chevron + Titel + Count) |
+| Part depth=1 | h5 | 1rem padding-left | Geschlossen | Leichterer Stil: kleinere Font-Size, dezenterer Hintergrund |
+| Part depth=2+ | h6 | 2rem padding-left | Geschlossen | Noch dezenter: dotted left-border statt solid |
+
+**CSS-Klassen** (neu zu erstellen in `base.css`):
+```css
+/* Nested accordion depth styling */
+.part-children .accordion { padding-left: 1rem; }
+.part-children .part-children .accordion { padding-left: 0.5rem; }
+
+/* Depth 1: Leichterer Trigger */
+.part-children .accordion-trigger { font-size: 0.9375rem; }
+
+/* Depth 2+: Dezentester Stil */
+.part-children .part-children .accordion-trigger {
+  font-size: 0.875rem;
+  border-left: 2px dotted var(--color-border);
+  padding-left: 0.75rem;
+}
+```
+
+**Sonderfaelle**:
+- Parts mit `name="item"` und OHNE Titel: Flach rendern (kein Accordion), da sie nur Prose enthalten
+- Parts ohne Sub-Parts und ohne Prose: Nicht rendern
+- `formatPartName()` liefert Labels: Statement, Guidance, Assessment Objective, etc.
+
+---
+
+### Anforderung S3: Barrierefreiheit / IFG-Konformitaet [HOCH]
+
+**Stakeholder-Feedback**: "Barrierefreiheit / IFG konform"
+
+**Kontext**: IFG = **Informationsfreiheitsgesetz**. Barrierefreiheit erfordert Einhaltung der:
+- **BITV 2.0** (Barrierefreie-Informationstechnik-Verordnung)
+- **WCAG 2.1 Level AA** (Mindest-Anforderung gemaess BITV 2.0)
+- **EN 301 549** (Europaeische Norm fuer IKT-Barrierefreiheit)
+
+**Deine Aufgaben**:
+
+#### B4: Kontrast-Audit
+
+Alle folgenden Farb-Kombinationen systematisch pruefen (Minimum 4.5:1 Normaltext, 3:1 grosse Schrift):
+
+| Text-Token | Hintergrund-Token | Light-Werte | Dark-Werte |
+|------------|-------------------|-------------|------------|
+| `--color-text` | `--color-bg` | #1f2937 auf #ffffff | #f9fafb auf #111827 |
+| `--color-text-secondary` | `--color-bg` | #6b7280 auf #ffffff | #9ca3af auf #111827 |
+| `--color-text` | `--color-bg-elevated` | #1f2937 auf #ffffff | #f9fafb auf #1f2937 |
+| `--color-status-success-text` | `-success-bg` | #166534 auf #dcfce7 | #86efac auf #052e16 |
+| `--color-status-error-text` | `-error-bg` | #991b1b auf #fee2e2 | #fca5a5 auf #450a0a |
+| `--color-status-warning-text` | `-warning-bg` | #854d0e auf #fef9c3 | #fde68a auf #422006 |
+| `--color-status-info-text` | `-info-bg` | #1e40af auf #dbeafe | #93c5fd auf #172554 |
+| `--color-accent-purple-text` | `-purple-bg` | #6b21a8 auf #f0e6ff | #c4b5fd auf #2e1065 |
+| `--color-accent-amber-text` | `-amber-bg` | #92400e auf #fef3c7 | #fcd34d auf #451a03 |
+
+→ Ergebnis: Pass/Fail Report, Dark-Mode-Korrekturen bei Bedarf
+
+#### B5: Nested Accordion visuelles Design reviewen
+
+- Heading-Hierarchie (h3 → h4 → h5 → h6) auf Konsistenz pruefen
+- Visuelle Unterscheidung der Tiefenebenen ausreichend?
+- Einrueckung lesbar ohne zu viel horizontalen Platz zu verschwenden?
+
+#### B6: Navigation Multi-Line Review
+
+- Mehrzeilige Titel in Sidebar: Sind Chevron/ID korrekt oben ausgerichtet?
+- Selected-State bei mehrzeiligen Items: Background korrekt auf volle Hoehe?
+- Abstand zwischen Items ausreichend?
+
+---
+
+## Ergebnisse: Stakeholder-Feedback Design Review (2026-02-07)
+
+### S1: Navigation Multi-Line Titel — REVIEW
+
+**FE-Umsetzung**: CSS-only Aenderungen in `base.css`
+
+| CSS-Klasse | Aenderung | Bewertung |
+|------------|-----------|-----------|
+| `.tree-group-title` | `white-space: normal; word-wrap: break-word; overflow: visible` | GUT |
+| `.tree-control-title` | Identisch | GUT |
+| `.compdef-component-title` | Identisch | GUT |
+| `.tree-group-header` | `align-items: flex-start` (Chevron oben) | GUT |
+| `.tree-control-btn` | `align-items: flex-start` (ID oben) | GUT |
+| `.tree-control-row` | `align-items: flex-start` | GUT |
+| `.compdef-component-item` | `align-items: flex-start` | GUT |
+| Mobile Touch-Targets | `min-height: 44px` beibehalten | GUT |
+
+**Ergebnis**: KEINE ISSUES. Multi-Line Wrapping korrekt, Chevron/ID oben ausgerichtet, Selected-State deckt volle Hoehe ab, Touch-Targets eingehalten.
+
+---
+
+### S2: Nested Part Accordions — REVIEW
+
+**FE-Umsetzung**: `PartView` in `control-detail.tsx` umgebaut zu rekursiven Accordions.
+
+| Aspekt | Umsetzung | Bewertung |
+|--------|-----------|-----------|
+| Heading-Hierarchie | h3(Content) → h4(depth=0) → h5(depth=1) → h6(depth=2+) | KORREKT |
+| `defaultOpen` | depth=0 offen, depth>0 geschlossen | GUT |
+| Flat-Rendering | Parts ohne Titel und ohne Kinder → flaches `<div>` | GUT |
+| `formatPartName()` | Statement, Guidance, Assessment Objective, Overview, etc. | GUT |
+| Font-Size Cascade | 0.875rem → 0.75rem → 0.6875rem (pro Tiefe) | GUT |
+| Left-Border Nesting | `.part-children` mit `border-left: 2px solid` | GUT |
+| Session-Persist | Ueber bestehende Accordion-Logik | GUT |
+
+**Gefundene Issues**:
+
+| # | Issue | Schwere | Fix |
+|---|-------|---------|-----|
+| R12 | Depth 2+ dotted border: CSS targetete `.accordion` (kein border-left), statt `.part-children` Container | Mittel | **BEHOBEN**: `.part-children .part-children { border-left-style: dotted; }` |
+| R13 | Accordion ID `${partId}-${depth}` kann kollidieren wenn mehrere Parts gleichen Namen haben (z.B. zwei "item" Parts bei depth=1) | Niedrig | Empfehlung: Index in ID einbauen: `${partId}-${depth}-${i}` |
+
+---
+
+### S3: IFG/BITV Konformitaet — REVIEW
+
+| # | Anforderung | WCAG | Umsetzung | Bewertung |
+|---|-------------|------|-----------|-----------|
+| A1 | `lang="en"` auf `<html>` | 3.1.1 | ✅ In `index.html` gesetzt | GUT |
+| A2 | Heading-Hierarchie konsistent | 1.3.1 | ✅ h2→h3→h4→h5→h6 durch Part-Accordions | GUT |
+| A3 | ARIA Landmarks | 1.3.1 | ✅ `<header role="banner">`, `<main>`, `<aside>`, `<footer>` | GUT |
+| A5 | Tastatur-Zugang | 2.1.1 | ✅ Nested Accordions per Enter/Space, Tab-Reihenfolge logisch | GUT |
+| A6 | Status-Aenderungen | 4.1.3 | ✅ `aria-live="polite"` auf CopyLinkButton | GUT |
+
+---
+
+### B4: Kontrast-Audit (WCAG 2.1 AA / BITV 2.0)
+
+**Ergebnis: ALLE 22 KOMBINATIONEN BESTEHEN**
+
+#### Light Mode
+
+| Token-Kombination | Hex-Werte | Kontrast | Ergebnis |
+|-------------------|-----------|----------|----------|
+| `--color-text` auf `--color-bg` | #1f2937 / #ffffff | 14.68:1 | PASS |
+| `--color-text-secondary` auf `--color-bg` | #6b7280 / #ffffff | 4.83:1 | PASS (knapp) |
+| `--color-text` auf `--color-bg-elevated` | #1f2937 / #ffffff | 14.68:1 | PASS |
+| Success: Text auf Bg | #166534 / #dcfce7 | 6.49:1 | PASS |
+| Error: Text auf Bg | #991b1b / #fee2e2 | 6.80:1 | PASS |
+| Warning: Text auf Bg | #854d0e / #fef9c3 | 6.38:1 | PASS |
+| Info: Text auf Bg | #1e40af / #dbeafe | 7.15:1 | PASS |
+| Purple: Text auf Bg | #6b21a8 / #f0e6ff | 7.25:1 | PASS |
+| Amber: Text auf Bg | #92400e / #fef3c7 | 6.37:1 | PASS |
+
+#### Dark Mode
+
+| Token-Kombination | Hex-Werte | Kontrast | Ergebnis |
+|-------------------|-----------|----------|----------|
+| `--color-text` auf `--color-bg` | #f9fafb / #111827 | 16.98:1 | PASS |
+| `--color-text-secondary` auf `--color-bg` | #9ca3af / #111827 | 6.99:1 | PASS |
+| `--color-text` auf `--color-bg-elevated` | #f9fafb / #1f2937 | 14.05:1 | PASS |
+| Success: Text auf Bg | #86efac / #052e16 | 10.62:1 | PASS |
+| Error: Text auf Bg | #fca5a5 / #450a0a | 8.51:1 | PASS |
+| Warning: Text auf Bg | #fde68a / #422006 | 11.70:1 | PASS |
+| Info: Text auf Bg | #93c5fd / #172554 | 8.15:1 | PASS |
+| Purple: Text auf Bg | #c4b5fd / #2e1065 | 8.25:1 | PASS |
+| Amber: Text auf Bg | #fcd34d / #451a03 | 10.39:1 | PASS |
+
+#### Zusaetzliche Kombinationen
+
+| Token-Kombination | Hex-Werte | Kontrast | Ergebnis |
+|-------------------|-----------|----------|----------|
+| Link (light) | #1a56db / #ffffff | 6.18:1 | PASS |
+| Link (dark) | #60a5fa / #111827 | 6.98:1 | PASS |
+| Secondary auf bg-secondary (light) | #6b7280 / #f9fafb | 4.63:1 | PASS (knapp) |
+| Secondary auf bg-secondary (dark) | #9ca3af / #1f2937 | 5.78:1 | PASS |
+
+**Fazit**: Kein Korrekturbedarf. Knappste Werte bei `--color-text-secondary` (4.83:1 light, 4.63:1 auf bg-secondary) — beide ueber dem AA-Minimum von 4.5:1.
+
+---
+
+### B5: Nested Accordion Design Review
+
+| Kriterium | Ergebnis |
+|-----------|----------|
+| Heading-Hierarchie (h3→h4→h5→h6) | ✅ Konsistent, keine Ebenen uebersprungen |
+| Visuelle Unterscheidung der Tiefenebenen | ✅ Ausreichend durch Font-Size-Abstufung + Left-Border |
+| Einrueckung | ✅ 1rem pro Ebene — lesbar ohne horizontalen Platzverbrauch |
+| Depth 2+ dotted border | ✅ Nach Fix R12 jetzt korrekt |
+
+---
+
+### B6: Navigation Multi-Line Review
+
+| Kriterium | Ergebnis |
+|-----------|----------|
+| Chevron/ID oben ausgerichtet | ✅ `align-items: flex-start` auf allen Containern |
+| Selected-State volle Hoehe | ✅ `background-color` auf `.tree-control-row.selected` deckt gesamte Zeile |
+| Abstand zwischen Items | ✅ Padding 0.5rem/0.375rem ausreichend |
+| Touch-Targets | ✅ min-height 44px im Mobile Responsive |
+
+---
+
+### Build nach Fixes
+
+- Bundle: 14.20 KB JS + 6.36 KB CSS gzipped
+- TypeScript: 0 Errors
+- Tests: 350/350 bestanden

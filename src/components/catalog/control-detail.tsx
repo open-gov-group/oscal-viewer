@@ -137,27 +137,41 @@ interface PartViewProps {
 
 const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
   const partLabel = formatPartName(part.name)
+  const title = part.title ?? partLabel
+  const hasChildren = part.parts && part.parts.length > 0
+  const partId = part.id ?? part.name
+
+  // Parts without title and without children → flat content
+  if (!title && !hasChildren) {
+    return (
+      <div class={`part-view part-${part.name}`}>
+        {part.prose && <div class="part-prose">{part.prose}</div>}
+        {part.props && part.props.length > 0 && <PropertyList props={part.props} />}
+      </div>
+    )
+  }
+
+  // Parts with title or children → nested Accordion
+  const headingLevel = Math.min(4 + depth, 6) as 4 | 5 | 6
 
   return (
-    <div class={`part-view part-${part.name}`}>
-      {(part.title ?? partLabel) && (
-        <h4 class="part-title">
-          {part.title ?? partLabel}
-        </h4>
-      )}
-      {part.prose && (
-        <div class="part-prose">{part.prose}</div>
-      )}
-      {part.props && part.props.length > 0 && (
-        <PropertyList props={part.props} />
-      )}
-      {part.parts && part.parts.length > 0 && (
-        <div class="part-children">
-          {part.parts.map((child, i) => (
-            <PartView key={child.id ?? `${child.name}-${i}`} part={child} depth={depth + 1} />
-          ))}
-        </div>
-      )}
+    <div class={`part-view part-${part.name}`} data-depth={depth}>
+      <Accordion
+        id={`${partId}-${depth}`}
+        title={title || part.name}
+        defaultOpen={depth === 0}
+        headingLevel={headingLevel}
+      >
+        {part.prose && <div class="part-prose">{part.prose}</div>}
+        {part.props && part.props.length > 0 && <PropertyList props={part.props} />}
+        {hasChildren && (
+          <div class="part-children">
+            {part.parts!.map((child, i) => (
+              <PartView key={child.id ?? `${child.name}-${i}`} part={child} depth={depth + 1} />
+            ))}
+          </div>
+        )}
+      </Accordion>
     </div>
   )
 }

@@ -25,6 +25,7 @@ export const CopyLinkButton: FunctionComponent<CopyLinkButtonProps> = ({ viewTyp
       class={`copy-link-btn ${copied ? 'copied' : ''}`}
       onClick={handleCopy}
       aria-label={copied ? 'Link copied' : `Copy link to ${elementId}`}
+      aria-live="polite"
       title={copied ? 'Link copied!' : 'Copy link'}
     >
       {copied ? (

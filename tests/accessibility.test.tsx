@@ -269,3 +269,178 @@ describe('Accessibility - SearchBar Combobox', () => {
     expect(axeResults).toHaveNoViolations()
   })
 })
+
+// ============================================================
+// Accessibility Tests - Nested Part Accordions (QS12)
+// ============================================================
+
+describe('Accessibility - Nested Part Accordions (QS12)', () => {
+  const nestedControl: Control = {
+    id: 'qs12-ac-1',
+    title: 'Access Control Policy',
+    parts: [
+      {
+        name: 'statement', id: 'qs12-smt',
+        prose: 'Organization defines...',
+        parts: [
+          { name: 'item', id: 'qs12-smt.a', prose: 'Item a text' },
+          {
+            name: 'item', id: 'qs12-smt.b', prose: 'Item b text',
+            parts: [
+              { name: 'item', id: 'qs12-smt.b.1', prose: 'Sub-item 1' },
+            ],
+          },
+        ],
+      },
+      { name: 'guidance', id: 'qs12-gdn', prose: 'Guidance text...' },
+    ],
+  }
+
+  it('QS12: ControlDetail with nested parts has no a11y violations', async () => {
+    const { container } = render(<ControlDetail control={nestedControl} />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+// ============================================================
+// Accessibility Tests - Heading Hierarchy (QS14)
+// ============================================================
+
+describe('Accessibility - Heading Hierarchy (QS14)', () => {
+  const nestedControl: Control = {
+    id: 'qs14-ac-1',
+    title: 'Access Control Policy',
+    parts: [
+      {
+        name: 'statement', id: 'qs14-smt',
+        prose: 'Organization defines...',
+        parts: [
+          { name: 'item', id: 'qs14-smt.a', prose: 'Item a' },
+          {
+            name: 'item', id: 'qs14-smt.b', prose: 'Item b',
+            parts: [
+              { name: 'item', id: 'qs14-smt.b.1', prose: 'Sub-item 1' },
+            ],
+          },
+        ],
+      },
+      { name: 'guidance', id: 'qs14-gdn', prose: 'Guidance text' },
+    ],
+  }
+
+  it('QS14: heading levels do not skip (no h2 to h4 jump)', () => {
+    const { container } = render(<ControlDetail control={nestedControl} />)
+    const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
+    const levels = Array.from(headings).map(h => parseInt(h.tagName[1]))
+
+    for (let i = 1; i < levels.length; i++) {
+      const jump = levels[i] - levels[i - 1]
+      expect(jump).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('QS14: heading hierarchy includes h2, h3, h4 in correct sequence', () => {
+    const { container } = render(<ControlDetail control={nestedControl} />)
+    const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
+    const uniqueLevels = [...new Set(Array.from(headings).map(h => parseInt(h.tagName[1])))].sort()
+    expect(uniqueLevels).toContain(2)
+    expect(uniqueLevels).toContain(3)
+    expect(uniqueLevels).toContain(4)
+  })
+})
+
+// ============================================================
+// Accessibility Tests - Contrast Ratio (QS16)
+// ============================================================
+
+describe('Accessibility - Status Badge Contrast (QS16)', () => {
+  function hexToLinear(hex: string): [number, number, number] {
+    const h = hex.replace('#', '')
+    const toLinear = (c: number): number => {
+      const srgb = c / 255
+      return srgb <= 0.04045 ? srgb / 12.92 : Math.pow((srgb + 0.055) / 1.055, 2.4)
+    }
+    return [
+      toLinear(parseInt(h.substring(0, 2), 16)),
+      toLinear(parseInt(h.substring(2, 4), 16)),
+      toLinear(parseInt(h.substring(4, 6), 16)),
+    ]
+  }
+
+  function luminance(hex: string): number {
+    const [r, g, b] = hexToLinear(hex)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+
+  function contrastRatio(fg: string, bg: string): number {
+    const l1 = luminance(fg)
+    const l2 = luminance(bg)
+    const lighter = Math.max(l1, l2)
+    const darker = Math.min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+  }
+
+  const lightPairs = [
+    { name: 'success', fg: '#166534', bg: '#dcfce7' },
+    { name: 'error', fg: '#991b1b', bg: '#fee2e2' },
+    { name: 'warning', fg: '#854d0e', bg: '#fef9c3' },
+    { name: 'orange', fg: '#9a3412', bg: '#ffedd5' },
+    { name: 'info', fg: '#1e40af', bg: '#dbeafe' },
+  ]
+
+  const darkPairs = [
+    { name: 'success', fg: '#86efac', bg: '#052e16' },
+    { name: 'error', fg: '#fca5a5', bg: '#450a0a' },
+    { name: 'warning', fg: '#fde68a', bg: '#422006' },
+    { name: 'orange', fg: '#fdba74', bg: '#431407' },
+    { name: 'info', fg: '#93c5fd', bg: '#172554' },
+  ]
+
+  for (const pair of lightPairs) {
+    it(`QS16: light mode ${pair.name} badge contrast >= 4.5:1`, () => {
+      const ratio = contrastRatio(pair.fg, pair.bg)
+      expect(ratio).toBeGreaterThanOrEqual(4.5)
+    })
+  }
+
+  for (const pair of darkPairs) {
+    it(`QS16: dark mode ${pair.name} badge contrast >= 4.5:1`, () => {
+      const ratio = contrastRatio(pair.fg, pair.bg)
+      expect(ratio).toBeGreaterThanOrEqual(4.5)
+    })
+  }
+})
+
+// ============================================================
+// Accessibility Tests - Full Audit with Nested Parts (QS19)
+// ============================================================
+
+describe('Accessibility - Full Audit with Nested Parts (QS19)', () => {
+  it('QS19: CatalogView with nested-parts control has no a11y violations', async () => {
+    const nestedCatalog: Catalog = {
+      uuid: 'cat-qs19',
+      metadata,
+      groups: [{
+        id: 'ac',
+        title: 'Access Control',
+        controls: [{
+          id: 'qs19-ac-1',
+          title: 'Access Control Policy',
+          parts: [
+            {
+              name: 'statement', id: 'qs19-smt',
+              prose: 'Organization defines...',
+              parts: [
+                { name: 'item', id: 'qs19-smt.a', prose: 'Item a' },
+              ],
+            },
+          ],
+        }],
+      }],
+    }
+    const { container } = render(<CatalogView catalog={nestedCatalog} />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})

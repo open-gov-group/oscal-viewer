@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { render } from '@testing-library/preact'
 import { App } from '@/app'
 
@@ -29,5 +31,16 @@ describe('App - Skip Link', () => {
     const { container } = render(<App />)
     const header = container.querySelector('[role="banner"]')
     expect(header).toBeTruthy()
+  })
+})
+
+// ============================================================
+// App - Language Attribute Tests (QS13)
+// ============================================================
+
+describe('App - Language Attribute (QS13)', () => {
+  it('QS13: index.html has lang="en" attribute on html element', () => {
+    const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8')
+    expect(indexHtml).toMatch(/<html[^>]*\slang="en"/)
   })
 })

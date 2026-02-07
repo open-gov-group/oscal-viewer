@@ -159,11 +159,50 @@ updates:
 | 2026-02-06 | DevOps Engineer | Architect | Phase 2 Umsetzung: Bundle Size Gate, CI/CD, Dependabot | Erledigt |
 | 2026-02-06 | Architect | DevOps Engineer | UI/UX Overhaul deployed (Commit a567973), Bundle 20.69 KB | Info |
 | 2026-02-06 | Architect | DevOps Engineer | UX Redesign: Full-Width + Sticky Sidebar (CSS-only). Bundle auf 16.30 KB aktualisiert | Info |
-| 2026-02-07 | Architect | DevOps Engineer | Dashboard-Redesign (3 Sprints) abgeschlossen. Deployment angefordert. Details siehe unten | Aktiv |
+| 2026-02-07 | Architect | DevOps Engineer | Dashboard-Redesign (3 Sprints) abgeschlossen. Deployment angefordert. Details siehe unten | Erledigt |
+| 2026-02-07 | DevOps Engineer | Architect | Dashboard-Redesign deployed. Commit `7d45658`, 36 Dateien, 350 Tests, 25.03 KB Bundle. Live auf GitHub Pages verifiziert | Erledigt |
+| 2026-02-07 | Architect | DevOps Engineer | Stakeholder-Feedback: 3 Verbesserungswuensche (Navigation, Nested Accordions, IFG). Deployment nach Umsetzung angefordert | Info |
 
 ---
 
-## AKTUELLER AUFTRAG: Dashboard-Redesign Deployment
+## ANSTEHEND: Stakeholder-Feedback Deployment
+
+**Datum**: 2026-02-07 | **Prioritaet**: NACH UMSETZUNG
+**Status**: Wartet auf Umsetzung durch Frontend Developer
+
+### Hintergrund
+
+Die Fachverantwortlichen haben die Live-Version (Dashboard-Redesign) reviewed und 3 Verbesserungswuensche:
+1. **Navigation**: Titel vollstaendig anzeigen (kein Ellipsis)
+2. **Verschachtelte Akkordions**: Parts innerhalb Controls als rekursive Accordions
+3. **IFG-Konformitaet**: BITV 2.0 / WCAG 2.1 AA Compliance
+
+### Erwartete Aenderungen
+
+| Bereich | Dateien | Aenderungen |
+|---------|---------|-------------|
+| CSS | `base.css` | Navigation Multi-Line, Nested Accordion Depth Styles |
+| TSX | `control-detail.tsx` | PartView → Accordion Refactor |
+| HTML | `index.html` | `lang="en"` Attribut |
+| a11y | Diverse | `aria-live` auf CopyLinkButton |
+
+### Erwarteter Bundle-Impact
+
+- CSS: +0.1 KB gzipped (Navigation Wrapping, Nested Accordion Styles)
+- JS: +0.1 KB gzipped (PartView Accordion statt div)
+- **Total**: ~0.2 KB Zuwachs → ~20.6 KB (weit unter 100 KB)
+
+### Deployment-Anweisungen (nach Umsetzung)
+
+1. Architect fuehrt Vorab-Verifikation durch (TypeScript, Tests, Build, Bundle)
+2. Commit und Push auf `origin/main`
+3. GitHub Actions `deploy.yml` wird automatisch ausgeloest
+4. Bundle Size Gate muss bestehen (< 100 KB)
+5. GitHub Pages Deployment verifizieren
+
+---
+
+## ABGESCHLOSSEN: Dashboard-Redesign Deployment
 
 **Datum**: 2026-02-07 | **Prioritaet**: HOCH
 

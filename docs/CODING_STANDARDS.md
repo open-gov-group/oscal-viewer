@@ -1,7 +1,7 @@
 # OSCAL Viewer - Coding Standards
 
-**Version**: 3.0.0
-**Gueltig ab**: Phase 2 (Deep-Link / Filter / Accordion Update)
+**Version**: 3.1.0
+**Gueltig ab**: Stakeholder-Feedback (Pattern 16, BITV 2.0)
 
 ---
 
@@ -395,6 +395,77 @@ import { Accordion, AccordionGroup } from '@/components/shared/accordion'
 - `count` optional: zeigt Zaehler neben dem Titel
 - Zustand wird in `sessionStorage` persistiert (bleibt innerhalb Tab-Sitzung)
 
+### 5.7 Nested Accordion Pattern (Referenz: `control-detail.tsx`, PartView)
+
+Rekursive Verschachtelung von Accordions fuer hierarchische OSCAL-Parts.
+Heading-Level steigt automatisch mit der Tiefe (h4 -> h5 -> h6, max h6).
+
+```tsx
+interface PartViewProps {
+  part: Part
+  depth?: number
+}
+
+const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
+  const title = part.title ?? formatPartName(part.name)
+  const hasChildren = part.parts && part.parts.length > 0
+
+  // Flache Darstellung fuer Parts ohne Titel und ohne Kinder
+  if (!title && !hasChildren) {
+    return (
+      <div class={`part-view part-${part.name}`}>
+        {part.prose && <div class="part-prose">{part.prose}</div>}
+      </div>
+    )
+  }
+
+  // Heading-Level: h4 bei depth=0, h5 bei depth=1, max h6
+  const headingLevel = Math.min(4 + depth, 6) as 4 | 5 | 6
+
+  return (
+    <div class={`part-view part-${part.name}`} data-depth={depth}>
+      <Accordion
+        id={`${part.id ?? part.name}-${depth}`}
+        title={title || part.name}
+        defaultOpen={depth === 0}
+        headingLevel={headingLevel}
+      >
+        {part.prose && <div class="part-prose">{part.prose}</div>}
+        {hasChildren && (
+          <div class="part-children">
+            {part.parts!.map((child, i) => (
+              <PartView key={child.id ?? `${child.name}-${i}`} part={child} depth={depth + 1} />
+            ))}
+          </div>
+        )}
+      </Accordion>
+    </div>
+  )
+}
+```
+
+**Regeln:**
+- Heading-Hierarchie darf keine Ebene ueberspringen (h2 -> h3 -> h4, nicht h2 -> h4)
+- Maximale Tiefe: h6 (depth >= 3 bleibt bei h6)
+- `depth=0` standardmaessig geoeffnet (`defaultOpen={true}`), tiefere Ebenen geschlossen
+- Parts ohne Titel UND ohne Kinder werden flach (ohne Accordion) gerendert
+- CSS: `.part-children` hat `border-left: 2px dotted var(--color-border)` als visuelle Verschachtelung
+
+### 5.8 CSS fuer verschachtelte Parts
+
+```css
+.part-children {
+  margin-left: 0.5rem;
+  padding-left: 1rem;
+  border-left: 2px dotted var(--color-border);
+}
+
+.part-prose {
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+```
+
 ---
 
 ## 6. Shared Components Uebersicht
@@ -419,3 +490,67 @@ import { Accordion, AccordionGroup } from '@/components/shared/accordion'
 - Commit-Messages: `<type>: <beschreibung>` (z.B. `feat: implement profile renderer`)
   - Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
 - Kleine, fokussierte Commits
+
+---
+
+## 8. Barrierefreiheit / BITV 2.0
+
+Der OSCAL Viewer erfuellt die Anforderungen der BITV 2.0 (basierend auf WCAG 2.1 AA).
+
+### 8.1 Sprache (WCAG 3.1.1)
+
+Die Dokumentsprache MUSS in `index.html` gesetzt sein:
+
+```html
+<html lang="en">
+```
+
+### 8.2 Heading-Hierarchie (WCAG 1.3.1)
+
+- Headings MUESSEN eine lueckenlose Hierarchie bilden: h1 -> h2 -> h3 -> h4 -> h5 -> h6
+- Keine Ebene ueberspringen (z.B. h2 -> h4 ist ein Verstoss)
+- `Accordion`-Komponente: `headingLevel` Prop bestimmt das semantische Level
+- Verschachtelte Accordions: `Math.min(4 + depth, 6)` garantiert korrekte Hierarchie
+
+### 8.3 Kontrast (WCAG 1.4.3 / 1.4.11)
+
+- Normaler Text: Kontrast >= 4.5:1 gegen Hintergrund
+- Grosser Text (>= 18pt / >= 14pt bold): Kontrast >= 3:1
+- UI-Komponenten und Grafiken: Kontrast >= 3:1
+- Alle Farbwerte MUESSEN ueber CSS-Variablen definiert sein (siehe 4.2)
+- Kontrast-Audit: 22/22 relevante Paarungen bestehen (Stand: Stakeholder-Feedback)
+- Ausnahme: Deaktivierter Text (`--color-text-disabled`) ist bewusst kontrastarm (WCAG 1.4.3 Ausnahme fuer inaktive Elemente)
+
+### 8.4 Status-Nachrichten (WCAG 4.1.3)
+
+Dynamische Statusaenderungen MUESSEN per `aria-live` angekuendigt werden:
+
+```tsx
+// Korrekt: CopyLinkButton mit aria-live
+<span class="copy-link-feedback" aria-live="polite">Copied!</span>
+
+// Korrekt: Suchresultate mit aria-live
+<div aria-live="polite">{count} results found</div>
+```
+
+- `aria-live="polite"` fuer nicht-dringende Updates (Kopier-Feedback, Filterergebnisse)
+- `aria-live="assertive"` nur fuer kritische Fehler
+
+### 8.5 Tastaturbedienbarkeit (WCAG 2.1.1 / 2.4.7)
+
+- Alle interaktiven Elemente MUESSEN per Tastatur erreichbar sein
+- `:focus-visible` Styles DUERFEN NICHT entfernt werden
+- Roving Tabindex fuer Tab-Listen (siehe 5.1)
+- ArrowUp/ArrowDown fuer Combobox-Navigation (siehe 5.2)
+- Enter/Space fuer Accordion-Toggle (nativ durch `<button>`)
+
+### 8.6 Checkliste fuer BITV 2.0 Konformitaet
+
+- [ ] `lang` Attribut auf `<html>` gesetzt
+- [ ] Heading-Hierarchie lueckenlos (h1 -> h2 -> ... -> h6)
+- [ ] Alle Farben ueber CSS-Variablen (keine hardcoded Werte)
+- [ ] Kontrast >= 4.5:1 fuer normalen Text
+- [ ] `aria-live` fuer dynamische Statusaenderungen
+- [ ] `:focus-visible` Styles vorhanden
+- [ ] Tastaturnavigation fuer alle interaktiven Elemente
+- [ ] axe-core Tests in der Testsuite

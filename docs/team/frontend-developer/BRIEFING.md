@@ -3,7 +3,7 @@
 **Rolle**: Frontend Developer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-07
-**Phase**: Sprint 3 ABGESCHLOSSEN - Alle UI/UX Designer Aufgaben erledigt
+**Phase**: Stakeholder-Feedback Umsetzung (Navigation, Nested Parts, IFG)
 
 ---
 
@@ -164,6 +164,7 @@ tests/
 | 2026-02-06 | Frontend Developer | Architect | Phase 2 komplett: alle 4 Issues implementiert, 70 Tests, 14.39 KB Bundle | Erledigt |
 | 2026-02-06 | Architect | Frontend Developer | UI/UX Overhaul: Material Design, a11y, Responsive (Commit a567973). Neue Patterns beachten: CSS-Variablen, Sidebar-Toggle, ARIA Tabs | Info |
 | 2026-02-06 | Architect | Frontend Developer | UX Redesign: Full-Width Layout + Sticky Sidebar (CSS-only, keine TSX-Aenderungen). Neues Layout-Pattern beachten | Info |
+| 2026-02-07 | Architect | Frontend Developer | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel, S2: Part-Akkordions, S3: IFG/BITV). Details im Abschnitt "AKTUELLER AUFTRAG" | Aktiv |
 
 ---
 
@@ -331,3 +332,172 @@ Alle FE-Aufgaben aus dem UI/UX Designer Briefing sind umgesetzt. Verbleibend im 
 - G9: Nav Pane breiter + resizable (Backlog)
 - G11: Loading State / Skeleton Screens (Backlog)
 - G17: Virtualisierung fuer grosse Dokumente (Backlog)
+
+---
+
+## AKTUELLER AUFTRAG: Stakeholder-Feedback (2026-02-07)
+
+**Prioritaet**: HOCH | **Quelle**: Fachverantwortliche nach Review der Live-Version
+**Gesamtbewertung**: "Geht absolut in die richtige Richtung"
+
+Die Fachverantwortlichen haben 3 Verbesserungswuensche identifiziert:
+
+---
+
+### Aufgabe S1: Navigation — Gesamttitel sichtbar machen [HOCH]
+
+**Problem**: Navigationstitel werden einzeilig dargestellt und bei langen Titeln abgeschnitten (`text-overflow: ellipsis`). Der vollstaendige Titel soll in jedem Eintrag sichtbar sein.
+
+**Betroffene Stellen**:
+
+| Datei | CSS-Klasse | Aktuell | Aenderung |
+|-------|-----------|---------|-----------|
+| `base.css` | `.tree-group-title` (Zeile ~917-922) | `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` | `white-space: normal; word-wrap: break-word; overflow: visible` |
+| `base.css` | `.tree-control-title` (Zeile ~998-1002) | `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` | `white-space: normal; word-wrap: break-word; overflow: visible` |
+| `base.css` | `.compdef-component-title` (Zeile ~1554-1558) | `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` | `white-space: normal; word-wrap: break-word; overflow: visible` |
+
+**TSX-Aenderungen**: Vermutlich keine noetig (reines CSS).
+
+**Layout-Anpassungen**:
+- `.tree-group-header` und `.tree-control-btn`: `align-items: center` → `align-items: flex-start` (damit Chevron/ID oben bleibt bei mehrzeiligen Titeln)
+- `.tree-control-row`: eventuell `align-items: flex-start` statt `center`
+- Min-Height beibehalten fuer Touch-Targets (44px mobile)
+- Padding-Unterseite pruefen fuer visuellen Abstand zwischen Eintraegen
+
+**Risiko**: Niedrig (CSS-only, keine Logik-Aenderungen)
+
+---
+
+### Aufgabe S2: Parts als verschachtelte Akkordions [HOCH]
+
+**Problem**: Parts innerhalb von Controls werden aktuell als flache `<div>`-Elemente gerendert (`PartView` in `control-detail.tsx`). Die Fachverantwortlichen wuenschen eine rekursive Accordion-Struktur:
+
+```
+Control (Accordion — bereits vorhanden: "Content")
+└── Part: Statement (Accordion)
+    └── Part: Item a (Accordion)
+    └── Part: Item b (Accordion)
+        └── Part: Sub-Item (Accordion)
+└── Part: Guidance (Accordion)
+└── Part: Assessment Objective (Accordion)
+```
+
+**Betroffene Datei**: `src/components/catalog/control-detail.tsx`
+
+**Aktuelle Implementierung** (Zeile 138-163):
+```tsx
+const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
+  // Rendert als flache <div>, NICHT als Accordion
+  // Rekursive Sub-Parts ebenfalls als <div>
+}
+```
+
+**Gewuenschte Implementierung**:
+```tsx
+const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
+  const partLabel = formatPartName(part.name)
+  const title = part.title ?? partLabel
+  const hasContent = !!(part.prose || part.props?.length || part.parts?.length || part.links?.length)
+
+  // headingLevel: h4 fuer depth=0, h5 fuer depth=1, h6 fuer depth=2, max h6
+  const headingLevel = Math.min(4 + depth, 6) as 4 | 5 | 6
+
+  // Kein Titel und kein verschachtelter Inhalt → flach rendern (z.B. "item" Parts)
+  if (!title && !part.parts?.length) {
+    return (
+      <div class="part-view part-inline">
+        {part.prose && <div class="part-prose">{part.prose}</div>}
+      </div>
+    )
+  }
+
+  return (
+    <Accordion
+      id={`${part.id ?? part.name}-${depth}`}
+      title={title || part.name}
+      count={part.parts?.length}
+      defaultOpen={depth === 0}  // Top-Level Parts offen
+      headingLevel={headingLevel}
+    >
+      {part.prose && <div class="part-prose">{part.prose}</div>}
+      {part.props && part.props.length > 0 && <PropertyList props={part.props} />}
+      {part.links && part.links.length > 0 && (
+        <ul class="links-list">
+          {part.links.map((link, i) => (
+            <li key={`${link.href}-${i}`}>
+              <a href={link.href} rel="noopener noreferrer">{link.text ?? link.href}</a>
+            </li>
+          ))}
+        </ul>
+      )}
+      {part.parts && part.parts.length > 0 && (
+        <div class="part-children">
+          {part.parts.map((child, i) => (
+            <PartView key={child.id ?? `${child.name}-${i}`} part={child} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </Accordion>
+  )
+}
+```
+
+**Heading-Hierarchie-Limit**:
+- Control-Header: `<h2>`
+- Content-Accordion: `<h3>` (bestehend)
+- Part depth=0: `<h4>` (Statement, Guidance, Assessment)
+- Part depth=1: `<h5>` (Items a, b, c)
+- Part depth=2+: `<h6>` (Sub-Items — max HTML-Level)
+- Tiefer als h6: weiterhin h6 verwenden (HTML-Limit)
+
+**Accordion-Verhalten**:
+- Top-Level Parts (depth=0): `defaultOpen={true}` (z.B. Statement)
+- Sub-Parts (depth>0): `defaultOpen={false}` (collapsed)
+- Session-Persist ueber bestehende Accordion-Logik (sessionStorage)
+- Parts ohne Titel (z.B. `name="item"` mit leerer formatPartName) als flacher Content rendern
+
+**ID-Schema fuer Accordion**: `{partId ?? partName}-{depth}` — muss innerhalb eines Controls eindeutig sein
+
+**Risiko**: Mittel (rekursive Komponentenlogik, Heading-Hierarchie beachten)
+
+---
+
+### Aufgabe S3: Barrierefreiheit / IFG-Konformitaet [HOCH]
+
+**Hintergrund**: Die Loesung soll konform zum **Informationsfreiheitsgesetz (IFG)** sein. Das bedeutet Einhaltung der **BITV 2.0** (Barrierefreie-Informationstechnik-Verordnung), die auf **WCAG 2.1 AA** und **EN 301 549** basiert.
+
+**Aktueller Stand**: Viele a11y-Anforderungen sind bereits umgesetzt (Skip-Link, Focus-Visible, ARIA Tabs/Combobox/TreeView, axe-core Tests). Folgende Luecken muessen geschlossen werden:
+
+| # | Anforderung | WCAG | Aktueller Stand | Aenderung |
+|---|-------------|------|-----------------|-----------|
+| A1 | `lang`-Attribut auf `<html>` | 3.1.1 | Nicht gesetzt | `lang="en"` in `index.html` setzen |
+| A2 | Heading-Hierarchie konsistent | 1.3.1 | Teilweise — Parts haben `<h4>` ohne umschliessenden `<h3>` in manchen Faellen | Durch Part-Accordions (S2) behoben |
+| A3 | ARIA Landmarks vollstaendig | 1.3.1 | `<main>`, `<nav>`, `<header>` vorhanden, `<aside>` vorhanden | Pruefen: `role="banner"` auf Header, `<footer>` oder `role="contentinfo"` falls noetig |
+| A4 | Kontrast-Pruefung alle Farb-Tokens | 1.4.3 | 31 Token definiert, Dark Mode vorhanden | Systematische Kontrastpruefung aller Text-auf-Hintergrund Kombinationen |
+| A5 | Tastatur-Zugang vollstaendig | 2.1.1 | TreeView, Tabs, Combobox, Accordion — alle mit Keyboard | Nested Accordions: Enter/Space zum Oeffnen, Tab-Reihenfolge logisch |
+| A6 | Status-Aenderungen kommuniziert | 4.1.3 | StatusBadge hat `aria-hidden` auf Icon | Clipboard-Feedback: `aria-live="polite"` Region ergaenzen |
+| A7 | Fehler-Identifikation | 3.3.1 | Error-State mit `role="alert"` | Bereits konform |
+
+**Umsetzung**:
+1. `lang="en"` in `index.html` auf `<html>` Tag setzen (1 Zeile)
+2. Nested Accordion Heading-Hierarchie durch S2 sicherstellen
+3. `aria-live="polite"` auf CopyLinkButton Feedback
+4. Systematische Kontrast-Pruefung mit dem QA Engineer abstimmen
+
+**Risiko**: Niedrig (additive ARIA-Attribute, keine Logik-Aenderungen)
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Geschaetzter Aufwand | Abhaengigkeit |
+|---|---------|---------------------|---------------|
+| 1 | S1: Navigation Titel (CSS) | Klein | Keine |
+| 2 | S2: Parts als Akkordions (TSX) | Mittel | Keine |
+| 3 | S3: IFG/BITV a11y-Fixes | Klein | S2 (Heading-Hierarchie) |
+
+### Build-Erwartung
+
+- Bundle-Impact: ~0.2 KB gzipped (CSS-Aenderungen + PartView-Refactor)
+- Tests: Bestehende 350 Tests muessen bestehen, neue Tests fuer nested Parts
+- axe-core: 0 neue Violations
