@@ -3,7 +3,7 @@
 **Rolle**: DevOps Engineer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-07
-**Phase**: Dashboard-Redesign (3 Sprints) ABGESCHLOSSEN - Deployment angefordert
+**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
 
 ---
 
@@ -161,14 +161,16 @@ updates:
 | 2026-02-06 | Architect | DevOps Engineer | UX Redesign: Full-Width + Sticky Sidebar (CSS-only). Bundle auf 16.30 KB aktualisiert | Info |
 | 2026-02-07 | Architect | DevOps Engineer | Dashboard-Redesign (3 Sprints) abgeschlossen. Deployment angefordert. Details siehe unten | Erledigt |
 | 2026-02-07 | DevOps Engineer | Architect | Dashboard-Redesign deployed. Commit `7d45658`, 36 Dateien, 350 Tests, 25.03 KB Bundle. Live auf GitHub Pages verifiziert | Erledigt |
-| 2026-02-07 | Architect | DevOps Engineer | Stakeholder-Feedback: 3 Verbesserungswuensche (Navigation, Nested Accordions, IFG). Deployment nach Umsetzung angefordert | Info |
+| 2026-02-07 | Architect | DevOps Engineer | Stakeholder-Feedback: Deployment angefordert | Erledigt |
+| 2026-02-07 | DevOps Engineer | Architect | Stakeholder-Feedback deployed. Commit `e2c8f28`, 13 Dateien, 390 Tests, 25.19 KB Bundle | Erledigt |
+| 2026-02-07 | Architect | DevOps Engineer | Phase 3 Briefing: Issues #8-#10 (PWA, Doku, npm Package). Details im Abschnitt "AKTUELLER AUFTRAG Phase 3" | Aktiv |
 
 ---
 
-## ANSTEHEND: Stakeholder-Feedback Deployment
+## ABGESCHLOSSEN: Stakeholder-Feedback Deployment
 
-**Datum**: 2026-02-07 | **Prioritaet**: NACH UMSETZUNG
-**Status**: Wartet auf Umsetzung durch Frontend Developer
+**Datum**: 2026-02-07 | **Prioritaet**: HOCH
+**Status**: Deployed und verifiziert
 
 ### Hintergrund
 
@@ -382,3 +384,257 @@ Commit und Deploy der Dashboard-Redesign Aenderungen (3 Sprints) auf GitHub Page
 - Tests: 254 bestanden, 86.88% Coverage
 - Build: 18.83 KB total gzipped (Limit: 100 KB)
 - Alle Workflows syntaktisch korrekt
+
+---
+
+## Stakeholder-Feedback Deployment - Zusammenfassung (ABGESCHLOSSEN)
+
+| Metrik | Ergebnis |
+|--------|----------|
+| Commit | `e2c8f28` |
+| Dateien | 13 geaendert |
+| Tests | 390 bestanden |
+| Bundle | 14.20 KB JS + 6.36 KB CSS = 25.19 KB gzipped |
+| Deploy | GitHub Pages, Live verifiziert |
+
+---
+
+## AKTUELLER AUFTRAG: Phase 3 (2026-02-07)
+
+**Prioritaet**: HOCH | **Issues**: #8, #9, #10
+**Aktueller Stand**: 25.19 KB gzipped, 390 Tests, CI/CD voll funktionsfaehig
+
+Phase 3 hat signifikante DevOps-Aufgaben — insbesondere fuer PWA und npm Package:
+
+---
+
+### Issue #8: Progressive Web App (PWA) — DevOps-Aufgaben [HOCH]
+
+#### DO-P1: Service Worker Deployment [HOCH]
+
+**Hintergrund**: `vite-plugin-pwa` generiert einen Service Worker (`sw.js`) beim Build. Dieser muss korrekt auf GitHub Pages deployed werden.
+
+**Aenderungen an `deploy.yml`**:
+
+1. **SW-Scope pruefen**: Service Worker muss vom Root der Site (`/oscal-viewer/`) served werden
+2. **Cache-Busting**: Vite generiert gehashte Dateinamen → SW-Precache wird automatisch aktualisiert
+3. **Headers**: GitHub Pages setzt keine speziellen SW-Headers — Standard reicht
+4. **Verifizierung**: Nach Deploy pruefen ob `sw.js` unter `https://open-gov-group.github.io/oscal-viewer/sw.js` erreichbar ist
+
+**Risiko**: Niedrig — `vite-plugin-pwa` kuemmert sich um SW-Generierung, Vite Build inkludiert SW automatisch in `dist/`.
+
+---
+
+#### DO-P2: Lighthouse CI einrichten [HOCH]
+
+**Neuer Workflow**: `.github/workflows/lighthouse.yml` (NEU)
+
+```yaml
+name: Lighthouse CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Run Lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          uploadArtifacts: true
+          configPath: '.lighthouserc.json'
+```
+
+**Lighthouse Config**: `.lighthouserc.json` (NEU)
+
+```json
+{
+  "ci": {
+    "collect": {
+      "staticDistDir": "./dist"
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["warn", { "minScore": 0.9 }],
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
+        "categories:best-practices": ["warn", { "minScore": 0.9 }],
+        "categories:pwa": ["warn", { "minScore": 0.9 }]
+      }
+    }
+  }
+}
+```
+
+**Quality Gates**:
+- Accessibility Score >= 95: **Error** (Blockiert Merge)
+- Performance Score >= 90: **Warning**
+- PWA Score >= 90: **Warning**
+- Best Practices >= 90: **Warning**
+
+---
+
+#### DO-P3: PWA-spezifische CI-Checks [MITTEL]
+
+**Neue Steps in `ci.yml`** (PR-Workflow):
+
+```yaml
+- name: Check PWA manifest
+  run: |
+    if [ ! -f dist/manifest.json ]; then
+      echo "::error::manifest.json not found in dist/"
+      exit 1
+    fi
+    # Validate JSON
+    node -e "JSON.parse(require('fs').readFileSync('dist/manifest.json', 'utf8'))"
+
+- name: Check Service Worker
+  run: |
+    if [ ! -f dist/sw.js ]; then
+      echo "::error::Service Worker (sw.js) not found in dist/"
+      exit 1
+    fi
+```
+
+---
+
+### Issue #9: Dokumentation — DevOps-Aufgaben [NIEDRIG]
+
+#### DO-D1: Broken Link Check [NIEDRIG]
+
+**Optionaler CI-Step**: Markdown-Link-Checker fuer CONTRIBUTING.md, README.md, CHANGELOG.md
+
+```yaml
+- name: Check markdown links
+  uses: gaurav-nelson/github-action-markdown-link-check@v1
+  with:
+    folder-path: '.'
+    file-extension: '.md'
+    config-file: '.markdown-link-check.json'
+```
+
+**Prioritaet**: Niedrig — kann spaeter hinzugefuegt werden.
+
+---
+
+### Issue #10: npm Package — DevOps-Aufgaben [HOCH]
+
+#### DO-N1: npm Publish Pipeline [HOCH]
+
+**Neuer Workflow**: `.github/workflows/publish.yml` (NEU)
+
+```yaml
+name: Publish npm Package
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@open-gov-group'
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:lib
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+**Trigger**: GitHub Release erstellen → automatischer npm publish
+
+**Registry**: GitHub Packages (kostenlos fuer oeffentliche Repos, kein npm Account noetig)
+
+**Alternative**: npmjs.com Registry — erfordert npm-Token als GitHub Secret
+
+---
+
+#### DO-N2: Package Build in CI [MITTEL]
+
+**Neue Steps in `ci.yml`** (PR-Workflow):
+
+```yaml
+- name: Build npm package
+  run: npm run build:lib
+
+- name: Check package size
+  run: |
+    PACK_SIZE=$(npm pack --dry-run 2>&1 | grep 'total files' | awk '{print $NF}')
+    echo "Package size: $PACK_SIZE"
+```
+
+**Quality Gate**: Package-Groesse < 10 KB (Parser + Types ohne UI-Code)
+
+---
+
+#### DO-N3: Package Version Management [MITTEL]
+
+**Strategie**:
+- App-Version (`package.json`): Inkrementiert bei App-Releases
+- Package-Version: Inkrementiert NUR bei Parser/Types-Aenderungen
+- Empfehlung: `npm version patch/minor/major` manuell vor Release
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Issue | Geschaetzter Aufwand | Abhaengigkeit |
+|---|---------|-------|---------------------|---------------|
+| 1 | DO-P1: SW Deployment verifizieren | #8 | Klein | Nach FE-P3 (vite-plugin-pwa) |
+| 2 | DO-P3: PWA CI-Checks | #8 | Klein | Nach FE-P1 (manifest.json) |
+| 3 | DO-N1: npm Publish Pipeline | #10 | Mittel | Nach FE-N1 + TL-N2 |
+| 4 | DO-N2: Package Build in CI | #10 | Klein | Nach DO-N1 |
+| 5 | DO-P2: Lighthouse CI | #8 | Mittel | Nach DO-P1 |
+| 6 | DO-D1: Link Check (optional) | #9 | Klein | Keine |
+| 7 | DO-N3: Version Management | #10 | Klein | Nach DO-N1 |
+
+### Bundle-Entwicklung (aktualisiert)
+
+| Version | JS (gzip) | CSS (gzip) | Total | Tests |
+|---------|-----------|------------|-------|-------|
+| Phase 1 | 12.54 KB | - | 12.54 KB | 43 |
+| Phase 2 | 14.44 KB | 4.39 KB | 18.83 KB | 254 |
+| UI/UX Overhaul | 15.14 KB | 5.51 KB | 20.69 KB | 254 |
+| UX Redesign | 10.71 KB | 5.59 KB | 16.30 KB | 254 |
+| Dashboard-Redesign | 18.75 KB | 6.28 KB | 25.03 KB | 350 |
+| Stakeholder-Feedback | 14.20 KB | 6.36 KB | 25.19 KB | 390 |
+| **Phase 3 (erwartet)** | **~14.5 KB** | **~6.4 KB** | **~25.5 KB** | **~420** |
+
+**Budget-Nutzung**: 25.19 / 100 KB = 25.2% (74.8 KB Spielraum)
+
+### Performance-Budgets (aktualisiert)
+
+| Metrik | Limit | Aktuell | Phase 3 Ziel |
+|--------|-------|---------|-------------|
+| Bundle Size (gzipped) | < 100 KB | 25.19 KB | < 30 KB |
+| First Contentful Paint | < 1.5s | Nicht gemessen | Lighthouse >= 90 |
+| Lighthouse Performance | > 90 | Nicht gemessen | >= 90 |
+| Lighthouse Accessibility | > 95 | Nicht gemessen | >= 95 |
+| Lighthouse PWA | > 90 | N/A | >= 90 |
+
+### Neue CI/CD Workflows nach Phase 3
+
+| Workflow | Datei | Trigger | Zweck |
+|----------|-------|---------|-------|
+| Deploy (bestehend) | `deploy.yml` | Push to main | Build + Deploy GitHub Pages |
+| CI (bestehend) | `ci.yml` | Pull Request | TypeScript + Tests + Bundle Gate |
+| **Lighthouse (NEU)** | `lighthouse.yml` | Push + PR | Performance + a11y + PWA Scores |
+| **Publish (NEU)** | `publish.yml` | GitHub Release | npm Package veroeffentlichen |

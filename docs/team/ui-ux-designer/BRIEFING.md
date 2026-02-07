@@ -3,7 +3,7 @@
 **Rolle**: UI/UX Designer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-07
-**Phase**: Stakeholder-Feedback (Navigation, Nested Parts, IFG/BITV 2.0)
+**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
 
 ---
 
@@ -399,6 +399,7 @@ Muessen als CSS Custom Properties formalisiert werden.
 | 2026-02-07 | UI/UX Designer | Architect | Sprint 3 Design Review: 5/5 Tasks GUT-SEHR GUT. 2 CSS-Fixes (cursor, rgba), 1 Info (AccordionGroup nicht integriert). 13/24 Gaps geschlossen. Alle MUST-Gaps erledigt — bereit fuer Phase 3 | Abgeschlossen |
 | 2026-02-07 | Architect | UI/UX Designer | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel sichtbar, S2: Nested Part-Akkordions, S3: IFG/BITV Kontrast-Audit). Details im Abschnitt "AKTUELLER AUFTRAG" | Aktiv |
 | 2026-02-07 | UI/UX Designer | Architect | Stakeholder-Feedback Review: S1 OK, S2 OK (1 CSS-Fix R12), S3 OK. Kontrast-Audit: 22/22 PASS. B5+B6 Reviews bestanden. Bundle: 14.20 KB JS + 6.36 KB CSS | Abgeschlossen |
+| 2026-02-07 | Architect | UI/UX Designer | Phase 3 Briefing: Issues #8-#10 (PWA, Doku, npm Package). Details im Abschnitt "AKTUELLER AUFTRAG Phase 3" | Aktiv |
 
 ---
 
@@ -1411,3 +1412,319 @@ Alle folgenden Farb-Kombinationen systematisch pruefen (Minimum 4.5:1 Normaltext
 - Bundle: 14.20 KB JS + 6.36 KB CSS gzipped
 - TypeScript: 0 Errors
 - Tests: 350/350 bestanden
+
+---
+
+## Stakeholder-Feedback - Zusammenfassung (ABGESCHLOSSEN)
+
+| Aufgabe | Ergebnis |
+|---------|----------|
+| S1: Navigation Multi-Line | CSS-only Wrapping, Chevron/ID oben, Touch-Targets OK |
+| S2: Nested Part Accordions | Rekursives Accordion, h4→h5→h6, dotted border (R12 Fix) |
+| S3: IFG/BITV 2.0 Kontrast-Audit | 22/22 PASS (Light + Dark), knappste Werte 4.63:1 (>4.5:1) |
+
+**Build**: 14.20 KB JS + 6.36 KB CSS gzipped | 390 Tests | Commit: `e2c8f28`
+
+---
+
+## AKTUELLER AUFTRAG: Phase 3 (2026-02-07)
+
+**Prioritaet**: HOCH | **Issues**: #8, #9, #10
+**Aktueller Stand**: 14.20 KB JS + 6.36 KB CSS gzipped, 390 Tests, BITV 2.0 konform
+
+Phase 3 umfasst 3 Issues mit jeweils UI/UX-relevanten Aufgaben:
+
+---
+
+### Issue #8: Progressive Web App (PWA) — UI/UX Aufgaben [HOCH]
+
+#### UX-P1: App-Icon Design [HOCH]
+
+Das App-Icon wird als PWA-Icon (Homescreen, Taskbar) und als Favicon verwendet.
+
+**Anforderungen**:
+- **Favicon SVG**: Einfaches, skalierbares Icon (fuer Browser-Tab)
+- **192x192 PNG**: Standard-Icon fuer Mobile-Homescreen
+- **512x512 PNG**: Splash-Screen
+- **512x512 Maskable PNG**: Safe Zone (innerhalb 80% Kreis) fuer Android Adaptive Icons
+
+**Design-Vorgaben**:
+- Primaerfarbe: `--color-primary` (#1a365d) als Hintergrund
+- Weisses Symbol auf dunklem Grund (analog zur AppBar)
+- Symbol: Stilisiertes Dokument oder OSCAL-bezogenes Motiv
+- Kein Text im Icon (zu klein bei 192px)
+- Kontrast auf weissem UND dunklem Hintergrund pruefen
+
+**Formate**: SVG (Favicon) + PNG 192/512 (PWA) + PNG 512 Maskable
+
+---
+
+#### UX-P2: PWA Install-Erlebnis [MITTEL]
+
+**Design-Spezifikation fuer "Install App" Prompt**:
+
+- Browser-nativer Install-Prompt (kein eigener Button noetig in v1)
+- Optional in spaeterer Iteration: Dezenter "Install App" Button in der AppBar oder als Banner
+- Kein aggressiver Prompt — Nutzer sollen die App organisch entdecken
+
+---
+
+#### UX-P3: Offline-Status Anzeige [MITTEL]
+
+**Design-Spezifikation**:
+
+- **Banner bei Offline**: Dezentes Info-Banner unterhalb der AppBar
+  - Text: "You are offline. Previously loaded documents are still available."
+  - Hintergrund: `var(--color-status-info-bg)`, Text: `var(--color-status-info-text)`
+  - Schliessbar via X-Button
+  - `role="status"`, `aria-live="polite"` fuer Screen-Reader
+- **Bei Online-Rueckkehr**: Banner verschwindet automatisch
+
+**Keine visuellen Aenderungen noetig fuer**:
+- Datei-Upload (funktioniert offline, da lokal)
+- Suchfunktion (funktioniert offline, da lokal)
+- Alle Views (funktionieren offline, da kein Backend)
+
+---
+
+#### UX-P4: PWA Update-Toast [NIEDRIG]
+
+**Design-Spezifikation**:
+
+- Toast-Nachricht am unteren Bildschirmrand
+- Text: "New version available. Tap to update."
+- Hintergrund: `var(--color-primary)`, Text: weiss
+- Aktion: Klick/Tap laedt die Seite neu
+- Verschwindet nach 10 Sekunden oder nach Interaktion
+
+---
+
+### Issue #9: Dokumentation — UI/UX Aufgaben [MITTEL]
+
+#### UX-D1: BITV 2.0 Barrierefreiheitserklaerung [HOCH]
+
+**Hintergrund**: BITV 2.0 verlangt eine **Erklaerung zur Barrierefreiheit** auf der Webseite. Dies ist eine Pflichtangabe fuer oeffentliche Stellen.
+
+**Inhalt** (als Markdown-Datei `docs/ACCESSIBILITY_STATEMENT.md`):
+1. Stand der Barrierefreiheit (vollstaendig/teilweise/nicht konform)
+2. Bekannte Einschraenkungen (z.B. dynamisch geladene Inhalte)
+3. Feedback-Mechanismus (E-Mail oder GitHub Issues)
+4. Durchsetzungsverfahren (Verweis auf Schlichtungsstelle)
+
+**Design-Entscheidung**: Link zur Barrierefreiheitserklaerung im Footer oder in der AppBar als sekundaerer Link.
+
+---
+
+#### UX-D2: Dokumentationsseite pruefen [NIEDRIG]
+
+- README.md als "Landing Page" auf GitHub — dort ist bereits alles vorhanden
+- Falls User-Guide erstellt wird: Design muss nicht aufwendig sein (reines Markdown)
+- Keine eigene Doku-UI noetig (Viewer ist selbsterklaerend)
+
+---
+
+### Issue #10: npm Package — UI/UX Aufgaben [NIEDRIG]
+
+Keine direkten UI/UX-Aufgaben. Das npm Package exportiert Parser und Types — keine visuellen Komponenten.
+
+**Optional**: README.md des npm-Pakets koennte ein Code-Beispiel mit Screenshot enthalten.
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Issue | Geschaetzter Aufwand | Abhaengigkeit |
+|---|---------|-------|---------------------|---------------|
+| 1 | UX-P1: App-Icon Design | #8 | Mittel | Keine |
+| 2 | UX-P3: Offline-Status Banner | #8 | Klein | Keine |
+| 3 | UX-P4: PWA Update Toast | #8 | Klein | Keine |
+| 4 | UX-D1: Barrierefreiheitserklaerung | #9 | Mittel | Keine |
+| 5 | UX-P2: Install-Erlebnis | #8 | Klein | UX-P1 |
+
+### Verbleibende Backlog-Items aus Dashboard-Redesign
+
+Diese Punkte bleiben im Backlog und koennten in Phase 3 parallel adressiert werden:
+
+| # | Aufgabe | Prio | Kontext |
+|---|---------|------|---------|
+| 1 | Manueller Dark Mode Toggle (G23) | Mittel | Fuer PWA — Nutzer-Praeferenz persistieren |
+| 2 | Sidebar Close-Animation | Niedrig | CSS transition statt instant display:none |
+| 3 | Loading State / Skeleton Screens (G11) | Niedrig | Sinnvoll erst bei async Laden |
+
+---
+
+## Ergebnisse: Phase 3 Design Review (2026-02-07)
+
+### Uebersicht
+
+Phase 3 umfasst Issues #8 (PWA), #9 (Dokumentation), #10 (npm Package). Die FE-Umsetzung wurde gegen die Spec im Briefing geprueft.
+
+**Build nach Review**: 15.26 KB JS + 6.47 KB CSS gzipped | 390 Tests | 0 TS Errors
+
+---
+
+### UX-P1: App-Icon Design — REVIEW
+
+**3 SVG-Dateien erstellt:**
+
+| Datei | Zweck | Viewbox | Bewertung |
+|-------|-------|---------|-----------|
+| `public/favicon.svg` | Browser-Tab | 64x64 | GUT |
+| `public/icons/icon.svg` | PWA Homescreen | 512x512 | GUT |
+| `public/icons/icon-maskable.svg` | Android Adaptive | 512x512 | GUT |
+
+**Design-Bewertung**:
+- Motiv: Stilisiertes Dokument (Seiten + Textzeilen) mit blauem Checkmark-Kreis unten rechts
+- Erkennbarkeit: Klar bei 64px (Favicon) und 512px (PWA), Symbol transportiert "Dokument + Validierung"
+- Farbschema: `#1a365d` (Navy) + `#2b6cb0` (Accent-Blau) + `#fafafa` (Weiss)
+- Maskable Safe Zone: Content innerhalb 80%-Kreis — korrekt eingehalten
+- Kontrast: Navy auf weissem/dunklem Hintergrund gut sichtbar
+
+**Gefundene Issues**:
+
+| # | Issue | Schwere | Empfehlung |
+|---|-------|---------|------------|
+| R14 | Icon-Farbe `#1a365d` ≠ CSS `--color-primary` (#1a56db) | Mittel | Icons verwenden dunkleres Navy als die App. Fuer Konsistenz: entweder Icons auf `#1a56db` anpassen ODER akzeptieren, dass das App-Icon bewusst dunkler ist als die Header-Farbe |
+| R15 | Nur SVG-Icons, keine PNG-Fallbacks (192/512) | Niedrig | Chromium und moderne Browser unterstuetzen SVG in manifest. Safari/iOS liest ohnehin keine Manifest-Icons. Akzeptabel fuer v1, PNG-Generierung als Backlog |
+| R16 | Kein `<link rel="apple-touch-icon">` in index.html | Mittel | iOS/Safari zeigt kein PWA-Icon ohne apple-touch-icon. Empfehlung: PNG-Icon generieren und als apple-touch-icon einbinden |
+
+---
+
+### UX-P3: Offline-Status Anzeige — REVIEW
+
+**FE-Umsetzung**: Offline-Detection via `navigator.onLine` + Event-Listener, Banner unterhalb Header.
+
+| Aspekt | Spec | Umsetzung | Bewertung |
+|--------|------|-----------|-----------|
+| Banner-Text | "You are offline..." | Identisch | GUT |
+| Farben | `--color-status-info-bg/text` | ~~`--color-warning-bg` (undefiniert!)~~ | **BEHOBEN** → Info-Farben |
+| `role="status"` | Ja | Ja | GUT |
+| Auto-Dismiss bei Reconnect | Ja | Ja (via Event-Listener) | GUT |
+| X-Button zum Schliessen | Ja | Nicht implementiert | HINWEIS |
+
+**Behobene Issues**:
+
+| # | Issue | Schwere | Fix |
+|---|-------|---------|-----|
+| R17 | `.offline-banner` verwendete undefinierte CSS-Variablen (`--color-warning-bg`, `--color-warning-border`, `--color-warning-text`) mit Hardcoded-Fallbacks. Diese Tokens existieren NICHT in `:root` — die definierten heissen `--color-status-warning-*` | Mittel | **BEHOBEN**: Auf `var(--color-status-info-bg)` und `var(--color-status-info-text)` umgestellt. Semantisch korrekt: Offline ist informativ (App funktioniert weiterhin), nicht warnend |
+
+**Offene Punkte**:
+
+| # | Issue | Schwere | Empfehlung |
+|---|-------|---------|------------|
+| R18 | Kein X-Button zum Schliessen (Spec: "Schliessbar via X-Button") | Niedrig | Optional in naechster Iteration — Banner ist dezent und auto-dismiss funktioniert |
+
+---
+
+### UX-P4: PWA Update Toast — REVIEW
+
+**FE-Umsetzung**: CSS fuer `.pwa-toast` vorbereitet, VitePWA mit `registerType: 'autoUpdate'`.
+
+| Aspekt | Spec | Umsetzung | Bewertung |
+|--------|------|-----------|-----------|
+| Position | Unten rechts | `fixed; bottom: 1rem; right: 1rem` | GUT |
+| Background | `var(--color-primary)` | `var(--color-primary)` | GUT |
+| Text-Farbe | Weiss | `#fff` | GUT |
+| Border-Radius | Design Token | `var(--border-radius)` | GUT |
+| Box-Shadow | — | `rgba(0, 0, 0, 0.2)` (hardcoded) | AKZEPTABEL |
+| Button-Overlay | — | `rgba(255, 255, 255, 0.2)` | AKZEPTABEL (White-on-Primary Pattern) |
+| z-index | — | `1000` | GUT (ueber Header z-index 50) |
+
+**Bewertung**: Toast-CSS ist solide. Die hardcodierten `rgba`-Werte fuer Shadow und Button-Overlay sind gaengige Patterns fuer Floating-Elemente auf farbigem Hintergrund — kein Handlungsbedarf.
+
+---
+
+### Manifest.json + VitePWA Config — REVIEW
+
+**manifest.json**:
+
+| Feld | Wert | Bewertung |
+|------|------|-----------|
+| `name` | "OSCAL Viewer" | GUT |
+| `short_name` | "OSCAL" | GUT (max 12 Zeichen) |
+| `description` | "Browser-based viewer for NIST OSCAL documents" | GUT |
+| `start_url` | "/oscal-viewer/" | GUT (passt zu Vite `base`) |
+| `display` | "standalone" | GUT (PWA ohne Browser-Chrome) |
+| `background_color` | "#fafafa" | GUT (passt zu `--color-bg-secondary`) |
+| `theme_color` | "#1a365d" | INKONSISTENT (s. R19) |
+| Icons | SVG-only | AKZEPTABEL (s. R15) |
+
+**Gefundene Issues**:
+
+| # | Issue | Schwere | Empfehlung |
+|---|-------|---------|------------|
+| R19 | `theme_color` im Manifest (#1a365d) ≠ `<meta name="theme-color">` in index.html (#1a56db). Browser verwendet den Meta-Tag (korrekt = Header-Farbe). Manifest sollte angleichen | Mittel | Manifest `theme_color` auf `#1a56db` aendern ODER bewusst als Designentscheidung dokumentieren |
+
+**VitePWA Config**:
+
+| Aspekt | Bewertung |
+|--------|-----------|
+| `registerType: 'autoUpdate'` | GUT (nahtlose Updates) |
+| `manifest: false` (externes manifest.json) | GUT |
+| `globPatterns: ['**/*.{js,css,html,svg,png,woff2}']` | GUT (alle Assets gecacht) |
+| Google Fonts Caching (StaleWhileRevalidate + CacheFirst) | GUT |
+| Service Worker generiert (8 Precache-Entries, 111 KB) | GUT |
+
+---
+
+### Issue #10: npm Package (`src/lib/index.ts`) — REVIEW
+
+| Aspekt | Bewertung |
+|--------|-----------|
+| 56 Typ-Exporte (alle `type`-Exporte, kein Runtime-Cost) | GUT |
+| 6 Parser-Funktionsgruppen exportiert | GUT |
+| Framework-unabhaengig (kein Preact-Import) | GUT |
+| Tree-Shaking moeglich (individuelle Exporte) | GUT |
+| Keine visuellen Komponenten (nur Domain-Layer) | GUT — entspricht ADR-003 |
+
+**Keine Issues gefunden.** Public API ist sauber und minimal.
+
+---
+
+### Issue #9: Dokumentation (CONTRIBUTING.md) — REVIEW
+
+| Aspekt | Bewertung |
+|--------|-----------|
+| Prerequisites + Setup | GUT (Node 18+, 4 Zeilen) |
+| Commands-Tabelle | GUT (6 Befehle) |
+| Architektur-Uebersicht | GUT (3-Schichten + Import-Regeln) |
+| "How to Add a New OSCAL Renderer" | GUT (4 Schritte mit Code-Beispielen) |
+| Code Conventions | GUT (6 Punkte) |
+| PR Process | GUT (Standard 6-Schritt Workflow) |
+| Lizenz-Hinweis | GUT |
+
+**Keine Issues gefunden.** CONTRIBUTING.md ist vollstaendig und praxisnah.
+
+---
+
+### UX-D1: Barrierefreiheitserklaerung — STATUS
+
+`docs/ACCESSIBILITY_STATEMENT.md` wurde **NICHT erstellt**. Dies ist eine UX-Designer-Aufgabe (mein Verantwortungsbereich) und wird als naechster Schritt bearbeitet.
+
+---
+
+### Phase 3 Review — Zusammenfassung
+
+| Aufgabe | Ergebnis | Issues |
+|---------|----------|--------|
+| UX-P1: App-Icon Design | 3 SVG-Icons, klares Motiv, Safe Zone korrekt | R14 (Farbe), R15 (kein PNG), R16 (kein apple-touch-icon) |
+| UX-P3: Offline-Banner | Funktional, auto-dismiss | R17 (CSS-Fix angewandt), R18 (kein X-Button) |
+| UX-P4: PWA Toast | Solide CSS-Vorbereitung | Keine |
+| Manifest + VitePWA | Korrekte Konfiguration | R19 (theme_color Inkonsistenz) |
+| npm Package | Saubere Public API | Keine |
+| CONTRIBUTING.md | Vollstaendig | Keine |
+| ACCESSIBILITY_STATEMENT.md | Nicht erstellt | UX-D1 offen |
+
+**Behobene Issues**: R17 (Offline-Banner CSS-Variablen → `--color-status-info-*`)
+
+**Offene Empfehlungen fuer FE-Dev**:
+
+| # | Empfehlung | Prio | Aufwand |
+|---|-----------|------|---------|
+| 1 | Manifest `theme_color` auf `#1a56db` angleichen (R19) | Mittel | 1 Zeile |
+| 2 | `<link rel="apple-touch-icon">` in index.html (R16) | Mittel | 1 Zeile + PNG |
+| 3 | Icon-Farben auf `#1a56db` pruefen/angleichen (R14) | Niedrig | 3 Dateien |
+| 4 | Offline-Banner X-Button (R18) | Niedrig | ~10 Zeilen TSX + CSS |
+| 5 | PNG-Fallback-Icons generieren (R15) | Niedrig | Build-Script |
+
+**Build**: 15.26 KB JS + 6.47 KB CSS gzipped | 390 Tests | 0 TS Errors

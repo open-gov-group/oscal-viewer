@@ -360,6 +360,48 @@ body {
   color: var(--color-error);
 }
 
+/* Offline Banner */
+.offline-banner {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-status-info-bg);
+  border-bottom: 1px solid var(--color-status-info-text);
+  color: var(--color-status-info-text);
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+/* PWA Update Toast */
+.pwa-toast {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-primary);
+  color: #fff;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.pwa-toast button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-family: inherit;
+}
+
+.pwa-toast button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 /* Footer */
 .footer {
   padding: 1.5rem 2rem;

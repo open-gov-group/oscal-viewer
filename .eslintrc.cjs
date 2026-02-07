@@ -71,6 +71,24 @@ module.exports = {
       },
     },
     // -------------------------------------------------------
+    // Layer Rule: src/lib/ - Package Entry Point (Domain Layer)
+    // May import from types/ and parser/, but NOT from hooks/ or components/
+    // Ensures the npm package stays framework-independent (ADR-007)
+    // -------------------------------------------------------
+    {
+      files: ['src/lib/**/*.ts'],
+      rules: {
+        'no-restricted-imports': ['error', {
+          patterns: [
+            { group: ['@/hooks/*', '@/hooks'], message: 'lib/ must not import from hooks/ (package must stay framework-independent)' },
+            { group: ['@/components/*', '@/components/**'], message: 'lib/ must not import from components/ (package must stay framework-independent)' },
+            { group: ['../hooks/*', '../hooks'], message: 'lib/ must not import from hooks/ (layer violation)' },
+            { group: ['../components/*', '../components/**'], message: 'lib/ must not import from components/ (layer violation)' },
+          ],
+        }],
+      },
+    },
+    // -------------------------------------------------------
     // Layer Rule: src/hooks/ - Application Layer
     // May import from types/ and parser/, but NOT from components/
     // -------------------------------------------------------

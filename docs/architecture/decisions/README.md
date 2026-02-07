@@ -11,6 +11,8 @@ Dieses Verzeichnis enthält Architecture Decision Records (ADRs) für den OSCAL 
 | 003 | [Dreischichtige Komponentenarchitektur](ADR_003_component_architecture.md) | Accepted | 2026-02-06 |
 | 004 | [Vite Build-Konfiguration](ADR_004_build_tooling.md) | Accepted | 2026-02-06 |
 | 005 | [Performance-Strategie](ADR_005_performance_strategy.md) | Accepted | 2026-02-06 |
+| 006 | [PWA-Strategie](ADR_006_pwa.md) | Accepted | 2026-02-07 |
+| 007 | [npm Package Architecture](ADR_007_npm_package.md) | Accepted | 2026-02-07 |
 
 ## Neues ADR erstellen
 

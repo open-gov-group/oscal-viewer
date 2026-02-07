@@ -1,7 +1,7 @@
 # OSCAL Viewer - Coding Standards
 
-**Version**: 3.1.0
-**Gueltig ab**: Stakeholder-Feedback (Pattern 16, BITV 2.0)
+**Version**: 4.0.0
+**Gueltig ab**: Phase 3 (PWA, npm Package)
 
 ---
 
@@ -554,3 +554,79 @@ Dynamische Statusaenderungen MUESSEN per `aria-live` angekuendigt werden:
 - [ ] `:focus-visible` Styles vorhanden
 - [ ] Tastaturnavigation fuer alle interaktiven Elemente
 - [ ] axe-core Tests in der Testsuite
+
+---
+
+## 9. PWA / Service Worker (ADR-006)
+
+### 9.1 Grundregeln
+
+- Service Worker wird durch `vite-plugin-pwa` automatisch generiert
+- **KEIN** manueller Service-Worker-Code in `src/`
+- Caching-Konfiguration ausschliesslich in `vite.config.ts`
+- App-Code bleibt SW-unabhaengig (Graceful Degradation)
+
+### 9.2 Caching-Strategie
+
+| Ressource | Strategie | Ort |
+|-----------|-----------|-----|
+| App Shell (JS, CSS, HTML) | Precache | `workbox.globPatterns` in vite.config.ts |
+| Google Fonts Stylesheets | StaleWhileRevalidate | `workbox.runtimeCaching` in vite.config.ts |
+| Google Fonts Webfonts | CacheFirst (365d) | `workbox.runtimeCaching` in vite.config.ts |
+| OSCAL-Dateien | NICHT gecacht | User laedt lokal per File API |
+
+### 9.3 Update-Strategie
+
+`registerType: 'autoUpdate'` — kein User-Prompt noetig, da die App keinen persistierten State hat (Zero-Backend, ADR-002).
+
+### 9.4 Manifest
+
+Eigene `public/manifest.json` (nicht auto-generiert). Aenderungen am Manifest erfordern:
+- Korrekten `start_url` (muss `base` aus vite.config.ts entsprechen)
+- Icons in mindestens 192x192 und 512x512
+- `display: "standalone"`
+
+---
+
+## 10. npm Package Exports (ADR-007)
+
+### 10.1 Package-Architektur
+
+Das npm Package `@open-gov-group/oscal-parser` exportiert **ausschliesslich** den Domain Layer:
+
+```
+src/lib/index.ts  →  src/types/*    ✅  (Domain → Domain)
+src/lib/index.ts  →  src/parser/*   ✅  (Domain → Domain)
+src/lib/index.ts  →  src/hooks/*    ❌  (ESLint Error)
+src/lib/index.ts  →  src/components/* ❌  (ESLint Error)
+```
+
+### 10.2 Entry-Point
+
+```typescript
+// src/lib/index.ts — Public API
+export type { Catalog, Profile, ... } from '@/types/oscal'
+export { parseOscalDocument, parseCatalog, ... } from '@/parser/index'
+```
+
+**Regeln:**
+- NUR `export` und `export type` — keine Logik im Entry-Point
+- Alle Typ-Exports mit `export type` (Tree-Shaking)
+- Neue Parser MUESSEN hier re-exportiert werden
+
+### 10.3 Build
+
+```bash
+npm run build:lib    # Separater Build mit tsconfig.lib.json
+```
+
+- **Target**: ES2020 (breitere Kompatibilitaet)
+- **Module**: ESNext (Tree-Shaking-faehig)
+- **Declaration**: true (TypeScript .d.ts mitliefern)
+- Build-Artefakte in `dist/lib/` (nicht `dist/` der App)
+
+### 10.4 Versionierung
+
+App und Package haben **unabhaengige** Versionen:
+- App-Aenderungen (UI, CSS, Hooks) erhoehen NICHT die Package-Version
+- Parser/Types-Aenderungen erhoehen die Package-Version (SemVer)

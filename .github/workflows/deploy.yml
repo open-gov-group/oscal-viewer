@@ -64,6 +64,28 @@ jobs:
             echo "::warning::Bundle size ${KB_TOTAL} KB exceeds 75 KB warning threshold"
           fi
 
+      - name: Verify PWA assets
+        run: |
+          echo "## PWA Verification" >> $GITHUB_STEP_SUMMARY
+          PASS=true
+          if [ -f dist/manifest.json ]; then
+            node -e "JSON.parse(require('fs').readFileSync('dist/manifest.json', 'utf8'))"
+            echo "| manifest.json | Valid JSON |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::error::manifest.json not found in dist/"
+            PASS=false
+          fi
+          if [ -f dist/sw.js ]; then
+            SW_SIZE=$(wc -c < dist/sw.js | tr -d ' ')
+            echo "| sw.js | ${SW_SIZE} bytes |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::error::Service Worker (sw.js) not found in dist/"
+            PASS=false
+          fi
+          if [ "$PASS" = false ]; then
+            exit 1
+          fi
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:

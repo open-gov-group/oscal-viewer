@@ -61,6 +61,36 @@ jobs:
             echo "::warning::Bundle size ${KB_TOTAL} KB exceeds 75 KB warning threshold"
           fi
 
+      - name: Check PWA manifest
+        run: |
+          if [ ! -f dist/manifest.json ]; then
+            echo "::error::manifest.json not found in dist/"
+            exit 1
+          fi
+          node -e "JSON.parse(require('fs').readFileSync('dist/manifest.json', 'utf8'))"
+
+      - name: Check Service Worker
+        run: |
+          if [ ! -f dist/sw.js ]; then
+            echo "::error::Service Worker (sw.js) not found in dist/"
+            exit 1
+          fi
+
+      - name: Build npm package
+        run: npm run build:lib
+
+      - name: Check package size
+        run: |
+          LIB_SIZE=$(du -sb dist/lib/ | cut -f1)
+          LIB_KB=$(echo "scale=2; $LIB_SIZE / 1024" | bc)
+          echo "## npm Package Size" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| dist/lib/ | ${LIB_KB} KB |" >> $GITHUB_STEP_SUMMARY
+          if [ $LIB_SIZE -gt 102400 ]; then
+            echo "::warning::Package size ${LIB_KB} KB exceeds 100 KB"
+          fi
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:

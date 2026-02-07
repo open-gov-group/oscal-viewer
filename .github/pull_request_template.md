@@ -36,3 +36,17 @@ Closes #<!-- Issue-Nummer -->
 - [ ] `PropertyBadge`/`PropertyList` fuer Properties genutzt
 - [ ] Integration in `DocumentViewer` (neuer case)
 - [ ] CSS-Klassen mit Komponenten-Prefix
+
+### Service Worker / PWA (falls zutreffend)
+- [ ] Precache-Manifest korrekt (alle App-Assets, keine sensiblen Dateien)
+- [ ] Cache-Invalidierung via Version-Hash (Vite-Standard)
+- [ ] Keine User-Daten gecacht (OSCAL-Dateien werden NICHT gecacht)
+- [ ] Fonts-Caching mit Expiration (nicht unbegrenzt)
+- [ ] Update-Flow getestet (neuer Deploy ersetzt alten SW)
+- [ ] Offline-Fallback funktioniert (kein White-Screen)
+
+### npm Package (falls zutreffend)
+- [ ] Nur Domain Layer exportiert (types/, parser/)
+- [ ] Keine Preact/UI-Imports im Package
+- [ ] `npm run build:lib` erfolgreich
+- [ ] TypeScript Declarations (.d.ts) korrekt generiert

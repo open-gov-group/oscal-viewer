@@ -3,7 +3,7 @@
 **Rolle**: Frontend Developer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-07
-**Phase**: Stakeholder-Feedback Umsetzung (Navigation, Nested Parts, IFG)
+**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
 
 ---
 
@@ -164,7 +164,9 @@ tests/
 | 2026-02-06 | Frontend Developer | Architect | Phase 2 komplett: alle 4 Issues implementiert, 70 Tests, 14.39 KB Bundle | Erledigt |
 | 2026-02-06 | Architect | Frontend Developer | UI/UX Overhaul: Material Design, a11y, Responsive (Commit a567973). Neue Patterns beachten: CSS-Variablen, Sidebar-Toggle, ARIA Tabs | Info |
 | 2026-02-06 | Architect | Frontend Developer | UX Redesign: Full-Width Layout + Sticky Sidebar (CSS-only, keine TSX-Aenderungen). Neues Layout-Pattern beachten | Info |
-| 2026-02-07 | Architect | Frontend Developer | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel, S2: Part-Akkordions, S3: IFG/BITV). Details im Abschnitt "AKTUELLER AUFTRAG" | Aktiv |
+| 2026-02-07 | Architect | Frontend Developer | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel, S2: Part-Akkordions, S3: IFG/BITV). Details im Abschnitt "AKTUELLER AUFTRAG" | Erledigt |
+| 2026-02-07 | Frontend Developer | Architect | Stakeholder-Feedback komplett: S1 CSS-only, S2 PartView rekursiv, S3 lang+aria-live. 390 Tests, 14.20 KB JS + 6.36 KB CSS | Erledigt |
+| 2026-02-07 | Architect | Frontend Developer | Phase 3 Briefing: Issues #8-#10 (PWA, Doku, npm Package). Details im Abschnitt "AKTUELLER AUFTRAG Phase 3" | Aktiv |
 
 ---
 
@@ -501,3 +503,190 @@ const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
 - Bundle-Impact: ~0.2 KB gzipped (CSS-Aenderungen + PartView-Refactor)
 - Tests: Bestehende 350 Tests muessen bestehen, neue Tests fuer nested Parts
 - axe-core: 0 neue Violations
+
+---
+
+## Stakeholder-Feedback - Zusammenfassung (ABGESCHLOSSEN)
+
+| Aufgabe | Ergebnis |
+|---------|----------|
+| S1: Navigation Multi-Line | CSS-only: `white-space: normal`, `align-items: flex-start` |
+| S2: Nested Part Accordions | PartView rekursiv mit Accordion, h4→h5→h6, dotted border |
+| S3: IFG/BITV 2.0 | `lang="en"`, `aria-live="polite"`, Kontrast-Audit 22/22 PASS |
+
+**Build**: 14.20 KB JS + 6.36 KB CSS gzipped | 390 Tests | Commit: `e2c8f28`
+
+---
+
+## AKTUELLER AUFTRAG: Phase 3 (2026-02-07)
+
+**Prioritaet**: HOCH | **Issues**: #8, #9, #10
+**Aktueller Stand**: 14.20 KB JS + 6.36 KB CSS gzipped, 390 Tests, 0 TS Errors
+
+Phase 3 umfasst 3 Issues mit jeweils Frontend-relevanten Aufgaben:
+
+---
+
+### Issue #8: Progressive Web App (PWA) [HOCH]
+
+**Ziel**: OSCAL Viewer als installierbare Offline-PWA bereitstellen.
+
+**Hintergrund**: In `index.html` werden `manifest.json` und `favicon.svg` bereits referenziert, aber die Dateien existieren noch nicht. Es gibt keinen Service Worker und keine Offline-Faehigkeit.
+
+#### Aufgabe FE-P1: PWA Manifest erstellen [HOCH]
+
+**Datei**: `public/manifest.json` (NEU)
+
+```json
+{
+  "name": "OSCAL Viewer",
+  "short_name": "OSCAL",
+  "description": "Browser-based viewer for NIST OSCAL documents",
+  "start_url": "/oscal-viewer/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#1a365d",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
+```
+
+**Hinweis**: `start_url` muss den Vite `base`-Pfad `/oscal-viewer/` verwenden (GitHub Pages).
+
+#### Aufgabe FE-P2: App Icons erstellen [MITTEL]
+
+- `public/favicon.svg` — SVG-Icon (wird bereits in index.html referenziert)
+- `public/icons/icon-192.png` — 192x192 PNG
+- `public/icons/icon-512.png` — 512x512 PNG
+- `public/icons/icon-maskable-512.png` — 512x512 mit Safe Zone fuer Maskable
+
+**Design-Vorgabe**: Abstimmung mit UI/UX Designer. Vorschlag: Stilisiertes OSCAL-Logo oder Dokument-Symbol in `--color-primary` (#1a365d).
+
+#### Aufgabe FE-P3: Service Worker mit vite-plugin-pwa [HOCH]
+
+**Dependency**: `vite-plugin-pwa` (Dev-Dependency)
+
+**Datei**: `vite.config.ts` — Plugin hinzufuegen
+
+```ts
+import { VitePWA } from 'vite-plugin-pwa'
+
+export default defineConfig({
+  plugins: [
+    preact(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        runtimeCaching: [{
+          urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+          handler: 'StaleWhileRevalidate',
+          options: { cacheName: 'google-fonts-stylesheets' }
+        }, {
+          urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+          handler: 'CacheFirst',
+          options: { cacheName: 'google-fonts-webfonts', expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 } }
+        }]
+      },
+      manifest: false // Wir nutzen unsere eigene manifest.json
+    })
+  ]
+})
+```
+
+**Caching-Strategie**:
+- **App Shell** (JS, CSS, HTML): Precache (beim Install)
+- **Google Fonts**: StaleWhileRevalidate (Stylesheets) + CacheFirst (Webfonts)
+- **OSCAL-Dateien**: Werden NICHT gecacht (der User laedt eigene Dateien lokal)
+
+#### Aufgabe FE-P4: Offline-UI [MITTEL]
+
+- Pruefen ob `navigator.onLine` verfuegbar
+- Bei Offline: Info-Banner "You are offline. Previously loaded documents are still available."
+- Kein harter Fehler — die App funktioniert vollstaendig offline (keine Backend-Calls)
+
+#### Aufgabe FE-P5: PWA Update-Benachrichtigung [NIEDRIG]
+
+- Bei `vite-plugin-pwa` `registerType: 'autoUpdate'` wird der SW automatisch aktualisiert
+- Optional: Toast-Nachricht "New version available. Reload to update."
+
+**Layer-Konformitaet**: Alle Aenderungen im Presentation Layer (Components) und Build Config. Kein Domain/Application Layer betroffen.
+
+---
+
+### Issue #9: Dokumentation [MITTEL]
+
+Doku-Aufgaben mit Frontend-Relevanz:
+
+#### Aufgabe FE-D1: CONTRIBUTING.md Code-Beispiele [MITTEL]
+
+- README.md verlinkt auf `CONTRIBUTING.md`, aber die Datei fehlt
+- Frontend-relevanter Inhalt: "How to add a new OSCAL renderer" mit Verweis auf CODING_STANDARDS.md
+- Komponentenstruktur, Props-Interface, Datei-Konvention
+- Keine TSX-Aenderung, nur Doku
+
+#### Aufgabe FE-D2: Inline-Kommentare pruefen [NIEDRIG]
+
+- Shared Components (`accordion.tsx`, `filter-bar.tsx`, `copy-link-button.tsx`) haben gute JSDoc
+- Hooks (`useSearch`, `useDeepLink`, `useFilter`) pruefen: Sind Eingabe/Ausgabe dokumentiert?
+- Parser: Bereits gut dokumentiert
+
+---
+
+### Issue #10: npm Package [HOCH]
+
+**Ziel**: Parser und Types als wiederverwendbares npm-Paket `@open-gov-group/oscal-parser` veroeffentlichen.
+
+#### Aufgabe FE-N1: Package Exports definieren [HOCH]
+
+**Betroffene Dateien**: `src/types/oscal.ts`, `src/parser/*.ts`
+
+- Neuen Entry-Point erstellen: `src/lib/index.ts`
+- Exports: Alle Types + alle Parser-Funktionen + `parseOscalDocument`
+- Kein Preact-Import im Package (reines TypeScript)
+
+```ts
+// src/lib/index.ts
+export type { Catalog, Profile, ComponentDefinition, SystemSecurityPlan, ... } from '@/types/oscal'
+export { parseOscalDocument } from '@/parser'
+export { parseCatalog } from '@/parser/catalog'
+export { parseProfile } from '@/parser/profile'
+export { parseComponentDefinition } from '@/parser/component-definition'
+export { parseSSP } from '@/parser/ssp'
+export { detectDocumentType, detectVersion } from '@/parser/detect'
+```
+
+#### Aufgabe FE-N2: Sicherstellen dass Parser Framework-unabhaengig bleiben [HOCH]
+
+- `src/types/oscal.ts`: Nur TypeScript Interfaces — OK
+- `src/parser/*.ts`: Pruefen ob Preact-Imports vorhanden sind — sollten NICHT sein
+- `src/parser/index.ts`: Nur Types + reine Funktionen — OK
+- Layer-Architektur garantiert: Domain Layer (types/, parser/) importiert nie aus hooks/ oder components/
+
+**Risiko**: Niedrig — ESLint Layer-Regeln verhindern bereits unerlaubte Imports.
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Issue | Geschaetzter Aufwand | Abhaengigkeit |
+|---|---------|-------|---------------------|---------------|
+| 1 | FE-P1: manifest.json | #8 | Klein | Keine |
+| 2 | FE-P2: App Icons | #8 | Klein | UI/UX Designer |
+| 3 | FE-P3: vite-plugin-pwa | #8 | Mittel | FE-P1 |
+| 4 | FE-P4: Offline-UI | #8 | Klein | FE-P3 |
+| 5 | FE-N1: Package Exports | #10 | Mittel | Keine |
+| 6 | FE-N2: Parser-Unabhaengigkeit | #10 | Klein | FE-N1 |
+| 7 | FE-D1: CONTRIBUTING.md | #9 | Klein | Keine |
+| 8 | FE-P5: PWA Update Toast | #8 | Klein | FE-P3 |
+
+### Build-Erwartung Phase 3
+
+- Bundle-Impact PWA: ~0 KB (Service Worker wird separat generiert von vite-plugin-pwa)
+- Bundle-Impact npm: ~0 KB (nur Build-Config, kein neuer App-Code)
+- Neue Dev-Dependency: `vite-plugin-pwa`
+- Tests: 390 bestehende Tests muessen bestehen + neue PWA-Tests
+- Budget: 14.20 KB JS + 6.36 KB CSS → weiterhin weit unter 100 KB

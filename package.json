@@ -10,6 +10,7 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts,.tsx",
+    "build:lib": "tsc -p tsconfig.lib.json",
     "format": "prettier --write src"
   },
   "repository": {
@@ -46,6 +47,7 @@
     "prettier": "^3.2.4",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
+    "vite-plugin-pwa": "^1.2.0",
     "vitest": "^1.2.2",
     "vitest-axe": "^0.1.0"
   },

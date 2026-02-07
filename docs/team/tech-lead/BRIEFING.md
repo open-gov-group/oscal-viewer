@@ -3,7 +3,7 @@
 **Rolle**: Tech Lead
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: Stakeholder-Feedback (Nested Accordion Pattern, IFG/BITV Standards)
+**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
 
 ---
 
@@ -147,12 +147,19 @@ src/
 | 2026-02-07 | Tech Lead | Alle | Code Review: 6 neue Dateien (useDeepLink, useFilter, FilterBar, StatusBadge, Accordion, CopyLinkButton) - alle layer-konform | Erledigt |
 | 2026-02-07 | Tech Lead | Alle | ESLint-Fix: `filter-bar.tsx:61` ASI-Safety Semikolon entfernt | Erledigt |
 | 2026-02-07 | Tech Lead | Alle | CODING_STANDARDS.md v3.0.0: Deep-Link, Filter, Accordion Patterns + Shared Components Uebersicht | Erledigt |
-| 2026-02-07 | Architect | Tech Lead | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel, S2: Nested Part-Akkordions + Pattern 16, S3: IFG/BITV Standards). Details im Abschnitt "AKTUELLER AUFTRAG" | Aktiv |
-| 2026-02-07 | Tech Lead | Alle | S1 Review OK: CSS multi-line wrapping, kein Truncation auf `.nav-doc-title` | Erledigt |
-| 2026-02-07 | Tech Lead | Alle | S2 Review OK: PartView rekursiv, h4→h5→h6, dotted border. 1 CSS-Fix (`.part-children` border-left) | Erledigt |
-| 2026-02-07 | Tech Lead | Alle | S3 Review OK: `lang="en"` vorhanden, `aria-live="polite"` vorhanden, Kontrast-Audit 22/22 PASS | Erledigt |
-| 2026-02-07 | Tech Lead | Alle | CODING_STANDARDS.md v3.1.0: Pattern 16 (Nested Accordion, 5.7-5.8) + BITV 2.0 Sektion (8.1-8.6) | Erledigt |
-| 2026-02-07 | Tech Lead | Alle | Validierung: ESLint 0 Fehler, TypeScript 0 Fehler, 350/350 Tests, 13 axe-core | Erledigt |
+| 2026-02-07 | Architect | Tech Lead | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel, S2: Nested Part-Akkordions + Pattern 16, S3: IFG/BITV Standards) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | S1-S3 Reviews OK, CODING_STANDARDS v3.1.0, 390 Tests, Kontrast-Audit 22/22 PASS | Erledigt |
+| 2026-02-07 | Architect | Tech Lead | Phase 3 Briefing: Issues #8-#10 (PWA, Doku, npm Package). Details im Abschnitt "AKTUELLER AUFTRAG Phase 3" | Aktiv |
+| 2026-02-07 | Tech Lead | Alle | TL-P1: ADR-006 PWA-Strategie erstellt (vite-plugin-pwa, Precache, autoUpdate, eigene manifest.json) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | TL-N1: ADR-007 npm Package Architecture erstellt (@open-gov-group/oscal-parser, Domain Layer only) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | TL-D1: CONTRIBUTING.md aktualisiert (Renderer-Anleitung, Hooks, BITV 2.0, PR-Template-Verweis) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | TL-D2: CHANGELOG.md erstellt (Keep a Changelog Format, v0.1.0 + v0.2.0 + Unreleased) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | TL-N2: tsconfig.lib.json erstellt, src/lib/index.ts bereits vorhanden (Review OK) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | TL-P2: CODING_STANDARDS.md v4.0.0 — Sektion 9 (PWA/SW) + Sektion 10 (npm Package Exports) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | TL-P3: PR-Template erweitert — SW/PWA + npm Package Checklisten | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | TL-N3: ESLint Layer-Regel fuer src/lib/ hinzugefuegt (hooks + components Import verboten) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | TL-D3: ADR Index aktualisiert (ADR-006 + ADR-007) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | Validierung: ESLint 0 Fehler, TypeScript 0 Fehler, 390/390 Tests, 27 axe-core | Erledigt |
 
 ---
 
@@ -324,3 +331,247 @@ const PartView = ({ part, depth = 0 }) => {
   - Kontrast >= 4.5:1 fuer allen Text (keine Ausnahmen)
 
 **Keine ADR noetig**: Die Aenderungen sind inkrementell und folgen bestehenden Patterns.
+
+---
+
+## Stakeholder-Feedback - Zusammenfassung (ABGESCHLOSSEN)
+
+| Aufgabe | Tech-Lead-Aktion | Ergebnis |
+|---------|-----------------|----------|
+| S1: Navigation Multi-Line | CSS Review | OK — keine Layer-Aenderung |
+| S2: Nested Part Accordions | Pattern 16 definiert, h4→h5→h6 Review | OK — 1 CSS-Fix (dotted border) |
+| S3: IFG/BITV 2.0 | CODING_STANDARDS v3.1.0 (BITV 2.0 Sektion) | OK — 6 Standards (8.1-8.6) |
+
+**Build**: 14.20 KB JS + 6.36 KB CSS gzipped | 390 Tests | Commit: `e2c8f28`
+
+---
+
+## AKTUELLER AUFTRAG: Phase 3 (2026-02-07)
+
+**Prioritaet**: HOCH | **Issues**: #8, #9, #10
+**Aktueller Stand**: 14.20 KB JS + 6.36 KB CSS, 390 Tests, BITV 2.0 konform, CODING_STANDARDS v3.1.0
+
+Phase 3 umfasst 3 Issues mit jeweils architektur-relevanten Aufgaben:
+
+---
+
+### Issue #8: Progressive Web App (PWA) [HOCH]
+
+#### TL-P1: ADR-006 PWA-Strategie [HOCH]
+
+**Datei**: `docs/architecture/decisions/ADR_006_pwa.md` (NEU)
+
+**Entscheidungen zu dokumentieren**:
+
+1. **Build-Tool**: `vite-plugin-pwa` (Workbox-basiert)
+   - **Begruendung**: Integriert sich nahtlos in bestehende Vite-Config, generiert Service Worker automatisch, Workbox ist der De-facto-Standard
+   - **Alternativen verworfen**: Manueller SW (zu fehleranfaellig), Partytown (nicht fuer Offline gedacht)
+
+2. **Caching-Strategie**: Precache (App Shell) + Runtime-Cache (Google Fonts)
+   - App Shell: JS, CSS, HTML werden beim Install gecacht — sofortige Offline-Verfuegbarkeit
+   - OSCAL-Dateien: NICHT gecacht (User laedt eigene Dateien lokal)
+   - Google Fonts: `StaleWhileRevalidate` (Stylesheets), `CacheFirst` (Webfonts)
+
+3. **Update-Strategie**: `autoUpdate` (prompt-less)
+   - **Begruendung**: Die App hat keinen User-State der verloren gehen kann (Dateien werden lokal geladen)
+   - **Alternative**: `prompt` — unnoetig, da kein Data-Loss-Risiko
+
+4. **Manifest**: Eigene `manifest.json` in `public/` (nicht auto-generiert)
+   - **Begruendung**: Mehr Kontrolle ueber Icons, Start-URL, Display-Modus
+
+**Layer-Konformitaet**: Service Worker ist Build-Artefakt, nicht Teil der App-Architektur. Keine Aenderung an der Dreischicht-Architektur. `vite-plugin-pwa` bleibt Dev-Dependency.
+
+---
+
+#### TL-P2: CODING_STANDARDS.md v4.0.0 aktualisieren [MITTEL]
+
+**Neue Patterns fuer Phase 3**:
+
+##### Pattern 17: PWA Service Worker
+
+```
+- Service Worker wird durch vite-plugin-pwa automatisch generiert
+- KEIN manueller SW-Code in src/
+- Caching-Konfiguration NUR in vite.config.ts
+- Runtime-Caching fuer externe Ressourcen (Fonts, CDN)
+- App-Code bleibt SW-unabhaengig (Graceful Degradation)
+```
+
+##### Pattern 18: npm Package Exports
+
+```
+- Package Entry-Point: src/lib/index.ts
+- NUR Domain Layer exportieren (types/, parser/)
+- KEINE Preact/UI-Abhaengigkeiten im Package
+- TypeScript Declarations (.d.ts) mitliefern
+- Separates tsconfig.lib.json fuer Package-Build
+```
+
+---
+
+#### TL-P3: Service Worker Review-Checkliste [MITTEL]
+
+Bei PRs die den Service Worker betreffen, folgende Punkte pruefen:
+
+| # | Check | Details |
+|---|-------|---------|
+| 1 | Precache-Manifest korrekt | Alle App-Assets enthalten, keine sensiblen Dateien |
+| 2 | Cache-Invalidierung | Version-Hash in Dateinamen (Vite macht das automatisch) |
+| 3 | Keine User-Daten gecacht | OSCAL-Dateien werden NICHT gecacht |
+| 4 | Fonts-Caching sinnvoll | Google Fonts mit Expiration, nicht unbegrenzt |
+| 5 | Update-Flow getestet | Neuer Deploy → alter SW wird ersetzt → kein Stuck-State |
+| 6 | Offline-Fallback | App laeuft ohne Netzwerk (kein white-screen) |
+
+---
+
+### Issue #9: Dokumentation [MITTEL]
+
+#### TL-D1: CONTRIBUTING.md erstellen [HOCH]
+
+**Datei**: `CONTRIBUTING.md` (NEU, im Root)
+
+**Inhalt**:
+1. **Getting Started**: `npm install`, `npm run dev`, `npm test`
+2. **Architecture Overview**: Verweis auf ARCHITECTURE.md und ADRs
+3. **Coding Standards**: Verweis auf docs/CODING_STANDARDS.md
+4. **How to add a new OSCAL Renderer**: Schritt-fuer-Schritt
+   - Types in `oscal.ts` definieren
+   - Parser in `parser/` erstellen
+   - View in `components/{typ}/` erstellen
+   - In `document-viewer.tsx` registrieren
+   - Tests schreiben
+5. **PR-Prozess**: Verweis auf `.github/pull_request_template.md`
+6. **Layer-Architektur-Regeln**: Domain → Application → Presentation
+
+#### TL-D2: CHANGELOG.md erstellen [MITTEL]
+
+**Datei**: `CHANGELOG.md` (NEU, im Root)
+
+**Format**: Keep a Changelog (https://keepachangelog.com/)
+
+```markdown
+# Changelog
+
+## [Unreleased]
+
+## [0.2.0] - 2026-02-07
+### Added
+- Stakeholder-Feedback: Multi-line navigation titles, nested part accordions, BITV 2.0 compliance
+- Dashboard-Redesign: Accordion, Deep-Linking, Filter, StatusBadge, CopyLinkButton
+- UI/UX Overhaul: Material Design, responsive, accessibility fixes
+- Full-Width Layout with sticky sidebar
+
+## [0.1.0] - 2026-02-06
+### Added
+- Initial release: Catalog, Profile, Component-Def, SSP renderers
+- Global search with per-type indexing
+- axe-core accessibility testing (254 tests)
+```
+
+#### TL-D3: ADR Index aktualisieren [NIEDRIG]
+
+- Bestehende ADRs: 001-005
+- Neue ADR: 006 (PWA)
+- Optional: ADR-007 (npm Package Architecture)
+
+---
+
+### Issue #10: npm Package [HOCH]
+
+#### TL-N1: ADR-007 npm Package Architecture [HOCH]
+
+**Datei**: `docs/architecture/decisions/ADR_007_npm_package.md` (NEU)
+
+**Entscheidungen zu dokumentieren**:
+
+1. **Package-Scope**: Nur Domain Layer (types + parser)
+   - **Begruendung**: Wiederverwendbar ohne Framework-Abhaengigkeit
+   - Parser sind reines TypeScript, keine Preact-Imports
+   - Types sind reine Interfaces, keine Runtime-Abhaengigkeit
+
+2. **Package-Name**: `@open-gov-group/oscal-parser`
+   - Scoped Package unter der GitHub-Organisation
+   - "parser" im Namen — klar was das Package macht
+
+3. **Build-Setup**: Separates `tsconfig.lib.json`
+   - Target: ES2020 (breitere Kompatibilitaet)
+   - Module: ESNext (Tree-Shaking-faehig)
+   - Declaration: true (TypeScript Declarations mitliefern)
+   - Entry: `src/lib/index.ts`
+
+4. **Versionierung**: Unabhaengig von der App
+   - App: v0.x.y (GitHub Pages)
+   - Package: eigene Version, Semantic Versioning
+   - Aenderungen am Parser erhoehen Package-Version
+
+5. **Testing**: Bestehende Parser-Tests + Fixture-Tests decken das Package ab
+   - Kein separates Test-Setup noetig
+
+**Layer-Konformitaet**: ESLint Layer-Regeln garantieren bereits, dass Domain Layer nicht aus Application/Presentation importiert. Das npm Package exportiert den bestehenden Code — keine Umstrukturierung noetig.
+
+---
+
+#### TL-N2: package.json Konfiguration [HOCH]
+
+**Aenderungen in `package.json`**:
+
+```json
+{
+  "name": "@open-gov-group/oscal-parser",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/lib/index.js",
+  "types": "./dist/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/lib/index.js",
+      "types": "./dist/lib/index.d.ts"
+    }
+  },
+  "files": ["dist/lib/"],
+  "scripts": {
+    "build:lib": "tsc -p tsconfig.lib.json"
+  }
+}
+```
+
+**Wichtig**: Das bestehende `vite build` fuer die App bleibt unveraendert. `build:lib` ist ein separater Build-Schritt nur fuer das npm Package.
+
+---
+
+#### TL-N3: ESLint Layer-Regeln pruefen [MITTEL]
+
+Verifizieren dass die bestehenden Layer-Regeln den Package-Export absichern:
+
+| Import-Richtung | Erlaubt | ESLint-Regel |
+|----------------|---------|--------------|
+| `src/lib/index.ts` → `src/types/*` | JA | Domain → Domain |
+| `src/lib/index.ts` → `src/parser/*` | JA | Domain → Domain |
+| `src/lib/index.ts` → `src/hooks/*` | NEIN | Domain → Application (verboten) |
+| `src/lib/index.ts` → `src/components/*` | NEIN | Domain → Presentation (verboten) |
+
+→ Bestehende Regeln reichen aus. `src/lib/` liegt im Domain Layer.
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Issue | Geschaetzter Aufwand | Abhaengigkeit |
+|---|---------|-------|---------------------|---------------|
+| 1 | TL-P1: ADR-006 PWA | #8 | Mittel | Keine |
+| 2 | TL-N1: ADR-007 npm Package | #10 | Mittel | Keine |
+| 3 | TL-D1: CONTRIBUTING.md | #9 | Mittel | Keine |
+| 4 | TL-D2: CHANGELOG.md | #9 | Klein | Keine |
+| 5 | TL-N2: package.json Review | #10 | Klein | TL-N1 |
+| 6 | TL-P2: CODING_STANDARDS v4.0.0 | #8+#10 | Mittel | TL-P1, TL-N1 |
+| 7 | TL-P3: SW Review-Checkliste | #8 | Klein | TL-P1 |
+| 8 | TL-N3: ESLint-Regeln pruefen | #10 | Klein | TL-N2 |
+| 9 | TL-D3: ADR Index | #9 | Klein | TL-P1, TL-N1 |
+
+### Build-Erwartung Phase 3
+
+- PWA: Kein Bundle-Impact (SW wird separat generiert)
+- npm Package: Kein App-Bundle-Impact (separater Build)
+- Neue Dev-Dependencies: `vite-plugin-pwa`
+- Tests: 390 bestehende Tests + neue PWA/Package Tests
+- Neue Dateien: 2 ADRs, CONTRIBUTING.md, CHANGELOG.md, tsconfig.lib.json, src/lib/index.ts

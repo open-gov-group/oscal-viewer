@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'preact/hooks'
+import { useState, useCallback, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { OscalDocument } from '@/types/oscal'
 import { parseOscalDocument } from '@/parser'
@@ -11,6 +11,18 @@ export const App: FunctionComponent = () => {
   const [document, setDocument] = useState<OscalDocument | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [offline, setOffline] = useState(!navigator.onLine)
+
+  useEffect(() => {
+    const goOffline = () => setOffline(true)
+    const goOnline = () => setOffline(false)
+    window.addEventListener('offline', goOffline)
+    window.addEventListener('online', goOnline)
+    return () => {
+      window.removeEventListener('offline', goOffline)
+      window.removeEventListener('online', goOnline)
+    }
+  }, [])
   const { query, setQuery, results, isSearching } = useSearch(document?.data ?? null)
 
   const handleSearchSelect = useCallback((result: SearchResult) => {
@@ -111,6 +123,12 @@ export const App: FunctionComponent = () => {
           </div>
         )}
       </header>
+
+      {offline && (
+        <div class="offline-banner" role="status">
+          You are offline. Previously loaded documents are still available.
+        </div>
+      )}
 
       <main id="main-content" class="main">
         {!document ? (

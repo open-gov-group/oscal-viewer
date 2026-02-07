@@ -1,0 +1,13 @@
+{
+  "name": "OSCAL Viewer",
+  "short_name": "OSCAL",
+  "description": "Browser-based viewer for NIST OSCAL documents",
+  "start_url": "/oscal-viewer/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#1a365d",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

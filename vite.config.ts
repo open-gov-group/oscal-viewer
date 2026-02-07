@@ -1,10 +1,29 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import preact from '@preact/preset-vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [preact()],
+  plugins: [
+    preact(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        runtimeCaching: [{
+          urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+          handler: 'StaleWhileRevalidate',
+          options: { cacheName: 'google-fonts-stylesheets' }
+        }, {
+          urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+          handler: 'CacheFirst',
+          options: { cacheName: 'google-fonts-webfonts', expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 } }
+        }]
+      },
+      manifest: false
+    })
+  ],
   base: '/oscal-viewer/',
   test: {
     include: ['tests/**/*.test.{ts,tsx}'],
