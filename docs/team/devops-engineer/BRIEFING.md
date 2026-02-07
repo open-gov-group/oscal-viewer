@@ -3,7 +3,7 @@
 **Rolle**: DevOps Engineer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-07
-**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
+**Phase**: Feature-Paket (Metadata, Params, URL-Loading, Config-Presets)
 
 ---
 
@@ -133,9 +133,11 @@ updates:
 
 | Metrik | Limit | Aktuell | Status |
 |--------|-------|---------|--------|
-| Bundle Size (gzipped) | < 100 KB | 20.40 KB | OK |
-| First Contentful Paint | < 1.5s | Nicht gemessen | Einrichten |
-| Lighthouse Score | > 90 | Nicht gemessen | Einrichten |
+| Bundle Size (gzipped) | < 100 KB | ~30.0 KB | OK |
+| First Contentful Paint | < 1.5s | Lighthouse CI aktiv | OK |
+| Lighthouse Performance | > 90 | Lighthouse CI aktiv | OK |
+| Lighthouse Accessibility | > 95 | Lighthouse CI aktiv | OK |
+| Lighthouse PWA | > 90 | Lighthouse CI aktiv | OK |
 
 ---
 
@@ -163,7 +165,108 @@ updates:
 | 2026-02-07 | DevOps Engineer | Architect | Dashboard-Redesign deployed. Commit `7d45658`, 36 Dateien, 350 Tests, 25.03 KB Bundle. Live auf GitHub Pages verifiziert | Erledigt |
 | 2026-02-07 | Architect | DevOps Engineer | Stakeholder-Feedback: Deployment angefordert | Erledigt |
 | 2026-02-07 | DevOps Engineer | Architect | Stakeholder-Feedback deployed. Commit `e2c8f28`, 13 Dateien, 390 Tests, 25.19 KB Bundle | Erledigt |
-| 2026-02-07 | Architect | DevOps Engineer | Phase 3 Briefing: Issues #8-#10 (PWA, Doku, npm Package). Details im Abschnitt "AKTUELLER AUFTRAG Phase 3" | Aktiv |
+| 2026-02-07 | Architect | DevOps Engineer | Phase 3 Briefing: Issues #8-#10 (PWA, Doku, npm Package). Details im Abschnitt "AKTUELLER AUFTRAG Phase 3" | Erledigt |
+| 2026-02-07 | DevOps Engineer | Architect | Phase 3 deployed. Commit `abcf25c`, 35 Dateien, 444 Tests, 28.76 KB Bundle. PWA live (sw.js + manifest.json). 4 Workflows, Lighthouse CI, npm Publish Pipeline | Erledigt |
+| 2026-02-07 | Architect | DevOps Engineer | Lighthouse CI Fix: NO_FCP → vite preview. Commit `8a19131` | Info |
+| 2026-02-07 | Architect | DevOps Engineer | Feature-Paket: Metadata, Params, URL-Loading, Config-Presets. Deployment angefordert. Details siehe "AKTUELLER AUFTRAG: Feature-Paket" | Aktiv |
+
+---
+
+## AKTUELLER AUFTRAG: Feature-Paket Deployment (2026-02-07)
+
+**Prioritaet**: HOCH | **Commits**: `8a19131`, `4a46e11`
+**Status**: QA-getestet, bereit fuer Deployment
+
+### Hintergrund
+
+Zwei Commits muessen deployed werden:
+1. **`8a19131`** — Lighthouse CI Fix: `staticDistDir` durch `startServerCommand` (vite preview) ersetzt, behebt NO_FCP Error
+2. **`4a46e11`** — Feature-Paket: 4 neue Features (Metadata, Params, URL-Loading, Config-Presets)
+
+### Vorab-Verifikation (vom Architect + QA Engineer durchgefuehrt)
+
+| Pruefung | Ergebnis |
+|----------|----------|
+| TypeScript strict | 0 Errors |
+| ESLint | 0 Errors |
+| Tests | **444/444 bestanden** (17 Testdateien) |
+| Build | Erfolgreich |
+| Bundle JS (gzip) | 15.98 KB (app) + 4.62 KB (preact) + 2.41 KB (workbox) = **23.01 KB** |
+| Bundle CSS (gzip) | **6.99 KB** |
+| **Bundle Total (gzip)** | **~30.0 KB** (< 100 KB Limit, 30% Budget) |
+| config.json in dist/ | Vorhanden |
+
+### Was deployt wird
+
+**9 Dateien** geaendert, +557 Insertions / -82 Deletions
+
+#### Neue Dateien (3)
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `src/components/shared/parameter-item.tsx` | Shared ParameterItem (aus control-detail extrahiert) |
+| `src/types/config.ts` | PresetEntry + AppConfig Interfaces |
+| `public/config.json` | Default-Presets (NIST SP 800-53, FedRAMP High) |
+
+#### Modifizierte Dateien (6)
+
+| Datei | Aenderungen |
+|-------|-------------|
+| `src/app.tsx` | URL-Loading (handleUrl, ?url= Auto-Load), Config-Presets, Loading-Spinner, Preset-Buttons |
+| `src/components/shared/metadata-panel.tsx` | PartyCards (Email, Telefon, Type-Badge), Links-Sektion, Remarks-Sektion |
+| `src/components/catalog/catalog-view.tsx` | Catalog-Level Params Accordion |
+| `src/components/catalog/control-detail.tsx` | ParameterItem nach shared/ verschoben, Import hinzugefuegt |
+| `src/styles/base.css` | +248 Zeilen CSS (Metadata-Cards, Presets, URL-Input, Loading-Spinner) |
+| `tests/components/shared.test.tsx` | Parties-Test an neues PartyCard-Format angepasst |
+
+#### Lighthouse CI Fix (`8a19131`)
+
+| Datei | Aenderung |
+|-------|-----------|
+| `.lighthouserc.json` | `staticDistDir` → `startServerCommand: "npx vite preview --port 9123"` |
+
+### Neue Features im Detail
+
+| Feature | Beschreibung | Nutzer-Impact |
+|---------|-------------|---------------|
+| **MetadataPanel** | Parties als Cards mit Email/Telefon, Links-Sektion, Remarks | Vollstaendige Metadaten-Anzeige |
+| **Catalog Params** | Top-Level Parameter in eigenem Accordion | NIST-Kataloge zeigen alle Parameter |
+| **URL-Loading** | OSCAL per URL laden, `?url=` fuer Shareability | Direkt-Links zu Dokumenten moeglich |
+| **Config-Presets** | Quick-Load Buttons fuer haeufige Dokumente | 1-Klick Zugang zu NIST/FedRAMP |
+
+### Bundle-Entwicklung
+
+| Version | JS (gzip) | CSS (gzip) | Total | Tests |
+|---------|-----------|------------|-------|-------|
+| Phase 3 | 28.76 KB | - | 28.76 KB | 444 |
+| Dep-Upgrade | 28.53 KB | - | 28.53 KB | 444 |
+| **Feature-Paket** | **23.01 KB** | **6.99 KB** | **~30.0 KB** | **444** |
+
+**Budget-Nutzung**: 30.0 / 100 KB = 30.0% (70 KB Spielraum)
+
+### Deployment-Anweisungen
+
+Beide Commits (`8a19131` + `4a46e11`) sind bereits auf `origin/main` gepusht.
+
+1. GitHub Actions `deploy.yml` wird automatisch ausgeloest
+2. Bundle Size Gate muss bestehen (< 100 KB) ✓
+3. Lighthouse CI Workflow laeuft mit neuem `startServerCommand` (NO_FCP Fix)
+4. Nach Deploy verifizieren:
+   - `https://open-gov-group.github.io/oscal-viewer/` — App laeuft
+   - `https://open-gov-group.github.io/oscal-viewer/config.json` — Presets erreichbar
+   - Preset-Buttons laden NIST/FedRAMP Kataloge
+   - `?url=` Parameter funktioniert (Direkt-Link)
+
+### Risiko-Bewertung
+
+| Risiko | Bewertung |
+|--------|-----------|
+| Bundle Size | NIEDRIG - 30.0 KB, weit unter 100 KB Limit |
+| Test-Regression | NIEDRIG - 444 Tests, 0 Failures |
+| Breaking Changes | NIEDRIG - Additive Features, keine API-Aenderungen |
+| Neue Dependencies | KEINE - Alle Features mit bestehenden Packages |
+| CORS bei URL-Loading | NIEDRIG - Hilfreiche Fehlermeldung bei CORS-Blockade |
+| config.json fehlt | NIEDRIG - Graceful Degradation (keine Presets angezeigt) |
 
 ---
 

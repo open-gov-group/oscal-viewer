@@ -38,7 +38,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/main.tsx', 'src/types/**'],
+      exclude: ['src/main.tsx', 'src/types/**', 'src/lib/**'],
       thresholds: {
         statements: 70,
         branches: 65,

@@ -224,6 +224,148 @@ describe('GroupTree', () => {
 })
 
 // ============================================================
+// GroupTree - Keyboard Navigation Tests
+// ============================================================
+
+describe('GroupTree - Keyboard Navigation', () => {
+  const groups: Group[] = testCatalog.groups!
+  const onSelect = vi.fn()
+
+  function getVisibleItems(container: Element): HTMLElement[] {
+    return Array.from(container.querySelectorAll<HTMLElement>(
+      '.tree-group-header, .tree-control-btn'
+    ))
+  }
+
+  it('ArrowDown moves focus to next item', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const items = getVisibleItems(container)
+    items[0].focus()
+    fireEvent.keyDown(items[0], { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(items[1])
+  })
+
+  it('ArrowUp moves focus to previous item', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const items = getVisibleItems(container)
+    items[1].focus()
+    fireEvent.keyDown(items[1], { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(items[0])
+  })
+
+  it('Home moves focus to first item', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const items = getVisibleItems(container)
+    items[2].focus()
+    fireEvent.keyDown(items[2], { key: 'Home' })
+    expect(document.activeElement).toBe(items[0])
+  })
+
+  it('End moves focus to last item', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const items = getVisibleItems(container)
+    items[0].focus()
+    fireEvent.keyDown(items[0], { key: 'End' })
+    expect(document.activeElement).toBe(items[items.length - 1])
+  })
+
+  it('ArrowDown does not go past last item', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const items = getVisibleItems(container)
+    const lastItem = items[items.length - 1]
+    lastItem.focus()
+    fireEvent.keyDown(lastItem, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(lastItem)
+  })
+
+  it('ArrowUp does not go before first item', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const items = getVisibleItems(container)
+    items[0].focus()
+    fireEvent.keyDown(items[0], { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(items[0])
+  })
+
+  it('ArrowLeft on expanded group collapses it', () => {
+    render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const groupHeader = screen.getByLabelText(/Access Control.*controls/)
+    groupHeader.focus()
+    const treeitem = groupHeader.closest('[role="treeitem"]')
+    expect(treeitem?.getAttribute('aria-expanded')).toBe('true')
+    fireEvent.keyDown(groupHeader, { key: 'ArrowLeft' })
+    expect(treeitem?.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('ArrowRight on collapsed group expands it', () => {
+    render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const groupHeader = screen.getByLabelText(/Access Control.*controls/)
+    // First collapse
+    fireEvent.click(groupHeader)
+    const treeitem = groupHeader.closest('[role="treeitem"]')
+    expect(treeitem?.getAttribute('aria-expanded')).toBe('false')
+    // Then ArrowRight to expand
+    groupHeader.focus()
+    fireEvent.keyDown(groupHeader, { key: 'ArrowRight' })
+    expect(treeitem?.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('roving tabindex: first item gets tabindex 0 by default', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const items = getVisibleItems(container)
+    // useEffect sets tabindex=0 on first item if none has it
+    expect(items.some(el => el.getAttribute('tabindex') === '0')).toBe(true)
+  })
+
+  it('renders sub-control expand button for controls with children', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    // ac-1 has a sub-control (ac-1.1), so it should have an expand button
+    const expandBtns = container.querySelectorAll('.tree-expand-btn')
+    expect(expandBtns.length).toBeGreaterThan(0)
+  })
+
+  it('clicking sub-control expand button shows child controls', () => {
+    const { container } = render(
+      <GroupTree groups={groups} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    const expandBtn = container.querySelector('.tree-expand-btn')!
+    fireEvent.click(expandBtn)
+    // ac-1.1 should be visible after expanding
+    expect(screen.getByText('ac-1.1')).toBeInTheDocument()
+  })
+
+  it('renders top-level controls when passed as controls prop', () => {
+    const controls: Control[] = [
+      { id: 'ctrl-1', title: 'Standalone Control' },
+    ]
+    render(
+      <GroupTree controls={controls} selectedControlId={null} onSelectControl={onSelect} />
+    )
+    expect(screen.getByText('ctrl-1')).toBeInTheDocument()
+    expect(screen.getByText('Standalone Control')).toBeInTheDocument()
+  })
+})
+
+// ============================================================
 // ControlDetail Tests
 // ============================================================
 
