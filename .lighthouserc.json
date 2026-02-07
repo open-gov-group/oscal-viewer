@@ -1,7 +1,9 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "./dist"
+      "startServerCommand": "npx vite preview --port 9123",
+      "startServerReadyPattern": "Local:",
+      "url": ["http://localhost:9123/oscal-viewer/"]
     },
     "assert": {
       "assertions": {
