@@ -16,7 +16,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vitest/globals", "vite-plugin-pwa/client"],
+    "types": ["vitest/globals", "vite-plugin-pwa/client", "node"],
     "paths": {
       "@/*": ["./src/*"]
     }
