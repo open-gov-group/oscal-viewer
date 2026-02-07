@@ -1,6 +1,8 @@
 import type { FunctionComponent } from 'preact'
 import type { Control, Part, Parameter } from '@/types/oscal'
 import { PropertyList } from '@/components/shared/property-badge'
+import { Accordion } from '@/components/shared/accordion'
+import { CopyLinkButton } from '@/components/shared/copy-link-button'
 
 interface ControlDetailProps {
   control: Control
@@ -11,6 +13,7 @@ export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control }
     <article class="control-detail" aria-labelledby={`control-${control.id}-title`}>
       <header class="control-detail-header">
         <span class="control-id-badge">{control.id}</span>
+        <CopyLinkButton viewType="catalog" elementId={control.id} />
         <h2 id={`control-${control.id}-title`}>{control.title}</h2>
         {control.class && <span class="control-class">{control.class}</span>}
       </header>
@@ -19,29 +22,42 @@ export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control }
         <PropertyList props={control.props} />
       )}
 
+      {control.parts && control.parts.length > 0 && (
+        <Accordion
+          id={`${control.id}-parts`}
+          title="Content"
+          count={control.parts.length}
+          defaultOpen={true}
+          headingLevel={3}
+        >
+          {control.parts.map((part, i) => (
+            <PartView key={part.id ?? `${part.name}-${i}`} part={part} />
+          ))}
+        </Accordion>
+      )}
+
       {control.params && control.params.length > 0 && (
-        <section class="control-section" aria-labelledby={`${control.id}-params`}>
-          <h3 id={`${control.id}-params`}>Parameters</h3>
+        <Accordion
+          id={`${control.id}-params`}
+          title="Parameters"
+          count={control.params.length}
+          headingLevel={3}
+        >
           <div class="params-list">
             {control.params.map(param => (
               <ParameterItem key={param.id} param={param} />
             ))}
           </div>
-        </section>
-      )}
-
-      {control.parts && control.parts.length > 0 && (
-        <section class="control-section" aria-labelledby={`${control.id}-parts`}>
-          <h3 id={`${control.id}-parts`}>Content</h3>
-          {control.parts.map((part, i) => (
-            <PartView key={part.id ?? `${part.name}-${i}`} part={part} />
-          ))}
-        </section>
+        </Accordion>
       )}
 
       {control.links && control.links.length > 0 && (
-        <section class="control-section" aria-labelledby={`${control.id}-links`}>
-          <h3 id={`${control.id}-links`}>Links</h3>
+        <Accordion
+          id={`${control.id}-links`}
+          title="Links"
+          count={control.links.length}
+          headingLevel={3}
+        >
           <ul class="links-list">
             {control.links.map((link, i) => (
               <li key={`${link.href}-${i}`}>
@@ -52,18 +68,22 @@ export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control }
               </li>
             ))}
           </ul>
-        </section>
+        </Accordion>
       )}
 
       {control.controls && control.controls.length > 0 && (
-        <section class="control-section" aria-labelledby={`${control.id}-enhancements`}>
-          <h3 id={`${control.id}-enhancements`}>Control Enhancements</h3>
+        <Accordion
+          id={`${control.id}-enhancements`}
+          title="Control Enhancements"
+          count={control.controls.length}
+          headingLevel={3}
+        >
           <div class="sub-controls">
             {control.controls.map(sub => (
               <ControlDetail key={sub.id} control={sub} />
             ))}
           </div>
-        </section>
+        </Accordion>
       )}
     </article>
   )

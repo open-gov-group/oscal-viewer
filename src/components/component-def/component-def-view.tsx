@@ -1,16 +1,22 @@
 import { useState, useMemo } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { ComponentDefinition, DefinedComponent, ControlImplementation, ImplementedRequirement } from '@/types/oscal'
+import { useDeepLink } from '@/hooks/use-deep-link'
+import { useFilter } from '@/hooks/use-filter'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
+import { Accordion } from '@/components/shared/accordion'
+import { FilterBar } from '@/components/shared/filter-bar'
+import type { FilterCategory } from '@/components/shared/filter-bar'
 
 interface ComponentDefViewProps {
   componentDef: ComponentDefinition
 }
 
 export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ componentDef }) => {
-  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null)
+  const { selectedId: selectedComponentId, setSelectedId: setSelectedComponentId } = useDeepLink('compdef')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const filter = useFilter()
 
   const stats = useMemo(() => {
     const components = componentDef.components ?? []
@@ -23,6 +29,29 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
       implementations: totalImplementations,
     }
   }, [componentDef])
+
+  const typeCategories = useMemo((): FilterCategory[] => {
+    const components = componentDef.components ?? []
+    const types = [...new Set(components.map(c => c.type))]
+    if (types.length <= 1) return []
+    return [{ key: 'type', label: 'Type', options: types.map(t => ({ value: t, label: t })) }]
+  }, [componentDef])
+
+  const filteredComponents = useMemo(() => {
+    const components = componentDef.components ?? []
+    if (!filter.hasActiveFilters) return components
+    const typeChips = filter.chips.filter(c => c.key === 'type').map(c => c.value)
+    return components.filter(comp => {
+      if (typeChips.length > 0 && !typeChips.includes(comp.type)) return false
+      if (filter.keyword) {
+        const kw = filter.keyword.toLowerCase()
+        return comp.title.toLowerCase().includes(kw) ||
+          comp.type.toLowerCase().includes(kw) ||
+          comp.description.toLowerCase().includes(kw)
+      }
+      return true
+    })
+  }, [componentDef, filter.keyword, filter.chips, filter.hasActiveFilters])
 
   const selectedComponent = useMemo(() => {
     if (!selectedComponentId) return null
@@ -56,8 +85,26 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
         <div class="compdef-layout">
           <div class={`sidebar-backdrop ${sidebarOpen ? 'visible' : ''}`} onClick={() => setSidebarOpen(false)} />
           <aside class={`compdef-sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Component list">
+            <div class="nav-title-box">
+              <span class="nav-doc-type">Component Definition</span>
+              <span class="nav-doc-title">{componentDef.metadata.title}</span>
+              {componentDef.metadata.version && (
+                <span class="nav-doc-version">v{componentDef.metadata.version}</span>
+              )}
+            </div>
+            <FilterBar
+              keyword={filter.keyword}
+              onKeywordChange={filter.setKeyword}
+              chips={filter.chips}
+              onAddChip={filter.addChip}
+              onRemoveChip={filter.removeChip}
+              onClearAll={filter.clearAll}
+              hasActiveFilters={filter.hasActiveFilters}
+              categories={typeCategories}
+              placeholder="Filter components..."
+            />
             <ul class="compdef-component-list" role="listbox" aria-label="Components">
-              {componentDef.components.map(comp => (
+              {filteredComponents.map(comp => (
                 <li
                   key={comp.uuid}
                   role="option"
@@ -143,36 +190,54 @@ const ComponentDetail: FunctionComponent<ComponentDetailProps> = ({ component })
         <h2 id={`comp-${component.uuid}-title`}>{component.title}</h2>
       </header>
 
-      <p class="compdef-description">{component.description}</p>
+      <div class="content-box">
+        <p class="compdef-description">{component.description}</p>
+        {component.purpose && (
+          <div class="compdef-purpose">
+            <strong>Purpose:</strong> {component.purpose}
+          </div>
+        )}
+      </div>
 
-      {component.purpose && (
-        <div class="compdef-purpose">
-          <strong>Purpose:</strong> {component.purpose}
+      {component.props && component.props.length > 0 && (
+        <div class="content-box">
+          <div class="content-box-header">
+            <h3>Properties</h3>
+            <span class="content-box-count">{component.props.length}</span>
+          </div>
+          <PropertyList props={component.props} />
         </div>
       )}
 
-      {component.props && component.props.length > 0 && (
-        <PropertyList props={component.props} />
-      )}
-
       {component['responsible-roles'] && component['responsible-roles'].length > 0 && (
-        <section class="compdef-subsection">
-          <h3>Responsible Roles</h3>
+        <div class="content-box">
+          <div class="content-box-header">
+            <h3>Responsible Roles</h3>
+            <span class="content-box-count">{component['responsible-roles'].length}</span>
+          </div>
           <div class="compdef-roles-list">
             {component['responsible-roles'].map(role => (
               <span key={role['role-id']} class="compdef-role-badge">{role['role-id']}</span>
             ))}
           </div>
-        </section>
+        </div>
       )}
 
       {component['control-implementations'] && component['control-implementations'].length > 0 && (
-        <section class="compdef-subsection" aria-labelledby={`comp-${component.uuid}-ci`}>
-          <h3 id={`comp-${component.uuid}-ci`}>Control Implementations</h3>
+        <div class="compdef-subsection">
           {component['control-implementations'].map(ci => (
-            <ControlImplementationView key={ci.uuid} implementation={ci} />
+            <Accordion
+              key={ci.uuid}
+              id={`ci-${ci.uuid}`}
+              title={`Control Implementation: ${ci.source}`}
+              count={ci['implemented-requirements'].length}
+              defaultOpen={component['control-implementations']!.length === 1}
+              headingLevel={3}
+            >
+              <ControlImplementationView implementation={ci} />
+            </Accordion>
           ))}
-        </section>
+        </div>
       )}
     </article>
   )

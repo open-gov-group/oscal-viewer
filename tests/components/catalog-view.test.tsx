@@ -4,6 +4,11 @@ import { GroupTree } from '@/components/catalog/group-tree'
 import { ControlDetail } from '@/components/catalog/control-detail'
 import type { Catalog, Control, Group } from '@/types/oscal'
 
+// Clean up URL hash between tests to prevent state leaking via useDeepLink
+beforeEach(() => {
+  history.replaceState(null, '', window.location.pathname)
+})
+
 // ============================================================
 // Test Fixtures
 // ============================================================
@@ -307,5 +312,81 @@ describe('ControlDetail', () => {
     expect(screen.queryByText('Content')).not.toBeInTheDocument()
     expect(screen.queryByText('Links')).not.toBeInTheDocument()
     expect(screen.queryByText('Control Enhancements')).not.toBeInTheDocument()
+  })
+})
+
+// ============================================================
+// CatalogView - FAB Sidebar Toggle Tests
+// ============================================================
+
+describe('CatalogView - FAB Sidebar Toggle', () => {
+  it('renders FAB toggle button', () => {
+    render(<CatalogView catalog={testCatalog} />)
+    expect(screen.getByLabelText('Open navigation')).toBeInTheDocument()
+  })
+
+  it('FAB has aria-expanded false by default', () => {
+    render(<CatalogView catalog={testCatalog} />)
+    expect(screen.getByLabelText('Open navigation').getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('clicking FAB opens sidebar', () => {
+    const { container } = render(<CatalogView catalog={testCatalog} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    const sidebar = container.querySelector('.catalog-sidebar')
+    expect(sidebar?.classList.contains('open')).toBe(true)
+  })
+
+  it('FAB aria-label changes when sidebar is open', () => {
+    render(<CatalogView catalog={testCatalog} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    expect(screen.getByLabelText('Close navigation')).toBeInTheDocument()
+  })
+
+  it('FAB aria-expanded is true when sidebar is open', () => {
+    render(<CatalogView catalog={testCatalog} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    expect(screen.getByLabelText('Close navigation').getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('clicking FAB again closes sidebar', () => {
+    const { container } = render(<CatalogView catalog={testCatalog} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    fireEvent.click(screen.getByLabelText('Close navigation'))
+    const sidebar = container.querySelector('.catalog-sidebar')
+    expect(sidebar?.classList.contains('open')).toBe(false)
+  })
+})
+
+// ============================================================
+// CatalogView - Sidebar Backdrop Tests
+// ============================================================
+
+describe('CatalogView - Sidebar Backdrop', () => {
+  it('renders backdrop element', () => {
+    const { container } = render(<CatalogView catalog={testCatalog} />)
+    expect(container.querySelector('.sidebar-backdrop')).toBeTruthy()
+  })
+
+  it('backdrop is not visible by default', () => {
+    const { container } = render(<CatalogView catalog={testCatalog} />)
+    const backdrop = container.querySelector('.sidebar-backdrop')
+    expect(backdrop?.classList.contains('visible')).toBe(false)
+  })
+
+  it('backdrop becomes visible when sidebar opens', () => {
+    const { container } = render(<CatalogView catalog={testCatalog} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    const backdrop = container.querySelector('.sidebar-backdrop')
+    expect(backdrop?.classList.contains('visible')).toBe(true)
+  })
+
+  it('clicking backdrop closes sidebar', () => {
+    const { container } = render(<CatalogView catalog={testCatalog} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    const backdrop = container.querySelector('.sidebar-backdrop')!
+    fireEvent.click(backdrop)
+    const sidebar = container.querySelector('.catalog-sidebar')
+    expect(sidebar?.classList.contains('open')).toBe(false)
   })
 })

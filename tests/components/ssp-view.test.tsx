@@ -2,6 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/preact'
 import { SspView } from '@/components/ssp/ssp-view'
 import type { SystemSecurityPlan } from '@/types/oscal'
 
+// Clean up URL hash between tests to prevent state leaking via useDeepLink
+beforeEach(() => {
+  history.replaceState(null, '', window.location.pathname)
+})
+
 // ============================================================
 // Test Fixtures
 // ============================================================
@@ -315,5 +320,94 @@ describe('SspView - Control Implementation', () => {
 
   it('renders by-components on requirements', () => {
     expect(screen.getByText('Audit logging via Apache access logs')).toBeInTheDocument()
+  })
+})
+
+// ============================================================
+// SspView - Tab Keyboard Navigation Tests
+// ============================================================
+
+describe('SspView - Tab Keyboard Navigation', () => {
+  it('ArrowRight moves from first to second tab', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    const firstTab = container.querySelector('#ssp-tab-characteristics')!
+    fireEvent.keyDown(firstTab, { key: 'ArrowRight' })
+    expect(screen.getByText('System Implementation').closest('[role="tab"]')?.getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('ArrowRight wraps from last tab to first tab', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    fireEvent.click(screen.getByText('Control Implementation'))
+    const lastTab = container.querySelector('#ssp-tab-controls')!
+    fireEvent.keyDown(lastTab, { key: 'ArrowRight' })
+    expect(screen.getByText('System Characteristics').closest('[role="tab"]')?.getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('ArrowLeft wraps from first tab to last tab', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    const firstTab = container.querySelector('#ssp-tab-characteristics')!
+    fireEvent.keyDown(firstTab, { key: 'ArrowLeft' })
+    expect(screen.getByText('Control Implementation').closest('[role="tab"]')?.getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('ArrowLeft moves from second to first tab', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    fireEvent.click(screen.getByText('System Implementation'))
+    const secondTab = container.querySelector('#ssp-tab-implementation')!
+    fireEvent.keyDown(secondTab, { key: 'ArrowLeft' })
+    expect(screen.getByText('System Characteristics').closest('[role="tab"]')?.getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('Home key moves to first tab', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    fireEvent.click(screen.getByText('Control Implementation'))
+    const lastTab = container.querySelector('#ssp-tab-controls')!
+    fireEvent.keyDown(lastTab, { key: 'Home' })
+    expect(screen.getByText('System Characteristics').closest('[role="tab"]')?.getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('End key moves to last tab', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    const firstTab = container.querySelector('#ssp-tab-characteristics')!
+    fireEvent.keyDown(firstTab, { key: 'End' })
+    expect(screen.getByText('Control Implementation').closest('[role="tab"]')?.getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('active tab has tabIndex 0, inactive tabs have tabIndex -1', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    const tabs = container.querySelectorAll('[role="tab"]')
+    expect(tabs[0].getAttribute('tabindex')).toBe('0')
+    expect(tabs[1].getAttribute('tabindex')).toBe('-1')
+    expect(tabs[2].getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('tabIndex updates when active tab changes', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    fireEvent.click(screen.getByText('System Implementation'))
+    const tabs = container.querySelectorAll('[role="tab"]')
+    expect(tabs[0].getAttribute('tabindex')).toBe('-1')
+    expect(tabs[1].getAttribute('tabindex')).toBe('0')
+    expect(tabs[2].getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('each tab has aria-controls pointing to tabpanel', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    const tabs = container.querySelectorAll('[role="tab"]')
+    expect(tabs[0].getAttribute('aria-controls')).toBe('ssp-tabpanel-characteristics')
+    expect(tabs[1].getAttribute('aria-controls')).toBe('ssp-tabpanel-implementation')
+    expect(tabs[2].getAttribute('aria-controls')).toBe('ssp-tabpanel-controls')
+  })
+
+  it('tabpanel has aria-labelledby pointing to active tab', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    const tabpanel = container.querySelector('[role="tabpanel"]')
+    expect(tabpanel?.getAttribute('aria-labelledby')).toBe('ssp-tab-characteristics')
+  })
+
+  it('tabpanel aria-labelledby updates when tab changes', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    fireEvent.click(screen.getByText('System Implementation'))
+    const tabpanel = container.querySelector('[role="tabpanel"]')
+    expect(tabpanel?.getAttribute('aria-labelledby')).toBe('ssp-tab-implementation')
   })
 })

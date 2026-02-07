@@ -159,7 +159,7 @@ describe('ProfileView - Imports', () => {
 
   it('has proper section heading for imports', () => {
     render(<ProfileView profile={fullProfile} />)
-    const heading = screen.getByRole('heading', { name: 'Imports' })
+    const heading = screen.getByRole('heading', { name: /Imports/ })
     expect(heading).toBeInTheDocument()
   })
 })
@@ -189,7 +189,7 @@ describe('ProfileView - Merge', () => {
 describe('ProfileView - Modifications', () => {
   it('renders set-parameters section', () => {
     render(<ProfileView profile={fullProfile} />)
-    expect(screen.getByRole('heading', { name: 'Parameter Settings' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Parameter Settings/ })).toBeInTheDocument()
     expect(screen.getByText('ac-1_prm_1')).toBeInTheDocument()
   })
 
@@ -205,7 +205,7 @@ describe('ProfileView - Modifications', () => {
 
   it('renders alterations section', () => {
     render(<ProfileView profile={fullProfile} />)
-    expect(screen.getByRole('heading', { name: 'Alterations' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Alterations/ })).toBeInTheDocument()
   })
 
   it('renders alter control-ids', () => {

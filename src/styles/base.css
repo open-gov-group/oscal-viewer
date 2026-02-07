@@ -39,6 +39,15 @@
   --color-accent-orange: #f97316;
   --color-error-bg: #fef2f2;
   --color-error-border: #fecaca;
+
+  /* Extended design tokens (Briefing 03) */
+  --color-bg-elevated: #ffffff;
+  --color-border-strong: #d1d5db;
+  --color-text-disabled: #9ca3af;
+  --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-link: #1a56db;
+  --color-link-hover: #1e429f;
+  --border-radius-box: 10px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -72,6 +81,14 @@
     --color-accent-orange: #fb923c;
     --color-error-bg: #450a0a;
     --color-error-border: #991b1b;
+
+    /* Extended design tokens - dark mode */
+    --color-bg-elevated: #1f2937;
+    --color-border-strong: #4b5563;
+    --color-text-disabled: #6b7280;
+    --color-overlay: rgba(0, 0, 0, 0.7);
+    --color-link: #60a5fa;
+    --color-link-hover: #93c5fd;
   }
 }
 
@@ -433,6 +450,369 @@ body {
   margin-bottom: 0.75rem;
 }
 
+/* ============================================================
+   Shared: Content Box (Briefing 01§6, 02§5)
+   Usage: Wrap content sections in visual cards/panels
+   ============================================================ */
+
+.content-box {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-box);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.content-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.content-box-header h3,
+.content-box-header h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.content-box-header .content-box-count {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-secondary);
+  padding: 0.0625rem 0.5rem;
+  border-radius: 9999px;
+}
+
+/* ============================================================
+   Shared: Accordion (Briefing 01§6, 02§5, 04§1)
+   ARIA: button[aria-expanded] + region[aria-labelledby]
+   ============================================================ */
+
+.accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-box);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.accordion-heading {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.accordion-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  min-height: 44px;
+}
+
+.accordion-trigger:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.accordion-trigger[aria-expanded="true"] {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.accordion-trigger-icon {
+  display: inline-flex;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.625rem;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.accordion-trigger[aria-expanded="true"] .accordion-trigger-icon {
+  transform: rotate(90deg);
+}
+
+.accordion-trigger-title {
+  flex: 1;
+}
+
+.accordion-trigger-count {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-secondary);
+  padding: 0.0625rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.accordion-content {
+  padding: 1rem 1.25rem;
+}
+
+.accordion-content[hidden] {
+  display: none;
+}
+
+.accordion-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.accordion-actions button {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.75rem;
+}
+
+.accordion-actions button:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+/* ============================================================
+   Shared: Filter Bar (Spec U12)
+   ============================================================ */
+
+.filter-bar {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.filter-bar-row {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.filter-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.filter-input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  border-color: var(--color-primary);
+}
+
+.filter-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.filter-select {
+  padding: 0.375rem 0.375rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  background-color: var(--color-bg);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  max-width: 120px;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.375rem;
+  align-items: center;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.6875rem;
+  background-color: var(--color-status-info-bg);
+  color: var(--color-status-info-text);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.filter-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.filter-chip-remove:hover {
+  opacity: 1;
+  background-color: var(--color-bg-secondary);
+}
+
+.filter-clear-all {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 0.6875rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.filter-clear-all:hover {
+  color: var(--color-text);
+}
+
+/* ============================================================
+   Shared: Status Badge (Icon + Text)
+   ============================================================ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.status-badge-icon {
+  flex-shrink: 0;
+}
+
+.status-badge--operational,
+.status-badge--implemented {
+  background-color: var(--color-status-success-bg);
+  color: var(--color-status-success-text);
+}
+
+.status-badge--under-development,
+.status-badge--partial {
+  background-color: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+}
+
+.status-badge--planned {
+  background-color: var(--color-status-info-bg);
+  color: var(--color-status-info-text);
+}
+
+.status-badge--disposition,
+.status-badge--alternative {
+  background-color: var(--color-accent-purple-bg);
+  color: var(--color-accent-purple-text);
+}
+
+.status-badge--not-applicable {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   Shared: Copy Link Button
+   Small inline button for copying deep-link URLs to clipboard
+   ============================================================ */
+
+.copy-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  vertical-align: middle;
+  opacity: 0.5;
+  transition: opacity 150ms, color 150ms, background-color 150ms;
+}
+
+.copy-link-btn:hover {
+  opacity: 1;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+.copy-link-btn.copied {
+  opacity: 1;
+  color: var(--color-status-success-text);
+}
+
+/* ============================================================
+   Shared: Nav Title Box (Briefing 01§5, 02§2)
+   Sticky title above scrolling tree; full title, no ellipsis
+   ============================================================ */
+
+.nav-title-box {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 1rem;
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav-title-box .nav-doc-type {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.nav-title-box .nav-doc-title {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Kein text-overflow: ellipsis! Titel wird gewrapt. */
+}
+
+.nav-title-box .nav-doc-version {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
 /* Catalog View */
 .catalog-view {
   width: 100%;
@@ -453,7 +833,7 @@ body {
 
 .catalog-layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 340px 1fr;
   gap: 0;
   min-height: calc(100vh - 64px);
   margin: 0 -2.5rem;
@@ -563,13 +943,15 @@ body {
 }
 
 .tree-control-row.selected {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  border-left: 3px solid var(--color-primary);
+  font-weight: 600;
 }
 
 .tree-control-row.selected .tree-control-id {
-  color: white;
-  opacity: 0.8;
+  color: var(--color-primary);
+  opacity: 1;
 }
 
 .tree-expand-btn {
@@ -772,6 +1154,7 @@ body {
 .part-prose {
   font-size: 0.9375rem;
   line-height: 1.65;
+  max-width: 80ch;
 }
 
 .part-children {
@@ -1094,7 +1477,7 @@ body {
 
 .compdef-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 340px 1fr;
   gap: 0;
   min-height: calc(100vh - 64px);
   margin: 0 -2.5rem;
@@ -1146,13 +1529,15 @@ body {
 }
 
 .compdef-component-item.selected {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  border-left: 3px solid var(--color-primary);
+  font-weight: 600;
 }
 
 .compdef-component-item.selected .compdef-type-badge {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background-color: var(--color-accent-purple-bg);
+  color: var(--color-accent-purple-text);
 }
 
 .compdef-type-badge {
@@ -1208,6 +1593,7 @@ body {
   font-size: 0.9375rem;
   line-height: 1.65;
   margin-bottom: 0.75rem;
+  max-width: 80ch;
 }
 
 .compdef-purpose {
@@ -1274,6 +1660,7 @@ body {
   font-size: 0.8125rem;
   color: var(--color-text-secondary);
   margin-bottom: 0.75rem;
+  max-width: 80ch;
 }
 
 .compdef-requirements-list {
@@ -1306,6 +1693,7 @@ body {
 .compdef-requirement-desc {
   font-size: 0.8125rem;
   line-height: 1.5;
+  max-width: 80ch;
 }
 
 .compdef-statements {
@@ -1397,38 +1785,6 @@ body {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.5rem;
-}
-
-.ssp-status-badge {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 3px;
-  font-weight: 500;
-}
-
-.ssp-status--operational {
-  background-color: var(--color-status-success-bg);
-  color: var(--color-status-success-text);
-}
-
-.ssp-status--under-development {
-  background-color: var(--color-status-warning-bg);
-  color: var(--color-status-warning-text);
-}
-
-.ssp-status--under-major-modification {
-  background-color: var(--color-status-orange-bg);
-  color: var(--color-status-orange-text);
-}
-
-.ssp-status--disposition {
-  background-color: var(--color-status-error-bg);
-  color: var(--color-status-error-text);
-}
-
-.ssp-status--other {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
 }
 
 .ssp-sensitivity-badge {
@@ -1528,6 +1884,7 @@ body {
 .ssp-field-value {
   font-size: 0.9375rem;
   line-height: 1.65;
+  max-width: 80ch;
 }
 
 .ssp-system-id {
@@ -1666,6 +2023,7 @@ body {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   margin-bottom: 1rem;
+  max-width: 80ch;
 }
 
 .ssp-requirements-list {
@@ -1733,40 +2091,6 @@ body {
 .ssp-by-component p {
   margin-top: 0.125rem;
   line-height: 1.5;
-}
-
-.ssp-impl-status {
-  font-size: 0.6875rem;
-  padding: 0.0625rem 0.375rem;
-  border-radius: 3px;
-  font-weight: 500;
-  display: inline-block;
-  margin-top: 0.25rem;
-}
-
-.ssp-impl-status--implemented {
-  background-color: var(--color-status-success-bg);
-  color: var(--color-status-success-text);
-}
-
-.ssp-impl-status--partial {
-  background-color: var(--color-status-warning-bg);
-  color: var(--color-status-warning-text);
-}
-
-.ssp-impl-status--planned {
-  background-color: var(--color-status-info-bg);
-  color: var(--color-status-info-text);
-}
-
-.ssp-impl-status--alternative {
-  background-color: var(--color-accent-purple-bg);
-  color: var(--color-accent-purple-text);
-}
-
-.ssp-impl-status--not-applicable {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
 }
 
 .ssp-remarks {
@@ -1869,7 +2193,7 @@ body {
 .search-result-item {
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid var(--color-border);
-  cursor: default;
+  cursor: pointer;
 }
 
 .search-result-item:last-child {

@@ -3,7 +3,7 @@
 **Rolle**: QA Engineer
 **Projekt**: OSCAL Viewer
 **Stand**: 2026-02-06
-**Phase**: UX Redesign ABGESCHLOSSEN - Phase 3 als naechstes
+**Phase**: UI/UX QA Verifikation ABGESCHLOSSEN - Phase 3 als naechstes
 
 ---
 
@@ -184,27 +184,27 @@ it('has no accessibility violations', async () => {
 
 ### Test-Metriken
 
-| Metrik | Phase 1 | Phase 2 | Delta |
-|--------|---------|---------|-------|
-| Test-Dateien | 2 | 11 | +9 |
-| Tests gesamt | 70 | 254 | +184 |
-| Statement Coverage | 94.78% (Parser) | 86.88% (Gesamt) | Gesamt-Coverage neu |
-| Branch Coverage | - | 81.77% | Neu |
-| Function Coverage | - | 92.18% | Neu |
+| Metrik | Phase 1 | Phase 2 | UI/UX QA | Delta |
+|--------|---------|---------|----------|-------|
+| Test-Dateien | 2 | 11 | 12 | +1 |
+| Tests gesamt | 70 | 254 | 322 | +68 |
+| Statement Coverage | 94.78% (Parser) | 86.88% (Gesamt) | 89.13% | +2.25% |
+| Branch Coverage | - | 81.77% | 82.23% | +0.46% |
+| Function Coverage | - | 92.18% | 87.64% | -4.54% (neue Dateien) |
 
 ### Coverage pro Bereich
 
 | Bereich | Statements | Branches | Functions |
 |---------|-----------|----------|-----------|
 | Parser | 94.78% | 84.16% | 100% |
-| Catalog Components | 90.97% | 83.69% | 93.33% |
-| Profile Components | 93.30% | 71.64% | 100% |
-| CompDef Components | 86.60% | 80.00% | 83.33% |
-| SSP Components | 98.03% | 87.03% | 85.71% |
-| Shared Components | 100% | 89.65% | 100% |
-| Search Hook | 87.09% | 76.19% | 87.50% |
+| Catalog Components | 80.21% | 85.45% | 85% |
+| Profile Components | 93.68% | 71.64% | 100% |
+| CompDef Components | 89.14% | 84.31% | 88.88% |
+| SSP Components | 97.68% | 88.05% | 100% |
+| Shared Components | 96.73% | 90.16% | 100% |
+| Hooks | 92.33% | 72.88% | 90.9% |
 | DocumentViewer | 100% | 100% | 100% |
-| **app.tsx** | **0%** | **0%** | **0%** |
+| **app.tsx** | **55.63%** | **16.66%** | **14.28%** |
 
 ### Accessibility Findings (BEHOBEN)
 
@@ -228,20 +228,21 @@ tests/
 ├── parser.test.ts                        # 43 Parser-Tests (bestehend)
 ├── search.test.ts                        # 27 Search-Tests (bestehend)
 ├── fixtures.test.ts                      # 31 Tests mit echten NIST OSCAL-Dateien
-├── accessibility.test.tsx                # 9 axe-core Accessibility-Tests
+├── accessibility.test.tsx                # 13 axe-core Accessibility-Tests (+4 neue)
 ├── fixtures/
 │   ├── catalog-nist-example.json         # NIST OSCAL Catalog (1.1.3)
 │   ├── profile-nist-example.json         # NIST OSCAL Profile (1.1.3)
 │   ├── component-def-nist-example.json   # NIST OSCAL CompDef (1.1.2)
 │   └── ssp-nist-example.json            # NIST OSCAL SSP (1.1.3)
 └── components/
-    ├── shared.test.tsx                   # 21 Tests (MetadataPanel, PropertyBadge/List)
-    ├── catalog-view.test.tsx             # 30 Tests (CatalogView, GroupTree, ControlDetail)
+    ├── app.test.tsx                      # 4 Tests (Skip-Link, Banner-Rolle)
+    ├── shared.test.tsx                   # 38 Tests (+17: StatusBadge, Accordion, AccordionGroup)
+    ├── catalog-view.test.tsx             # 40 Tests (+10: FAB Toggle, Sidebar Backdrop)
     ├── profile-view.test.tsx             # 24 Tests (ProfileView, Imports, Merge, Modify)
-    ├── component-def-view.test.tsx       # 16 Tests (ComponentDefView, Detail, CIs)
-    ├── ssp-view.test.tsx                 # 32 Tests (SspView, Tabs, alle 3 Panels)
+    ├── component-def-view.test.tsx       # 23 Tests (+7: FAB Toggle, Sidebar Backdrop)
+    ├── ssp-view.test.tsx                 # 43 Tests (+11: Tab Keyboard-Navigation)
     ├── document-viewer.test.tsx          # 5 Tests (Router-Dispatch)
-    └── search-bar.test.tsx              # 16 Tests (SearchBar, Input, Results)
+    └── search-bar.test.tsx              # 31 Tests (+15: Combobox Keyboard-Navigation)
 ```
 
 ### Neue Dependencies
@@ -282,10 +283,10 @@ tests/
 | Bereich | Ziel | Aktuell | Status |
 |---------|------|---------|--------|
 | Parser | >= 90% | 94.78% | PASS |
-| Renderer | >= 80% | 86-100% | PASS |
-| Gesamt Statements | >= 80% | 86.88% | PASS |
-| Gesamt Branches | >= 70% | 81.77% | PASS |
-| Gesamt Functions | >= 80% | 92.18% | PASS |
+| Renderer | >= 80% | 80-100% | PASS |
+| Gesamt Statements | >= 80% | 89.13% | PASS |
+| Gesamt Branches | >= 70% | 82.23% | PASS |
+| Gesamt Functions | >= 80% | 87.64% | PASS |
 
 ---
 
@@ -312,6 +313,7 @@ tests/
 | 2026-02-06 | Architect | QA Engineer | UI/UX Overhaul (Commit a567973): Material Design, a11y Fixes, Responsive. QA-Verifikation angefordert | Info |
 | 2026-02-06 | QA Engineer | Architect | UI/UX Overhaul QA: 254 Tests bestanden, 0 TS Errors, 9/9 axe-core, Bundle 20.69 KB - FREIGEGEBEN | Abgeschlossen |
 | 2026-02-06 | Architect | QA Engineer | UX Redesign: Full-Width + Sticky Sidebar (CSS-only, 254 Tests bestanden). Neue Test-Luecken beachten | Info |
+| 2026-02-06 | QA Engineer | Architect | UI/UX QA: 322 Tests, 89.13% Coverage, 13 axe-core Tests, 0 neue Violations, 68 neue Tests | Abgeschlossen |
 
 ---
 
@@ -340,23 +342,26 @@ tests/
 | Phase 2 | 14.44 KB | 4.39 KB | 18.83 KB |
 | **UI/UX Overhaul** | **15.14 KB** | **5.51 KB** | **20.69 KB** |
 
-### Neue UI-Elemente (zukuenftig zu testen)
+### Neue UI-Elemente - Test-Status
 
-| Element | Typ | Datei | Test-Fokus |
-|---------|-----|-------|------------|
-| Skip-Link | a11y | app.tsx | Sichtbar bei :focus, navigiert zu #main-content |
-| FAB Sidebar Toggle | Responsive | catalog-view.tsx, component-def-view.tsx | Nur auf Mobile sichtbar, oeffnet/schliesst Sidebar |
-| Sidebar Backdrop | Responsive | catalog-view.tsx, component-def-view.tsx | Sichtbar bei offenem Sidebar, Klick schliesst |
-| SSP Tab Keyboard-Nav | a11y | ssp-view.tsx | ArrowLeft/Right/Home/End navigieren Tabs |
-| SearchBar Combobox | a11y | search-bar.tsx | ArrowUp/Down/Escape, aria-activedescendant |
+| Element | Typ | Datei | Tests | Status |
+|---------|-----|-------|-------|--------|
+| Skip-Link | a11y | app.tsx | 4 Tests (Rendering, Target, Rolle) | DONE |
+| FAB Sidebar Toggle | Responsive | catalog-view, component-def-view | 10 Tests (aria-expanded, aria-label, open/close) | DONE |
+| Sidebar Backdrop | Responsive | catalog-view, component-def-view | 7 Tests (Rendering, Visibility, Click-Close) | DONE |
+| SSP Tab Keyboard-Nav | a11y | ssp-view.tsx | 11 Tests (Arrow/Home/End, tabIndex, aria-controls) | DONE |
+| SearchBar Combobox | a11y | search-bar.tsx | 15 Tests (Arrow/Escape, activedescendant, expanded) | DONE |
+| StatusBadge | Shared | status-badge.tsx | 5 Tests + 1 axe-core | DONE |
+| Accordion | Shared | accordion.tsx | 11 Tests + 1 axe-core | DONE |
 
 ### Offene Test-Luecken
 
 | Bereich | Aktueller Stand | Empfehlung |
 |---------|-----------------|------------|
 | Responsive Layout | Nicht testbar in jsdom | Playwright E2E mit viewport Simulation |
-| FAB Sidebar Toggle | Kein Test (CSS-abhaengig) | Playwright mit `setViewportSize(375, 667)` |
-| Keyboard-Navigation | Teilweise via userEvent | Playwright fuer komplette Tab-Flows |
+| FAB CSS-Visibility | DOM-Tests vorhanden, CSS nicht | Playwright mit `setViewportSize(375, 667)` |
+| Sticky Sidebar | Nicht in jsdom testbar | Playwright E2E: scrollen und pruefen |
+| app.tsx File-Handling | 55.63% Coverage | Playwright E2E fuer Drag&Drop, File-Input |
 
 ---
 
@@ -400,3 +405,42 @@ tests/
 | Sticky Sidebar | `position: sticky` nicht in jsdom testbar | Playwright E2E: scrollen und pruefen ob Sidebar sichtbar bleibt |
 | Full-Width Layout | CSS Layout nicht in jsdom | Playwright: `page.evaluate(() => getComputedStyle(...))` |
 | `:has()` Selektor | Dropzone-Zentrierung | Playwright: Datei laden/entladen, Layout pruefen |
+
+---
+
+## UI/UX Elemente QA - Ergebnis-Report
+
+**Datum**: 2026-02-06 | **Ergebnis**: ALLE 5 UI-ELEMENTE GETESTET, 0 NEUE VIOLATIONS
+
+### Umsetzungsstatus
+
+| Aufgabe | Status | Details |
+|---------|--------|---------|
+| SSP Tab Keyboard-Nav Tests | DONE | 11 Tests: ArrowRight/Left (wrap), Home/End, tabIndex roving, aria-controls, aria-labelledby |
+| SearchBar Combobox Tests | DONE | 15 Tests: ArrowDown/Up, Escape, aria-activedescendant, aria-expanded, aria-controls, sequential IDs |
+| Skip-Link Tests | DONE | 4 Tests: Rendering, href, Target, Banner-Rolle |
+| FAB Sidebar Toggle Tests | DONE | 10 Tests: CatalogView (6) + ComponentDefView (4), aria-expanded, aria-label, open/close |
+| Sidebar Backdrop Tests | DONE | 7 Tests: CatalogView (4) + ComponentDefView (3), Visibility, Click-Close |
+| StatusBadge Tests | DONE | 5 Unit-Tests + 1 axe-core: States, CSS-Klassen, SVG-Icons, aria-hidden |
+| Accordion Tests | DONE | 11 Unit-Tests + 1 axe-core: Open/Close, aria-expanded, aria-controls, headingLevel |
+| axe-core Erweiterung | DONE | 4 neue Tests: StatusBadge, Accordion, SearchBar (mit/ohne Results) |
+
+### Neue Tests - Zusammenfassung
+
+| Datei | Vorher | Nachher | Neue Tests |
+|-------|--------|---------|------------|
+| ssp-view.test.tsx | 32 | 43 | +11 (Tab Keyboard-Nav) |
+| search-bar.test.tsx | 16 | 31 | +15 (Combobox Keyboard-Nav) |
+| catalog-view.test.tsx | 30 | 40 | +10 (FAB + Backdrop) |
+| component-def-view.test.tsx | 16 | 23 | +7 (FAB + Backdrop) |
+| shared.test.tsx | 21 | 38 | +17 (StatusBadge + Accordion + AccordionGroup) |
+| accessibility.test.tsx | 9 | 13 | +4 (StatusBadge, Accordion, SearchBar x2) |
+| app.test.tsx | NEU | 4 | +4 (Skip-Link, Roles) |
+| **Gesamt** | **254** | **322** | **+68** |
+
+### Accessibility-Ergebnis
+
+- **13/13 axe-core Tests bestanden** (0 neue Violations)
+- Alle neuen Elemente (StatusBadge, Accordion, SearchBar Combobox) sind WCAG 2.1 AA konform
+- SSP Tabs implementieren korrekt das WAI-ARIA Tabs Pattern (roving tabindex)
+- SearchBar implementiert korrekt das WAI-ARIA Combobox Pattern (aria-activedescendant)

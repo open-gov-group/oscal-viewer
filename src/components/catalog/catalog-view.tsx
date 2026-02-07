@@ -1,8 +1,12 @@
 import { useState, useMemo } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
-import type { Catalog, Control } from '@/types/oscal'
+import type { Catalog, Control, Group } from '@/types/oscal'
 import { countControls } from '@/parser/catalog'
+import { useDeepLink } from '@/hooks/use-deep-link'
+import { useFilter } from '@/hooks/use-filter'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
+import { FilterBar } from '@/components/shared/filter-bar'
+import type { FilterCategory } from '@/components/shared/filter-bar'
 import { GroupTree } from './group-tree'
 import { ControlDetail } from './control-detail'
 
@@ -11,12 +15,33 @@ interface CatalogViewProps {
 }
 
 export const CatalogView: FunctionComponent<CatalogViewProps> = ({ catalog }) => {
-  const [selectedControlId, setSelectedControlId] = useState<string | null>(null)
+  const { selectedId: selectedControlId, setSelectedId: setSelectedControlId } = useDeepLink('catalog')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const filter = useFilter()
 
   const controlMap = useMemo(() => buildControlMap(catalog), [catalog])
   const totalControls = useMemo(() => countControls(catalog), [catalog])
   const selectedControl = selectedControlId ? controlMap.get(selectedControlId) ?? null : null
+
+  const familyCategories = useMemo((): FilterCategory[] => {
+    if (!catalog.groups || catalog.groups.length === 0) return []
+    const options = catalog.groups
+      .filter(g => g.id)
+      .map(g => ({ value: g.id!, label: `${g.id!.toUpperCase()} – ${g.title}` }))
+    if (options.length === 0) return []
+    return [{ key: 'family', label: 'Family', options }]
+  }, [catalog])
+
+  const filteredGroups = useMemo(() => {
+    if (!filter.hasActiveFilters) return catalog.groups
+    const familyChips = filter.chips.filter(c => c.key === 'family').map(c => c.value)
+    return filterGroups(catalog.groups, filter.keyword, familyChips)
+  }, [catalog.groups, filter.keyword, filter.chips, filter.hasActiveFilters])
+
+  const filteredControls = useMemo(() => {
+    if (!filter.hasActiveFilters) return catalog.controls
+    return filterControlList(catalog.controls, filter.keyword)
+  }, [catalog.controls, filter.keyword, filter.hasActiveFilters])
 
   const handleControlSelect = (id: string) => {
     setSelectedControlId(id)
@@ -39,9 +64,27 @@ export const CatalogView: FunctionComponent<CatalogViewProps> = ({ catalog }) =>
       <div class="catalog-layout">
         <div class={`sidebar-backdrop ${sidebarOpen ? 'visible' : ''}`} onClick={() => setSidebarOpen(false)} />
         <aside class={`catalog-sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Control navigation">
+          <div class="nav-title-box">
+            <span class="nav-doc-type">Catalog</span>
+            <span class="nav-doc-title">{catalog.metadata.title}</span>
+            {catalog.metadata.version && (
+              <span class="nav-doc-version">v{catalog.metadata.version}</span>
+            )}
+          </div>
+          <FilterBar
+            keyword={filter.keyword}
+            onKeywordChange={filter.setKeyword}
+            chips={filter.chips}
+            onAddChip={filter.addChip}
+            onRemoveChip={filter.removeChip}
+            onClearAll={filter.clearAll}
+            hasActiveFilters={filter.hasActiveFilters}
+            categories={familyCategories}
+            placeholder="Filter controls..."
+          />
           <GroupTree
-            groups={catalog.groups}
-            controls={catalog.controls}
+            groups={filteredGroups}
+            controls={filteredControls}
             selectedControlId={selectedControlId}
             onSelectControl={handleControlSelect}
           />
@@ -103,4 +146,53 @@ function buildControlMap(catalog: Catalog): Map<string, Control> {
   addGroups(catalog.groups)
 
   return map
+}
+
+function controlMatchesKeyword(control: Control, keyword: string): boolean {
+  const kw = keyword.toLowerCase()
+  return control.id.toLowerCase().includes(kw) || control.title.toLowerCase().includes(kw)
+}
+
+function filterControlList(controls: Control[] | undefined, keyword: string): Control[] | undefined {
+  if (!controls || !keyword) return controls
+  return controls.filter(c => controlMatchesKeyword(c, keyword) ||
+    (c.controls && c.controls.some(sub => controlMatchesKeyword(sub, keyword))))
+}
+
+function filterGroups(groups: Group[] | undefined, keyword: string, familyIds: string[]): Group[] | undefined {
+  if (!groups) return groups
+
+  return groups.reduce<Group[]>((acc, group) => {
+    // Family chip filter: skip groups that don't match
+    if (familyIds.length > 0 && group.id && !familyIds.includes(group.id)) return acc
+
+    if (!keyword) {
+      acc.push(group)
+      return acc
+    }
+
+    // Filter controls within this group
+    const filteredControls = group.controls?.filter(c =>
+      controlMatchesKeyword(c, keyword) ||
+      (c.controls && c.controls.some(sub => controlMatchesKeyword(sub, keyword)))
+    )
+
+    // Recursively filter sub-groups
+    const filteredSubGroups = filterGroups(group.groups, keyword, [])
+
+    const hasMatchingControls = filteredControls && filteredControls.length > 0
+    const hasMatchingSubGroups = filteredSubGroups && filteredSubGroups.length > 0
+    const groupIdMatches = group.id?.toLowerCase().includes(keyword.toLowerCase())
+    const groupTitleMatches = group.title.toLowerCase().includes(keyword.toLowerCase())
+
+    if (hasMatchingControls || hasMatchingSubGroups || groupIdMatches || groupTitleMatches) {
+      acc.push({
+        ...group,
+        controls: hasMatchingControls ? filteredControls : (groupIdMatches || groupTitleMatches ? group.controls : undefined),
+        groups: hasMatchingSubGroups ? filteredSubGroups : (groupIdMatches || groupTitleMatches ? group.groups : undefined),
+      })
+    }
+
+    return acc
+  }, [])
 }

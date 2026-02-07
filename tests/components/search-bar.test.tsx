@@ -123,3 +123,121 @@ describe('SearchBar', () => {
     expect(options.length).toBe(3)
   })
 })
+
+// ============================================================
+// SearchBar - Combobox Keyboard Navigation Tests
+// ============================================================
+
+describe('SearchBar - Combobox Keyboard Navigation', () => {
+  const onQueryChange = vi.fn()
+
+  beforeEach(() => {
+    onQueryChange.mockClear()
+  })
+
+  it('input has role="combobox"', () => {
+    render(<SearchBar query="" onQueryChange={onQueryChange} results={[]} isSearching={false} />)
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
+  })
+
+  it('input has aria-haspopup="listbox"', () => {
+    render(<SearchBar query="" onQueryChange={onQueryChange} results={[]} isSearching={false} />)
+    expect(screen.getByRole('combobox').getAttribute('aria-haspopup')).toBe('listbox')
+  })
+
+  it('aria-expanded is false when not searching', () => {
+    render(<SearchBar query="" onQueryChange={onQueryChange} results={[]} isSearching={false} />)
+    expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('aria-expanded is true when showing results', () => {
+    render(<SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />)
+    expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('aria-controls references listbox when showing results', () => {
+    render(<SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />)
+    expect(screen.getByRole('combobox').getAttribute('aria-controls')).toBe('search-results-listbox')
+  })
+
+  it('aria-controls is absent when not showing results', () => {
+    render(<SearchBar query="" onQueryChange={onQueryChange} results={[]} isSearching={false} />)
+    expect(screen.getByRole('combobox').getAttribute('aria-controls')).toBeNull()
+  })
+
+  it('ArrowDown sets first result as active', () => {
+    const { container } = render(
+      <SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />
+    )
+    const input = screen.getByRole('combobox')
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    expect(input.getAttribute('aria-activedescendant')).toBe('search-result-0')
+    expect(container.querySelector('#search-result-0')?.getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('ArrowDown moves through results sequentially', () => {
+    render(<SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    expect(input.getAttribute('aria-activedescendant')).toBe('search-result-1')
+  })
+
+  it('ArrowDown does not exceed max results', () => {
+    render(<SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />)
+    const input = screen.getByRole('combobox')
+    for (let i = 0; i < 10; i++) {
+      fireEvent.keyDown(input, { key: 'ArrowDown' })
+    }
+    expect(input.getAttribute('aria-activedescendant')).toBe('search-result-2')
+  })
+
+  it('ArrowUp decrements active result index', () => {
+    render(<SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    fireEvent.keyDown(input, { key: 'ArrowUp' })
+    expect(input.getAttribute('aria-activedescendant')).toBe('search-result-0')
+  })
+
+  it('ArrowUp from first result clears active descendant', () => {
+    render(<SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    fireEvent.keyDown(input, { key: 'ArrowUp' })
+    expect(input.getAttribute('aria-activedescendant')).toBeNull()
+  })
+
+  it('Escape clears the query', () => {
+    render(<SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(onQueryChange).toHaveBeenCalledWith('')
+  })
+
+  it('result items have sequential IDs', () => {
+    const { container } = render(
+      <SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />
+    )
+    expect(container.querySelector('#search-result-0')).toBeTruthy()
+    expect(container.querySelector('#search-result-1')).toBeTruthy()
+    expect(container.querySelector('#search-result-2')).toBeTruthy()
+  })
+
+  it('active result has visual active class', () => {
+    const { container } = render(
+      <SearchBar query="ac" onQueryChange={onQueryChange} results={mockResults} isSearching={true} />
+    )
+    const input = screen.getByRole('combobox')
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    expect(container.querySelector('#search-result-0')?.classList.contains('search-result-active')).toBe(true)
+  })
+
+  it('keyboard navigation does nothing when no results', () => {
+    render(<SearchBar query="zzz" onQueryChange={onQueryChange} results={[]} isSearching={true} />)
+    const input = screen.getByRole('combobox')
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    expect(input.getAttribute('aria-activedescendant')).toBeNull()
+  })
+})

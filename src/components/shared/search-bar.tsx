@@ -7,14 +7,21 @@ interface SearchBarProps {
   onQueryChange: (q: string) => void
   results: SearchResult[]
   isSearching: boolean
+  onSelect?: (result: SearchResult) => void
 }
 
-export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryChange, results, isSearching }) => {
+export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryChange, results, isSearching, onSelect }) => {
   const [activeIndex, setActiveIndex] = useState(-1)
 
   useEffect(() => {
     if (!isSearching) setActiveIndex(-1)
   }, [isSearching])
+
+  const handleSelect = (result: SearchResult) => {
+    onSelect?.(result)
+    onQueryChange('')
+    setActiveIndex(-1)
+  }
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!isSearching || results.length === 0) return
@@ -29,6 +36,9 @@ export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryCha
     } else if (e.key === 'Escape') {
       onQueryChange('')
       setActiveIndex(-1)
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault()
+      handleSelect(results[activeIndex])
     }
   }
 
@@ -84,6 +94,7 @@ export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryCha
                   class={`search-result-item ${i === activeIndex ? 'search-result-active' : ''}`}
                   role="option"
                   aria-selected={i === activeIndex}
+                  onClick={() => handleSelect(result)}
                 >
                   <span class="search-result-type">{result.type}</span>
                   <div class="search-result-content">

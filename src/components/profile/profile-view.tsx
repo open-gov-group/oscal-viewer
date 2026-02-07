@@ -3,6 +3,7 @@ import type { FunctionComponent } from 'preact'
 import type { Profile, ProfileImport, Modify, Alter, SetParameter } from '@/types/oscal'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
+import { Accordion } from '@/components/shared/accordion'
 
 interface ProfileViewProps {
   profile: Profile
@@ -35,20 +36,27 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) =>
         )}
       </div>
 
-      <section class="profile-section" aria-labelledby="profile-imports-heading">
-        <h3 id="profile-imports-heading">Imports</h3>
+      <Accordion
+        id="profile-imports"
+        title="Imports"
+        count={profile.imports.length}
+        defaultOpen={true}
+        headingLevel={3}
+      >
         <div class="profile-imports">
           {profile.imports.map((imp, i) => (
             <ImportCard key={`${imp.href}-${i}`} import_={imp} index={i} />
           ))}
         </div>
-      </section>
+      </Accordion>
 
       {profile.merge && (
-        <section class="profile-section" aria-labelledby="profile-merge-heading">
-          <h3 id="profile-merge-heading">Merge Strategy</h3>
+        <div class="content-box">
+          <div class="content-box-header">
+            <h3>Merge Strategy</h3>
+          </div>
           <MergeInfo merge={profile.merge} />
-        </section>
+        </div>
       )}
 
       {profile.modify && (
@@ -165,25 +173,34 @@ const ModifySection: FunctionComponent<ModifySectionProps> = ({ modify }) => {
   return (
     <>
       {setParams && setParams.length > 0 && (
-        <section class="profile-section" aria-labelledby="profile-params-heading">
-          <h3 id="profile-params-heading">Parameter Settings</h3>
+        <Accordion
+          id="profile-params"
+          title="Parameter Settings"
+          count={setParams.length}
+          defaultOpen={true}
+          headingLevel={3}
+        >
           <div class="profile-params-list">
             {setParams.map(sp => (
               <SetParameterCard key={sp['param-id']} param={sp} />
             ))}
           </div>
-        </section>
+        </Accordion>
       )}
 
       {alters && alters.length > 0 && (
-        <section class="profile-section" aria-labelledby="profile-alters-heading">
-          <h3 id="profile-alters-heading">Alterations</h3>
+        <Accordion
+          id="profile-alters"
+          title="Alterations"
+          count={alters.length}
+          headingLevel={3}
+        >
           <div class="profile-alters-list">
             {alters.map((alter, i) => (
               <AlterCard key={`${alter['control-id']}-${i}`} alter={alter} />
             ))}
           </div>
-        </section>
+        </Accordion>
       )}
     </>
   )

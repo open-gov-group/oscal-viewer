@@ -2,8 +2,8 @@
 
 **Rolle**: DevOps Engineer
 **Projekt**: OSCAL Viewer
-**Stand**: 2026-02-06
-**Phase**: UX Redesign ABGESCHLOSSEN - Phase 3 als naechstes
+**Stand**: 2026-02-07
+**Phase**: Dashboard-Redesign (3 Sprints) ABGESCHLOSSEN - Deployment angefordert
 
 ---
 
@@ -133,7 +133,7 @@ updates:
 
 | Metrik | Limit | Aktuell | Status |
 |--------|-------|---------|--------|
-| Bundle Size (gzipped) | < 100 KB | 16.30 KB | OK |
+| Bundle Size (gzipped) | < 100 KB | 20.40 KB | OK |
 | First Contentful Paint | < 1.5s | Nicht gemessen | Einrichten |
 | Lighthouse Score | > 90 | Nicht gemessen | Einrichten |
 
@@ -159,6 +159,93 @@ updates:
 | 2026-02-06 | DevOps Engineer | Architect | Phase 2 Umsetzung: Bundle Size Gate, CI/CD, Dependabot | Erledigt |
 | 2026-02-06 | Architect | DevOps Engineer | UI/UX Overhaul deployed (Commit a567973), Bundle 20.69 KB | Info |
 | 2026-02-06 | Architect | DevOps Engineer | UX Redesign: Full-Width + Sticky Sidebar (CSS-only). Bundle auf 16.30 KB aktualisiert | Info |
+| 2026-02-07 | Architect | DevOps Engineer | Dashboard-Redesign (3 Sprints) abgeschlossen. Deployment angefordert. Details siehe unten | Aktiv |
+
+---
+
+## AKTUELLER AUFTRAG: Dashboard-Redesign Deployment
+
+**Datum**: 2026-02-07 | **Prioritaet**: HOCH
+
+### Auftrag
+
+Commit und Deploy der Dashboard-Redesign Aenderungen (3 Sprints) auf GitHub Pages.
+
+### Vorab-Verifikation (bereits vom Architect durchgefuehrt)
+
+| Pruefung | Ergebnis |
+|----------|----------|
+| TypeScript strict | 0 Errors |
+| Tests | **350/350 bestanden** (14 Testdateien) |
+| axe-core a11y | **13/13 bestanden** (0 Violations) |
+| Build | Erfolgreich (358ms) |
+| Bundle JS (gzip) | 14.12 KB (app) + 4.63 KB (preact) = **18.75 KB** |
+| Bundle CSS (gzip) | **6.28 KB** |
+| **Bundle Total (gzip)** | **20.40 KB** (< 100 KB Limit, 20.4% Budget) |
+
+### Was deployt wird
+
+**34 Dateien** (22 modifiziert + 12 neu), +2643 / -216 Zeilen
+
+#### Neue Dateien (12)
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `src/hooks/use-deep-link.ts` | URL-Hash Deep-Linking Hook (Application Layer) |
+| `src/hooks/use-filter.ts` | Filter-State Hook mit Keyword + Chips (Application Layer) |
+| `src/components/shared/accordion.tsx` | WAI-ARIA Accordion + AccordionGroup mit Expand/Collapse All |
+| `src/components/shared/status-badge.tsx` | SVG-Icon Status Badge (8 Zustaende) |
+| `src/components/shared/copy-link-button.tsx` | Clipboard Copy mit visuellem Feedback |
+| `src/components/shared/filter-bar.tsx` | FilterBar mit Keyword-Input, Category-Selects, Chips |
+| `tests/components/app.test.tsx` | 4 Tests (Skip-Link, Banner-Rolle) |
+| `tests/components/filter-bar.test.tsx` | 11 Tests (FilterBar Component) |
+| `tests/hooks/use-filter.test.ts` | 7 Tests (useFilter Hook) |
+| `docs/team/ui-ux-designer/01_briefing_overview.md` | UI/UX Briefing: Dashboard-Ueberblick |
+| `docs/team/ui-ux-designer/02_blueprint_views_layout.md` | UI/UX Briefing: Views + Layout |
+| `docs/team/ui-ux-designer/03_design_system_light_dark.md` | UI/UX Briefing: Design System |
+| `docs/team/ui-ux-designer/04_accessibility_quality_dod.md` | UI/UX Briefing: Accessibility + DoD |
+
+#### Modifizierte Dateien (22)
+
+| Bereich | Dateien | Aenderungen |
+|---------|---------|-------------|
+| **Components** | 7 Dateien | Accordions, Deep-Linking, Filter, StatusBadge, Title Box, Content Boxes, Search Navigation |
+| **Hooks** | 1 Datei | Search Debounce (200ms) |
+| **Styles** | 1 Datei | +478 Zeilen CSS (Accordion, StatusBadge, FilterBar, Content-Box, Title-Box) |
+| **Tests** | 7 Dateien | +96 Tests (350 total), neue axe-core Tests |
+| **Docs** | 5 Dateien | Team-Briefings + CODING_STANDARDS v3.0.0 |
+| **App** | 1 Datei | Search-Select Callback, Hash-Cleanup |
+
+### Bundle-Entwicklung
+
+| Version | JS (gzip) | CSS (gzip) | Total | Tests |
+|---------|-----------|------------|-------|-------|
+| Phase 1 | 12.54 KB | - | 12.54 KB | 43 |
+| Phase 2 | 14.44 KB | 4.39 KB | 18.83 KB | 254 |
+| UI/UX Overhaul | 15.14 KB | 5.51 KB | 20.69 KB | 254 |
+| UX Redesign | 10.71 KB | 5.59 KB | 16.30 KB | 254 |
+| **Dashboard-Redesign** | **18.75 KB** | **6.28 KB** | **20.40 KB** | **350** |
+
+**Delta zum UX Redesign**: +4.10 KB gzipped (6 neue Komponenten + 2 neue Hooks)
+**Budget-Nutzung**: 20.40 / 100 KB = 20.4% (79.6 KB Spielraum)
+
+### Deployment-Anweisungen
+
+1. Alle Dateien committen (staged + untracked)
+2. Push auf `origin/main`
+3. GitHub Actions `deploy.yml` wird automatisch ausgeloest
+4. Verifikation: Bundle Size Gate muss bestehen (< 100 KB)
+5. GitHub Pages Deployment pruefen
+
+### Risiko-Bewertung
+
+| Risiko | Bewertung |
+|--------|-----------|
+| Bundle Size | NIEDRIG - 20.40 KB, weit unter 100 KB Limit |
+| Test-Regression | NIEDRIG - 350 Tests, 0 Failures |
+| a11y-Regression | NIEDRIG - 13 axe-core Tests, 0 Violations |
+| Breaking Changes | NIEDRIG - Additive Features, keine API-Aenderungen |
+| Neue Dependencies | KEINE - Alle Features mit bestehenden Packages implementiert |
 
 ---
 

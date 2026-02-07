@@ -2,8 +2,8 @@
 
 **Rolle**: UI/UX Designer
 **Projekt**: OSCAL Viewer
-**Stand**: 2026-02-06
-**Phase**: UX Redesign (Full-Width Layout) ABGESCHLOSSEN - Phase 3 als naechstes
+**Stand**: 2026-02-07
+**Phase**: Dashboard-Redesign (Briefing 01-04 Integration) - Gap-Analyse + ToDos
 
 ---
 
@@ -391,6 +391,12 @@ Muessen als CSS Custom Properties formalisiert werden.
 | 2026-02-06 | UI/UX Designer | Architect | Review des Overhauls: 2 Nachbesserungen (aria-haspopup, Kontrast-Fix) - behoben | Abgeschlossen |
 | 2026-02-06 | Architect | UI/UX Designer | UX Redesign: Full-Width + Sticky Sidebar (Vergleich mit viewer.oscal.io) | Aktiv |
 | 2026-02-06 | UI/UX Designer | Architect | UX Redesign umgesetzt: CSS-only Refactoring, 254 Tests bestanden, 0 TSX-Aenderungen | Abgeschlossen |
+| 2026-02-07 | Architect | UI/UX Designer | Neues Briefing 01-04: Dashboard-Redesign, Boxes/Accordions, Filter, Deep-Linking | Aktiv |
+| 2026-02-07 | UI/UX Designer | Architect | Gap-Analyse: 24 Gaps identifiziert, 7 eigene ToDos, 12 Frontend-, 5 TechLead-, 8 QA-, 1 DevOps-ToDos | Aktiv |
+| 2026-02-07 | UI/UX Designer | Architect | Sprint 1 Design Review: 7/7 FE-Tasks OK, 1 CSS-Fix (.accordion-heading), 2 Hinweise (CompDef headingLevel, Profile View nachholen) | Abgeschlossen |
+| 2026-02-07 | UI/UX Designer | Architect | Tech Lead Review: CODING_STANDARDS.md v2.0.0 mit 10 Patterns GUT. TL2 (Deep-Linking ADR) kein Blocker - Spec U11 reicht. Empfehlung: Accordion-Pattern + Deep-Link-Pattern nachtraeglich in Standards aufnehmen | Abgeschlossen |
+| 2026-02-07 | UI/UX Designer | Architect | Sprint 2 Design Review: 6/6 FE-Tasks SEHR GUT. 1 CSS-Cleanup (63 Zeilen Dead Code), 2 Minor Issues. 11/24 Gaps geschlossen. Sprint 3 Plan erstellt | Abgeschlossen |
+| 2026-02-07 | UI/UX Designer | Architect | Sprint 3 Design Review: 5/5 Tasks GUT-SEHR GUT. 2 CSS-Fixes (cursor, rgba), 1 Info (AccordionGroup nicht integriert). 13/24 Gaps geschlossen. Alle MUST-Gaps erledigt — bereit fuer Phase 3 | Abgeschlossen |
 
 ---
 
@@ -506,12 +512,629 @@ Muessen als CSS Custom Properties formalisiert werden.
 
 ---
 
-### Verbleibende Design-Aufgaben (Phase 3+)
+---
 
-| # | Aufgabe | Prioritaet |
-|---|---------|------------|
-| 1 | Sidebar Close-Animation (aktuell: instant wg. display:none) | Niedrig |
-| 2 | Search: Klick auf Ergebnis navigiert zum Element | Mittel |
-| 3 | Komponenten-Typ-Icons (Software, Hardware, etc.) | Niedrig |
-| 4 | Dokumenttyp-spezifische Farbvariablen (--color-catalog, etc.) | Niedrig |
-| 5 | Manueller Dark Mode Toggle (fuer PWA, Issue #8) | Mittel |
+## Briefing 01-04 Integration: Gap-Analyse (2026-02-07)
+
+**Quelle**: `docs/team/ui-ux-designer/01_briefing_overview.md` bis `04_accessibility_quality_dod.md`
+**Ziel**: Professionelles Dashboard-UI fuer Public Sector ("audit-ready")
+
+### Was bereits umgesetzt ist
+
+| Anforderung (Briefing) | Status | Umsetzung |
+|------------------------|--------|-----------|
+| Fullscreen Desktop (kein boxed) | DONE | `max-width` entfernt, Full-Width Layout |
+| Sticky Sidebar Navigation | DONE | `position: sticky`, `height: calc(100vh - 64px)` |
+| Topbar (64-72px, fix) | DONE | Material AppBar, 64px, sticky |
+| Global Search im Header | DONE | SearchBar mit Combobox-Pattern |
+| Keyboard: Search (Esc, Arrows) | DONE | ArrowUp/Down, Escape, aria-activedescendant |
+| Keyboard: Tabs (Arrows) | DONE | SSP Tabs mit Arrow/Home/End |
+| Focus Ring sichtbar | DONE | Globale `:focus-visible` Styles |
+| Skip-Links | DONE | `<a href="#main-content">` |
+| Touch Targets 44px | DONE | Mobile min-height auf interaktiven Elementen |
+| Dark Mode (auto) | DONE | `prefers-color-scheme` mit 31 Token |
+| Status Farben Light+Dark | DONE | 21 semantische Variablen |
+| Responsiv Mobile | DONE | Sidebar Overlay, reduziertes Padding |
+| Metadatenanzeige | DONE | MetadataPanel (expandable `<details>`) |
+| Empty States | DONE | Sidebar-Platzhalter, Search No-Results |
+| Error State | DONE | File-Parsing-Fehler mit `role="alert"` |
+
+### Gap-Analyse: Was fehlt
+
+#### Prio 1 — MUST (Kern-Funktionalitaet)
+
+| # | Anforderung | Briefing-Ref | Aktueller Stand | Aufwand |
+|---|-------------|-------------|-----------------|---------|
+| G1 | **Title Box in Navigation** (sticky, full title wrap, kein Ellipsis) | 01§5, 02§2 | Nicht vorhanden. Titel nur im Header. In Nav-Sidebar fehlt Dokumenttitel komplett. | Mittel |
+| G2 | **Accordion-Komponente** (shared, ARIA-konform) | 01§6, 02§5, 04§1 | Nicht vorhanden. Sektionen sind flache `<section>` mit Headings. Nur MetadataPanel nutzt `<details>`. | Hoch |
+| G3 | **Boxes/Cards fuer Gruppierung** (bg-elevated + border) | 01§6, 02§5, 03§6 | Nicht vorhanden. Content wird ohne visuelle Gruppierung dargestellt. | Mittel |
+| G4 | **Catalog Control Detail: Accordion-Sektionen** | 02§4A | Parts, Parameters, Links, Enhancements sind immer sichtbar. Keine Collapse-Moeglichkeit. | Mittel |
+| G5 | **CompDef: Accordion fuer Capabilities + Control Impls** | 02§4C | Alles sichtbar, keine Collapse-Moeglichkeit. | Mittel |
+| G6 | **Deep-Linking** (URL-Hash auf Controls/Sektionen) | 01§3 | Nicht vorhanden. Selektion nur in React-State, geht bei Reload verloren. | Hoch |
+| G7 | **Fliesstextbreite 72-88ch** | 01§4, 02§1, 03§4 | Nicht begrenzt. Prose fuellt die volle Content-Breite. | Klein |
+| G8 | **Filter** (Family, Control-ID, Keywords) | 01§3, 02§3 | Nicht vorhanden. Nur Global Search existiert. | Hoch |
+
+#### Prio 2 — SHOULD (UX-Qualitaet)
+
+| # | Anforderung | Briefing-Ref | Aktueller Stand | Aufwand |
+|---|-------------|-------------|-----------------|---------|
+| G9 | **Nav Pane breiter (360-420px) + resizable** | 02§1 | Fest 300/280px. Kein Resize-Handle. | Mittel |
+| G10 | **Tree: Roving Tabindex + aria-level** | 04§1 | Alle Items tabbable (kein roving). Kein `aria-level`. | Mittel |
+| G11 | **Loading State / Skeleton Screens** | 01§3, 03§7 | Nicht vorhanden. Parsing ist synchron. | Mittel |
+| G12 | **Copy-to-clipboard** (IDs/Links) mit Toast | 01§3, 02§6 | Nicht vorhanden. | Mittel |
+| G13 | **Search: Debounce** | 04§2 | Synchrone Filterung bei jedem Keystroke. | Klein |
+| G14 | **Status: Icon + Text** (nie nur Farbe) | 01§7, 03§1, 04§1 | Status-Badges haben nur Farbe + Text. Kein Icon. | Mittel |
+| G15 | **Expand All / Collapse All** (Accordion-Gruppen) | 02§5, 03§6 | Nicht vorhanden (keine Accordions). | Klein |
+| G16 | **Accordion: Zustand pro Session merken** | 02§5 | Nicht vorhanden. | Klein |
+
+#### Prio 3 — NICE-TO-HAVE (Spaetere Iteration)
+
+| # | Anforderung | Briefing-Ref | Aktueller Stand | Aufwand |
+|---|-------------|-------------|-----------------|---------|
+| G17 | **Virtualisierung** grosser Trees/Listen | 01§3, 04§2 | Full DOM rendering. | Hoch |
+| G18 | **Right Utility Pane** (optional) | 02§1 | Nicht vorhanden. | Hoch |
+| G19 | **Context Switcher** (Document Type/Datei) | 02§3 | Nicht vorhanden. | Mittel |
+| G20 | **Raw-View / Download / Export** | 01§3 | Nicht vorhanden. | Mittel |
+| G21 | **Profile: Nav Tree** (statt linear) | 02§4B | Linear ohne Sidebar. | Hoch |
+| G22 | **SSP: Nav Tree** (zusaetzlich zu Tabs) | 02§4D | Nur Tabs, kein Nav Tree. | Hoch |
+| G23 | **Theme Switch im Header** | 02§3, 03§3 | Nur `prefers-color-scheme`, kein manueller Toggle. | Mittel |
+| G24 | **Breadcrumbs** im Content-Bereich | 02§3 | Nicht vorhanden. | Klein |
+
+### Design System: Token-Luecken (Briefing 03 vs. Ist)
+
+| Briefing-Token | Aktuell vorhanden | Aktion |
+|----------------|-------------------|--------|
+| `bg-subtle` | `--color-bg-secondary` | Rename/Alias |
+| `bg-elevated` | Nicht vorhanden | NEU: fuer Boxes/Cards |
+| `surface-1/2/3` | Nur `--color-surface` | Erweitern fuer Pane-Abstufungen |
+| `border-strong` | Nicht vorhanden | NEU: fuer Dark Mode |
+| `text-disabled` | Nicht vorhanden | NEU |
+| `icon`, `icon-muted` | Nicht vorhanden | NEU |
+| `link`, `link-hover` | `--color-primary` | Eigenstaendige Token |
+| `focus` | Nutzt `--color-primary` | Eigenstaendiges Token |
+| `overlay` | Nicht vorhanden | NEU: Backdrop |
+| Spacing Scale (4px Grid) | Ad-hoc rem-Werte | Systematisieren: `--space-1` bis `--space-8` |
+| Border Radius 10-14px | `--border-radius: 8px` | Erhoehen oder differenzieren |
+
+### Design-Entscheidungen (offen - benoetigen Architect-Feedback)
+
+**DE-1: SSP Tab vs. Nav Tree**
+- Briefing 02§4D will Nav Tree fuer SSP (Characteristics → Boundary → Roles → Controls → Backmatter)
+- Aktuell: 3 Tabs (gut funktionierend, ARIA-komplett)
+- **Empfehlung UI/UX**: Tabs beibehalten als Top-Level. Innerhalb der Tabs Accordions fuer Sub-Sektionen. Ein Nav Tree fuer SSP waere Over-Engineering bei nur 3 Hauptbereichen.
+
+**DE-2: Profile Linear vs. Sidebar**
+- Briefing 02§4B will Nav Tree (Imports → Modify Sets → Alterations)
+- Aktuell: Linear (passt zur Datenstruktur)
+- **Empfehlung UI/UX**: Nur bei grossen Profiles (>20 Alterations) lohnt sich ein Nav Tree. Fuer MVP: Linear beibehalten, ggf. Jump-Links/Anker-Navigation.
+
+**DE-3: Nav Pane Breite**
+- Briefing: 360-420px, resizable
+- Aktuell: 300px fest
+- **Empfehlung UI/UX**: Auf 340px erhoehen (Kompromiss). Resizable via CSS `resize: horizontal` oder JS-Drag-Handle ist Prio 2.
+
+---
+
+## UI/UX Designer — ToDo-Liste
+
+### Sofort umsetzen (CSS + kleine TSX-Aenderungen)
+
+| # | Aufgabe | Gap-Ref | Betroffene Dateien | Aufwand |
+|---|---------|---------|-------------------|---------|
+| U1 | Fliesstextbreite `max-width: 80ch` auf Prose-Elemente | G7 | `base.css` | Klein |
+| U2 | Nav Sidebar auf 340px verbreitern | DE-3 | `base.css` | Klein |
+| U3 | Design-Token erweitern: `bg-elevated`, `border-strong`, `text-disabled`, `overlay` | G3 | `base.css` `:root` + Dark Mode | Klein |
+| U4 | Box-Komponente CSS-Klasse: `.content-box` (bg-elevated + border + radius) | G3 | `base.css` | Klein |
+| U5 | Accordion CSS-Klasse: `.accordion`, `.accordion-trigger`, `.accordion-content` | G2 | `base.css` | Mittel |
+| U6 | Title Box CSS: `.nav-title-box` (sticky, wrap, Dokumenttyp-Label) | G1 | `base.css` | Klein |
+| U7 | Selected Tree Item: surface-step + left accent marker (statt primary-bg) | 03§6 | `base.css` | Klein |
+
+### Design-Spezifikationen erstellen (fuer Frontend Developer)
+
+| # | Aufgabe | Gap-Ref | Output |
+|---|---------|---------|--------|
+| U8 | Accordion-Komponente spezifizieren: Props, ARIA, States, Expand/Collapse All | G2, G15, G16 | Spezifikation in diesem Briefing |
+| U9 | Title Box spezifizieren: Inhalt, Sticky-Verhalten, Responsive | G1 | Spezifikation in diesem Briefing |
+| U10 | Content-Box spezifizieren: Varianten (Header, Summary, References, Metadata) | G3 | Spezifikation in diesem Briefing |
+| U11 | Deep-Linking UX spezifizieren: URL-Schema, Scroll-Verhalten, Copy-Link-Button | G6, G12 | Spezifikation in diesem Briefing |
+| U12 | Filter-UI spezifizieren: Chip-Bar, Filter-Kategorien pro View, Clear-All | G8 | Spezifikation in diesem Briefing |
+
+---
+
+---
+
+## Design-Spezifikationen (fuer Frontend Developer)
+
+### Spec U8: Accordion-Komponente
+
+**Datei**: `src/components/shared/accordion.tsx`
+**CSS**: `.accordion`, `.accordion-trigger`, `.accordion-content` (bereits in base.css)
+
+```tsx
+interface AccordionProps {
+  title: string             // Trigger-Text
+  count?: number            // Optional: Anzahl im Badge
+  defaultOpen?: boolean     // Initial offen? (Default: false)
+  id: string                // Fuer ARIA-Verknuepfung
+  children: ComponentChildren
+}
+```
+
+**ARIA-Pattern (WAI-ARIA Accordion)**:
+- Trigger: `<button role="button" aria-expanded="true|false" aria-controls="{id}-content">`
+- Content: `<div id="{id}-content" role="region" aria-labelledby="{id}-trigger" hidden?>`
+- Chevron rotiert bei expanded
+
+**Keyboard**:
+- Enter/Space: Toggle open/close
+- Focus auf dem Button-Element
+
+**AccordionGroup-Komponente** (optional):
+```tsx
+interface AccordionGroupProps {
+  children: ComponentChildren
+}
+```
+- Bietet "Expand All" / "Collapse All" Buttons ueber `.accordion-actions`
+- Accordion-Zustand optional in `sessionStorage` persistieren (Key: View + Section-ID)
+
+**Verwendung in Views**:
+- **CatalogView ControlDetail**: Parts, Parameters, Links, Enhancements je ein Accordion
+- **CompDefView ComponentDetail**: Capabilities, Control Implementations je ein Accordion
+- **SSP**: Innerhalb der Tabs fuer Sub-Sektionen (Impact Level, Authorization Boundary)
+
+---
+
+### Spec U9: Title Box
+
+**Einbauen in**: `catalog-view.tsx`, `component-def-view.tsx` (in der Sidebar, als erstes Kind)
+**CSS**: `.nav-title-box` (bereits in base.css)
+
+```tsx
+// Innerhalb der Sidebar, VOR dem Tree/List:
+<div class="nav-title-box">
+  <span class="nav-doc-type">Catalog</span>
+  <span class="nav-doc-title">{catalog.metadata.title}</span>
+  {catalog.metadata.version && (
+    <span class="nav-doc-version">v{catalog.metadata.version}</span>
+  )}
+</div>
+```
+
+**Verhalten**:
+- Position sticky (bleibt oben in der Sidebar)
+- Titel wird IMMER vollstaendig angezeigt (word-wrap, kein Ellipsis)
+- Dokumenttyp als kleines Label darueber
+- Version optional darunter
+- Tree/List scrollt UNTER der Title Box
+
+**Datenquelle**: `metadata.title`, `metadata.version` aus dem jeweiligen Dokument-Objekt
+
+---
+
+### Spec U10: Content-Box
+
+**CSS**: `.content-box`, `.content-box-header` (bereits in base.css)
+
+**Varianten**:
+1. **Summary Box**: Kurzbeschreibung oben im Detail-Panel
+   ```html
+   <div class="content-box">
+     <div class="content-box-header"><h3>Overview</h3></div>
+     <p class="part-prose">{description}</p>
+   </div>
+   ```
+
+2. **Section Box**: Gruppierung von Inhalten (z.B. Properties, Roles)
+   ```html
+   <div class="content-box">
+     <div class="content-box-header">
+       <h4>Properties</h4>
+       <span class="content-box-count">5</span>
+     </div>
+     <PropertyList props={...} />
+   </div>
+   ```
+
+3. **References Box**: Links und Backmatter
+   ```html
+   <div class="content-box">
+     <div class="content-box-header"><h4>References</h4></div>
+     <ul class="links-list">...</ul>
+   </div>
+   ```
+
+**Wann NICHT verwenden**: Stats-Bar, Metadata-Panel (haben eigene Patterns)
+
+---
+
+### Spec U11: Deep-Linking
+
+**URL-Schema**:
+```
+#/{view}/{element-id}
+Beispiele:
+  #/catalog/ac-1
+  #/catalog/ac-1.1
+  #/compdef/{component-uuid}
+  #/ssp/characteristics
+  #/ssp/implementation
+  #/ssp/controls
+```
+
+**Verhalten**:
+1. Beim Laden: URL-Hash parsen → Element selektieren → in View scrollen
+2. Bei Selektion: URL-Hash aktualisieren (`history.replaceState`)
+3. Kein Full-Reload bei Hash-Change (SPA-Verhalten)
+
+**Copy-Link-Button**:
+- Kleiner Button (16x16 Icon) neben Control-IDs und Section-Headings
+- Klick: Kopiert vollstaendige URL (`location.origin + location.pathname + hash`) in Clipboard
+- Bestaetigung: Dezenter Toast ("Link copied") fuer 2 Sekunden
+- CSS: `.copy-link-btn` (braucht noch Styling)
+
+**Hook**: `useDeepLink(type: string)` im Application Layer
+- Liest Hash bei Mount, gibt initialen Selection-Wert zurueck
+- Updatet Hash bei Selection-Change
+
+---
+
+### Spec U12: Filter-UI
+
+**Platzierung**: In der Sidebar, zwischen Title Box und Tree/List
+
+**CSS**: `.filter-bar` (braucht noch Styling)
+
+**Filter-Kategorien pro View**:
+
+| View | Filter 1 | Filter 2 | Filter 3 |
+|------|----------|----------|----------|
+| Catalog | Family (Group-ID) | Keyword (Freitext) | - |
+| CompDef | Component Type | - | - |
+| SSP | Implementation Status | Component | - |
+| Profile | Import Source | - | - |
+
+**UX-Pattern**:
+- Input-Feld mit "Filter..." Placeholder
+- Aktive Filter als Chips unterhalb
+- Chip: Label + X-Button zum Entfernen
+- "Clear All" Link wenn Filter aktiv
+- Filter reduziert die Tree/List-Eintraege (nicht die Detail-Ansicht)
+- Filter + Global Search arbeiten unabhaengig (beide koennen gleichzeitig aktiv sein)
+
+**Hook**: `useFilter(items, filterConfig)` im Application Layer
+
+---
+
+## Team-ToDos (Auftraege an andere Rollen)
+
+### Frontend Developer
+
+| # | Aufgabe | Gap-Ref | Prio | Aufwand | Abhaengigkeit |
+|---|---------|---------|------|---------|---------------|
+| FE1 | **Shared Accordion-Komponente** erstellen (`src/components/shared/accordion.tsx`) | G2 | 1 | Hoch | U5, U8 (CSS + Spec vom UI/UX Designer) |
+| FE2 | **Title Box** in CatalogView + CompDefView Sidebars einbauen | G1 | 1 | Mittel | U6, U9 (CSS + Spec) |
+| FE3 | **Catalog ControlDetail**: Sektionen in Accordions umbauen (Parts, Params, Links, Enhancements) | G4 | 1 | Mittel | FE1 |
+| FE4 | **CompDef Detail**: Capabilities + Control Implementations in Accordions | G5 | 1 | Mittel | FE1 |
+| FE5 | **Content-Boxes** auf alle Views anwenden (Summary, References, Metadata Boxes) | G3 | 1 | Mittel | U4, U10 (CSS + Spec) |
+| FE6 | **Deep-Linking**: URL-Hash-Routing fuer Control-Selektion | G6 | 2 | Hoch | U11 (Spec) |
+| FE7 | **Filter-Komponente**: FilterBar mit Chips, pro-View Filterlogik | G8 | 2 | Hoch | U12 (Spec) |
+| FE8 | **Copy-to-clipboard** Button auf Control-IDs + Section-Links | G12 | 2 | Mittel | U11 (Spec) |
+| FE9 | **Search: Debounce** (200ms) im useSearch Hook | G13 | 2 | Klein | - |
+| FE10 | **Status Icons** neben Status-Text-Badges (Check, Warning, Info, X) | G14 | 2 | Mittel | - |
+| FE11 | **Roving Tabindex** im GroupTree + aria-level Attribut | G10 | 2 | Mittel | - |
+| FE12 | **Prose max-width**: `max-width: 80ch` auf `.part-prose`, `.compdef-description` etc. | G7 | 1 | Klein | U1 (CSS) |
+
+### Tech Lead
+
+| # | Aufgabe | Gap-Ref | Prio | Aufwand |
+|---|---------|---------|------|---------|
+| TL1 | **Accordion-Architektur**: Shared-Komponente in Component-Layer, State-Management (localStorage fuer Session-Persist?) | G2, G16 | 1 | Review |
+| TL2 | **Deep-Linking ADR**: URL-Hash-Schema definieren (`#catalog/ac-1`, `#ssp/characteristics`) | G6 | 2 | ADR |
+| TL3 | **Virtualisierung evaluieren**: react-virtual oder eigene Loesung fuer grosse Trees | G17 | 3 | Spike |
+| TL4 | **ESLint-Regeln** fuer Accordion ARIA-Pflichtattribute pruefen | G2 | 1 | Klein |
+| TL5 | **Design Token Architecture**: CSS Custom Properties vs. Design-Token-System (style-dictionary o.ae.) | 03 | 3 | ADR |
+
+### QA Engineer
+
+| # | Aufgabe | Gap-Ref | Prio | Aufwand |
+|---|---------|---------|------|---------|
+| QA1 | **Accordion-Tests**: ARIA-Attribute, Keyboard (Enter/Space), Expand/Collapse All | G2 | 1 | Mittel |
+| QA2 | **Title Box Tests**: Langer Titel wird gewrapt (kein Ellipsis), Sticky-Verhalten | G1 | 1 | Klein |
+| QA3 | **Deep-Linking Tests**: URL-Hash setzt korrekte Selektion, Reload behaelt State | G6 | 2 | Mittel |
+| QA4 | **Filter Tests**: Filter reduziert Tree, Clear All, Kombination mit Search | G8 | 2 | Mittel |
+| QA5 | **Copy-to-clipboard Tests**: Button sichtbar, Clipboard-Inhalt korrekt | G12 | 2 | Klein |
+| QA6 | **Roving Tabindex Tests**: Arrow-Keys im Tree, Focus-Verhalten | G10 | 2 | Mittel |
+| QA7 | **Responsive-Test 320px-1440px+**: Kein Funktionsverlust bei Extrembreiten | DoD | 1 | Mittel |
+| QA8 | **axe-core Tests** fuer neue Accordion + Box Komponenten | G2, G3 | 1 | Mittel |
+
+### DevOps Engineer
+
+| # | Aufgabe | Gap-Ref | Prio | Aufwand |
+|---|---------|---------|------|---------|
+| DO1 | **Bundle Size Gate** pruefen: Accordion + Filter werden Bundle vergroessern | - | 2 | Klein |
+
+---
+
+## Empfohlene Umsetzungsreihenfolge
+
+### Sprint 1: Foundation (Accordion + Boxes + Title Box)
+1. UI/UX: CSS-Klassen + Design-Token (U1-U7)
+2. UI/UX: Specs schreiben (U8-U10)
+3. Frontend: Shared Accordion (FE1)
+4. Frontend: Title Box (FE2)
+5. Frontend: Content-Boxes (FE5)
+6. QA: Tests fuer neue Komponenten (QA1, QA2, QA8)
+
+### Sprint 2: Accordion-Integration + Deep-Linking
+1. Frontend: Catalog Accordions (FE3)
+2. Frontend: CompDef Accordions (FE4)
+3. UI/UX: Deep-Linking + Filter Specs (U11, U12)
+4. Tech Lead: Deep-Linking ADR (TL2)
+5. Frontend: Deep-Linking (FE6)
+6. Frontend: Search Debounce (FE9)
+7. QA: Deep-Linking + Responsive Tests (QA3, QA7)
+
+### Sprint 3: Filter + Polish
+1. Frontend: Filter-Komponente (FE7)
+2. Frontend: Copy-to-clipboard (FE8)
+3. Frontend: Status Icons (FE10)
+4. Frontend: Roving Tabindex (FE11)
+5. QA: Filter + Copy Tests (QA4, QA5, QA6)
+
+### Backlog (Prio 3)
+- Virtualisierung (TL3, G17)
+- Profile Nav Tree (G21)
+- SSP Nav Tree (G22)
+- Theme Switch (G23)
+- Right Utility Pane (G18)
+- Context Switcher (G19)
+- Raw-View / Export (G20)
+
+---
+
+## Design-Review Sprint 1 (2026-02-07)
+
+**Frontend Developer Sprint 1 Aufgaben**: FE1, FE2, FE3, FE4, FE5, FE9, FE12
+
+### Review-Ergebnisse
+
+| Aufgabe | Komponente | Bewertung | Anmerkungen |
+|---------|-----------|-----------|-------------|
+| FE1 Accordion | `accordion.tsx` | SEHR GUT | WAI-ARIA komplett, `headingLevel` korrekt, Chevron-Rotation funktional |
+| FE2 Title Box | `catalog-view.tsx`, `component-def-view.tsx` | GUT | Korrekt platziert, CSS-Klassen wie spezifiziert |
+| FE3 Catalog Accordions | `control-detail.tsx` | GUT | Content (defaultOpen), Params, Links, Enhancements - alle h3 |
+| FE4 CompDef Accordions | `component-def-view.tsx` | GUT | CI Accordions funktional. **Hinweis**: `headingLevel={3}` ergaenzen |
+| FE5 Content-Boxes | `component-def-view.tsx`, `ssp-view.tsx` | GUT | CompDef: Desc/Props/Roles. SSP: Impact/Boundary |
+| FE9 Debounce | `use-search.ts` | GUT | 200ms, Timer-Cleanup sauber |
+| FE12 Prose Width | CSS | GUT | Bereits via `max-width: 80ch` abgedeckt |
+
+### Gefundene Issues
+
+| # | Issue | Schwere | Fix |
+|---|-------|---------|-----|
+| R1 | `.accordion-heading` CSS fehlte - Browser-Default-Margins brechen Layout | Hoch | **BEHOBEN**: `margin: 0; font-size/weight/line-height: inherit` in base.css |
+| R2 | CompDef CI-Accordions ohne `headingLevel` - nicht-semantische Heading-Hierarchie | Niedrig | Frontend Dev soll `headingLevel={3}` ergaenzen |
+| R3 | ProfileView hat noch keine Accordions/Content-Boxes (war nicht in Sprint 1 Scope) | Info | Fuer Sprint 2 einplanen |
+
+### Build nach Fix
+
+- Bundle: 11.11 KB JS + 6.04 KB CSS gzipped
+- TypeScript: 0 Errors
+- Keine TSX-Aenderungen noetig (CSS-only Fix)
+
+---
+
+## Sprint 2: Naechste Schritte
+
+### Aktuelle Prioritaeten
+
+**Fuer den Frontend Developer (Sprint 2)**:
+
+| # | Aufgabe | Prio | Abhaengigkeit | Details |
+|---|---------|------|---------------|---------|
+| FE3b | CompDef CI-Accordions: `headingLevel={3}` ergaenzen | 1 | - | Quick-Fix aus Review R2 |
+| FE5b | Profile View: Content-Boxes + Accordions nachholen | 1 | FE1 (done) | Imports, Merge, Parameters, Alterations als Sektionen Box+Accordion |
+| FE6 | Deep-Linking (URL-Hash Routing) | 1 | Spec U11 | `useDeepLink` Hook, Hash-Schema `#/catalog/ac-1` |
+| FE8 | Copy-to-Clipboard auf Control-IDs | 2 | FE6 | Button + Toast, `navigator.clipboard.writeText` |
+| FE10 | Status-Icons neben Badges (operational, planned, etc.) | 2 | - | SVG-Icons inline |
+| FE11 | Roving Tabindex im GroupTree + `aria-level` | 2 | - | WAI-ARIA TreeView Pattern |
+
+**Fuer den Tech Lead (Sprint 2)**:
+
+| # | Aufgabe | Details |
+|---|---------|---------|
+| TL2 | Deep-Linking ADR: URL-Hash-Schema definieren | Parallel zu FE6 (Spec U11 reicht als Basis) |
+| TL6 | Accordion + AccordionGroup Pattern in CODING_STANDARDS.md dokumentieren | Analog zu Tabs/Combobox Patterns |
+| TL7 | Sprint 1 Code-Review: accordion.tsx, control-detail.tsx, component-def-view.tsx | Layer-Konformitaet, TypeScript, Patterns |
+
+**Fuer QA (Sprint 2)**:
+
+| # | Aufgabe | Details |
+|---|---------|---------|
+| QA1 | Accordion-Tests: ARIA, Keyboard, Expand/Collapse | Auf Sprint 1 Umsetzung |
+| QA2 | Title Box Tests: Langer Titel wrap, Sticky | Auf Sprint 1 Umsetzung |
+| QA7 | Responsive 320px-1440px+ | Gesamttest nach Sprint 1 |
+| QA8 | axe-core Tests fuer Accordion + Content-Box | Auf Sprint 1 Umsetzung |
+
+### Filter-Aufgabe verschoben
+
+FE7 (Filter-Komponente) wird auf Sprint 3 verschoben, da Deep-Linking (FE6) wichtiger ist und die Filter-UX davon profitiert (Filter-State kann in URL-Hash persistiert werden).
+
+---
+
+## Design-Review Sprint 2 (2026-02-07)
+
+**Frontend Developer Sprint 2 Aufgaben**: FE3b, FE5b, FE6, FE8, FE10, FE11
+
+### Review-Ergebnisse
+
+| Aufgabe | Komponente | Bewertung | Anmerkungen |
+|---------|-----------|-----------|-------------|
+| FE3b CompDef headingLevel | `component-def-view.tsx` | GUT | `headingLevel={3}` korrekt ergaenzt |
+| FE5b Profile Accordions | `profile-view.tsx` | SEHR GUT | Imports/Params defaultOpen, Alters collapsed, Merge als Content-Box - exzellente UX-Entscheidung |
+| FE6 Deep-Linking | `use-deep-link.ts` | SEHR GUT | Sauberer Application-Layer Hook, `hashchange` Listener, `history.replaceState`, SSP Tab-Persistenz |
+| FE8 Copy-to-Clipboard | `copy-link-button.tsx` | GUT | Visuelles Feedback (Checkmark 2s), `aria-label` Wechsel, Graceful Fallback |
+| FE10 Status Icons | `status-badge.tsx` | SEHR GUT | 8 Zustaende mit SVG-Icons, `aria-hidden` auf Icons, CSS-Variablen konsistent |
+| FE11 Roving Tabindex | `group-tree.tsx` | EXZELLENT | WAI-ARIA TreeView komplett: Arrow Up/Down/Left/Right, Home/End, Parent-Navigation, `aria-level`, `aria-current` |
+
+### QA-Beitrag Sprint 2
+
+| Metrik | Vorher (Sprint 1) | Sprint 2 |
+|--------|-------------------|----------|
+| Tests | 254 | 322 (+68) |
+| Statement Coverage | ~86% | 89.13% |
+| axe-core Tests | 9 | 13 (+4) |
+| Test-Dateien | 11 | 12 (+1) |
+
+Neue Tests fuer: StatusBadge, Accordion, AccordionGroup, FAB, Backdrop, Tab-Keyboard, Combobox-Keyboard.
+
+### Tech Lead Beitrag Sprint 2
+
+CODING_STANDARDS.md v2.0.0 mit 10 Patterns dokumentiert. Sprint 2-spezifische Aufgaben (TL2 ADR, TL6 Accordion-Pattern, TL7 Code-Review) noch offen.
+
+### Gefundene Issues
+
+| # | Issue | Schwere | Fix |
+|---|-------|---------|-----|
+| R4 | Toter CSS-Code: `.ssp-status-badge` + `.ssp-status--*` und `.ssp-impl-status--*` (63 Zeilen) nach StatusBadge-Migration | Mittel | **BEHOBEN**: Dead CSS entfernt, -0.12 KB CSS |
+| R5 | CopyLinkButton: Screen-Reader erhaelt kein Live-Update bei "copied" State | Niedrig | `aria-label` wechselt, reicht fuer Button-Fokus. Optional: `aria-live="polite"` Region |
+| R6 | "Load another file" Button raeumt URL-Hash nicht auf | Niedrig | Hash bleibt bis naechster File-Load. Kein UX-Problem da Dropzone erscheint |
+
+### Build nach Cleanup
+
+- Bundle: 12.59 KB JS + 6.08 KB CSS gzipped
+- TypeScript: 0 Errors
+- Tests: 322/322 bestanden
+
+---
+
+## Sprint 2 Abschluss — Gap-Status
+
+### Geschlossene Gaps
+
+| Gap | Beschreibung | Sprint | Status |
+|-----|-------------|--------|--------|
+| G1 | Title Box in Navigation | S1 | DONE (FE2) |
+| G2 | Accordion-Komponente (shared, ARIA) | S1 | DONE (FE1) |
+| G3 | Boxes/Cards fuer Gruppierung | S1 | DONE (FE5) |
+| G4 | Catalog Control Detail: Accordion-Sektionen | S1 | DONE (FE3) |
+| G5 | CompDef: Accordion fuer Capabilities + CIs | S1 | DONE (FE4) |
+| G6 | Deep-Linking (URL-Hash) | S2 | DONE (FE6) |
+| G7 | Fliesstextbreite 72-88ch | S1 | DONE (FE12) |
+| G10 | Tree: Roving Tabindex + aria-level | S2 | DONE (FE11) |
+| G12 | Copy-to-clipboard mit Feedback | S2 | DONE (FE8) |
+| G13 | Search: Debounce | S1 | DONE (FE9) |
+| G14 | Status: Icon + Text (nie nur Farbe) | S2 | DONE (FE10) |
+
+### Offene Gaps (fuer Sprint 3+)
+
+| Gap | Beschreibung | Prio | Naechster Sprint |
+|-----|-------------|------|------------------|
+| G8 | Filter (Family, Control-ID, Keywords) | MUST | Sprint 3 |
+| G9 | Nav Pane breiter + resizable | SHOULD | Backlog |
+| G11 | Loading State / Skeleton Screens | SHOULD | Backlog |
+| G15 | Expand All / Collapse All | SHOULD | Sprint 3 |
+| G16 | Accordion: Zustand pro Session merken | SHOULD | Sprint 3 |
+| G17 | Virtualisierung | NICE | Backlog |
+| G18-G24 | Right Pane, Context Switcher, Theme Switch, etc. | NICE | Backlog |
+
+---
+
+## Design-Review Sprint 3 (2026-02-07)
+
+**Frontend Developer Sprint 3 Aufgaben**: FE7, FE15, FE16, FE17, R6
+
+### Review-Ergebnisse
+
+| Aufgabe | Komponente | Bewertung | Anmerkungen |
+|---------|-----------|-----------|-------------|
+| FE7 Filter-Komponente | `use-filter.ts`, `filter-bar.tsx` | SEHR GUT | Sauberer Application-Layer Hook, FilterBar mit Keyword + Chips + Categories, pro-View Integration (Catalog: Family-Filter, CompDef: Type-Filter) |
+| FE15 AccordionGroup | `accordion.tsx` | GUT | Preact Context fuer Expand/Collapse Signals, Buttons funktional. **Hinweis**: Noch in keinem View integriert |
+| FE16 Session-Persist | `accordion.tsx` | SEHR GUT | `sessionStorage` mit `STORAGE_PREFIX`, sauberes try/catch fuer Private Mode, Initial-State via `readSavedState(id) ?? defaultOpen` |
+| FE17 Search-Navigation | `search-bar.tsx`, `app.tsx` | GUT | `onSelect` Callback, Enter-Key + Click, `handleSearchSelect` dispatcht korrekt zu Deep-Link Hash |
+| R6 Hash-Cleanup | `app.tsx` | GUT | "Load another file" raeumt URL-Hash auf via `history.replaceState` |
+
+### Tech Lead Beitrag Sprint 3
+
+CODING_STANDARDS.md v3.0.0: 15 Patterns dokumentiert (5 neue: Deep-Link, Filter, Accordion, Expand/Collapse, Session-Persist). 9 Shared Components katalogisiert. Code Review aller 6 neuen Dateien — alle layer-konform.
+
+### QA Beitrag Sprint 3
+
+| Metrik | Sprint 2 | Sprint 3 |
+|--------|----------|----------|
+| Tests | 322 | 350 (+28) |
+| Test-Dateien | 12 | 14 (+2) |
+
+Neue Tests: `use-filter.test.ts` (7 Tests), `filter-bar.test.tsx` (11 Tests), plus Updates fuer AccordionGroup, Session-Persist, SearchBar onSelect.
+
+### Gefundene Issues
+
+| # | Issue | Schwere | Fix |
+|---|-------|---------|-----|
+| R7 | `.search-result-item` hat `cursor: default` — Items sind seit Sprint 3 klickbar | Mittel | **BEHOBEN**: `cursor: pointer` in base.css |
+| R8 | `.filter-chip-remove:hover` nutzt hardcoded `rgba(0,0,0,0.1)` — Dark Mode Problem | Klein | **BEHOBEN**: `var(--color-bg-secondary)` statt rgba |
+| R9 | AccordionGroup wird in keinem View verwendet — nur definiert in accordion.tsx | Info | Sollte in ControlDetail (Catalog) und CompDef (CI-Sektionen) integriert werden |
+| R10 | `.accordion-group` CSS-Klasse fehlt in base.css (AccordionGroup rendert `<div class="accordion-group">`) | Niedrig | Kein visueller Bug da kein Styling noetig, aber `.accordion-group` sollte als Kommentar/Placeholder existieren |
+| R11 | Catalog filterGroups: Bei Keyword-Suche werden Sub-Controls nicht rekursiv geprueft | Niedrig | `controlMatchesKeyword` prueft nur top-level + direct children, nicht tiefer verschachtelte Controls |
+
+### Build nach Fixes
+
+- Bundle: 14.12 KB JS + 6.28 KB CSS gzipped
+- TypeScript: 0 Errors
+- Tests: 350/350 bestanden
+
+---
+
+## Sprint 3 Abschluss — Gap-Status
+
+### Geschlossene Gaps (kumuliert)
+
+| Gap | Beschreibung | Sprint | Status |
+|-----|-------------|--------|--------|
+| G1 | Title Box in Navigation | S1 | DONE (FE2) |
+| G2 | Accordion-Komponente (shared, ARIA) | S1 | DONE (FE1) |
+| G3 | Boxes/Cards fuer Gruppierung | S1 | DONE (FE5) |
+| G4 | Catalog Control Detail: Accordion-Sektionen | S1 | DONE (FE3) |
+| G5 | CompDef: Accordion fuer Capabilities + CIs | S1 | DONE (FE4) |
+| G6 | Deep-Linking (URL-Hash) | S2 | DONE (FE6) |
+| G7 | Fliesstextbreite 72-88ch | S1 | DONE (FE12) |
+| G8 | Filter (Family, Control-ID, Keywords) | S3 | DONE (FE7) |
+| G10 | Tree: Roving Tabindex + aria-level | S2 | DONE (FE11) |
+| G12 | Copy-to-clipboard mit Feedback | S2 | DONE (FE8) |
+| G13 | Search: Debounce | S1 | DONE (FE9) |
+| G14 | Status: Icon + Text (nie nur Farbe) | S2 | DONE (FE10) |
+| G15 | Expand All / Collapse All | S3 | TEILWEISE (FE15 — Komponente fertig, noch nicht in Views integriert) |
+| G16 | Accordion: Zustand pro Session merken | S3 | DONE (FE16) |
+
+**Gesamt: 13/24 Gaps geschlossen, 1 teilweise (G15)**
+
+### Offene Gaps (Backlog)
+
+| Gap | Beschreibung | Prio | Naechster Schritt |
+|-----|-------------|------|-------------------|
+| G9 | Nav Pane breiter + resizable | SHOULD | Backlog |
+| G11 | Loading State / Skeleton Screens | SHOULD | Backlog |
+| G15 | Expand All / Collapse All (Integration) | SHOULD | AccordionGroup in ControlDetail + CompDef integrieren |
+| G17 | Virtualisierung | NICE | Backlog |
+| G18-G24 | Right Pane, Context Switcher, Theme Switch, etc. | NICE | Backlog |
+
+---
+
+## Naechste Schritte: Phase 3 / Backlog
+
+### Empfehlung: Dashboard-Redesign Sprint abgeschlossen
+
+Alle **MUST-Gaps (G1-G8)** sind geschlossen. Alle **SHOULD-Gaps** ausser G9/G11 sind erledigt. Das Projekt ist bereit fuer **Phase 3** (Issues #8-#10: PWA, Dokumentation, npm Package).
+
+### Verbleibende UX-Aufgaben (Backlog-Prioritaet)
+
+| # | Aufgabe | Prioritaet | Kontext |
+|---|---------|------------|---------|
+| 1 | AccordionGroup in Views integrieren (G15) | Mittel | ControlDetail + CompDef mit "Expand All / Collapse All" wrappen |
+| 2 | Manueller Dark Mode Toggle (G23) | Mittel | Fuer PWA (Issue #8) — Nutzer-Praeferenz persistieren |
+| 3 | Nav Pane breiter/resizable (G9) | Niedrig | CSS `resize: horizontal` oder JS-Drag |
+| 4 | Sidebar Close-Animation | Niedrig | CSS transition statt instant display:none |
+| 5 | Komponenten-Typ-Icons (Software, Hardware, etc.) | Niedrig | SVG inline |
+| 6 | Dokumenttyp-spezifische Farbvariablen | Niedrig | `--color-catalog`, `--color-profile`, etc. |
+| 7 | Loading State / Skeleton Screens (G11) | Niedrig | Sinnvoll erst bei async Laden (z.B. URL-Import) |

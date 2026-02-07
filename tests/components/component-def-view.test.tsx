@@ -2,6 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/preact'
 import { ComponentDefView } from '@/components/component-def/component-def-view'
 import type { ComponentDefinition } from '@/types/oscal'
 
+// Clean up URL hash between tests to prevent state leaking via useDeepLink
+beforeEach(() => {
+  history.replaceState(null, '', window.location.pathname)
+})
+
 // ============================================================
 // Test Fixtures
 // ============================================================
@@ -101,9 +106,11 @@ describe('ComponentDefView', () => {
   })
 
   it('renders type badges', () => {
-    render(<ComponentDefView componentDef={fullComponentDef} />)
-    expect(screen.getByText('software')).toBeInTheDocument()
-    expect(screen.getByText('hardware')).toBeInTheDocument()
+    const { container } = render(<ComponentDefView componentDef={fullComponentDef} />)
+    const badges = container.querySelectorAll('.compdef-type-badge')
+    const badgeTexts = Array.from(badges).map(b => b.textContent)
+    expect(badgeTexts).toContain('software')
+    expect(badgeTexts).toContain('hardware')
   })
 
   it('shows placeholder when no component is selected', () => {
@@ -145,8 +152,7 @@ describe('ComponentDefView', () => {
     if (webAppOption) {
       fireEvent.click(webAppOption)
     }
-    expect(screen.getByText('Control Implementations')).toBeInTheDocument()
-    expect(screen.getByText('#nist-800-53')).toBeInTheDocument()
+    expect(screen.getByText(/Control Implementation: #nist-800-53/)).toBeInTheDocument()
   })
 
   it('renders implemented requirements in detail', () => {
@@ -197,5 +203,64 @@ describe('ComponentDefView', () => {
     const selected = Array.from(options).find(o => o.getAttribute('aria-selected') === 'true')
     expect(selected).toBeTruthy()
     expect(selected?.textContent).toContain('Web Application')
+  })
+})
+
+// ============================================================
+// ComponentDefView - FAB Sidebar Toggle Tests
+// ============================================================
+
+describe('ComponentDefView - FAB Sidebar Toggle', () => {
+  it('renders FAB toggle button', () => {
+    render(<ComponentDefView componentDef={fullComponentDef} />)
+    expect(screen.getByLabelText('Open navigation')).toBeInTheDocument()
+  })
+
+  it('FAB toggles aria-expanded and aria-label', () => {
+    render(<ComponentDefView componentDef={fullComponentDef} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    expect(screen.getByLabelText('Close navigation').getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('clicking FAB opens sidebar with open class', () => {
+    const { container } = render(<ComponentDefView componentDef={fullComponentDef} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    const sidebar = container.querySelector('.compdef-sidebar')
+    expect(sidebar?.classList.contains('open')).toBe(true)
+  })
+
+  it('clicking FAB again closes sidebar', () => {
+    const { container } = render(<ComponentDefView componentDef={fullComponentDef} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    fireEvent.click(screen.getByLabelText('Close navigation'))
+    const sidebar = container.querySelector('.compdef-sidebar')
+    expect(sidebar?.classList.contains('open')).toBe(false)
+  })
+})
+
+// ============================================================
+// ComponentDefView - Sidebar Backdrop Tests
+// ============================================================
+
+describe('ComponentDefView - Sidebar Backdrop', () => {
+  it('renders backdrop element', () => {
+    const { container } = render(<ComponentDefView componentDef={fullComponentDef} />)
+    expect(container.querySelector('.sidebar-backdrop')).toBeTruthy()
+  })
+
+  it('backdrop becomes visible when sidebar opens', () => {
+    const { container } = render(<ComponentDefView componentDef={fullComponentDef} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    const backdrop = container.querySelector('.sidebar-backdrop')
+    expect(backdrop?.classList.contains('visible')).toBe(true)
+  })
+
+  it('clicking backdrop closes sidebar', () => {
+    const { container } = render(<ComponentDefView componentDef={fullComponentDef} />)
+    fireEvent.click(screen.getByLabelText('Open navigation'))
+    const backdrop = container.querySelector('.sidebar-backdrop')!
+    fireEvent.click(backdrop)
+    const sidebar = container.querySelector('.compdef-sidebar')
+    expect(sidebar?.classList.contains('open')).toBe(false)
   })
 })

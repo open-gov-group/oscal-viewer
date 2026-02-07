@@ -1,8 +1,10 @@
-import { useState, useMemo } from 'preact/hooks'
+import { useState, useMemo, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { SystemSecurityPlan, SystemCharacteristics, SystemImplementation, SspControlImplementation } from '@/types/oscal'
+import { useDeepLink } from '@/hooks/use-deep-link'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
+import { StatusBadge } from '@/components/shared/status-badge'
 
 interface SspViewProps {
   ssp: SystemSecurityPlan
@@ -16,8 +18,23 @@ const tabDefs: Array<{ id: SspTab; label: string }> = [
   { id: 'controls', label: 'Control Implementation' },
 ]
 
+const validTabs: SspTab[] = ['characteristics', 'implementation', 'controls']
+
 export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
-  const [activeTab, setActiveTab] = useState<SspTab>('characteristics')
+  const { selectedId: hashTab, setSelectedId: setHashTab } = useDeepLink('ssp')
+  const initialTab = hashTab && validTabs.includes(hashTab as SspTab) ? hashTab as SspTab : 'characteristics'
+  const [activeTab, setActiveTabState] = useState<SspTab>(initialTab)
+
+  const setActiveTab = (tab: SspTab) => {
+    setActiveTabState(tab)
+    setHashTab(tab)
+  }
+
+  useEffect(() => {
+    if (hashTab && validTabs.includes(hashTab as SspTab)) {
+      setActiveTabState(hashTab as SspTab)
+    }
+  }, [hashTab])
 
   const stats = useMemo(() => ({
     users: ssp['system-implementation'].users.length,
@@ -57,9 +74,7 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
           <span class="ssp-short-name">({ssp['system-characteristics']['system-name-short']})</span>
         )}
         <div class="ssp-system-badges">
-          <span class={`ssp-status-badge ssp-status--${ssp['system-characteristics'].status.state}`}>
-            {ssp['system-characteristics'].status.state}
-          </span>
+          <StatusBadge state={ssp['system-characteristics'].status.state} />
           {ssp['system-characteristics']['security-sensitivity-level'] && (
             <span class="ssp-sensitivity-badge">
               {ssp['system-characteristics']['security-sensitivity-level']}
@@ -146,8 +161,10 @@ const CharacteristicsPanel: FunctionComponent<CharacteristicsPanelProps> = ({ ch
       )}
 
       {characteristics['security-impact-level'] && (
-        <div class="ssp-impact-levels">
-          <h4>Security Impact Level</h4>
+        <div class="content-box">
+          <div class="content-box-header">
+            <h3>Security Impact Level</h3>
+          </div>
           <div class="ssp-impact-grid">
             <div class="ssp-impact-item">
               <span class="ssp-impact-label">Confidentiality</span>
@@ -172,8 +189,10 @@ const CharacteristicsPanel: FunctionComponent<CharacteristicsPanelProps> = ({ ch
       )}
 
       {characteristics['authorization-boundary'] && (
-        <div class="ssp-field">
-          <span class="ssp-field-label">Authorization Boundary</span>
+        <div class="content-box">
+          <div class="content-box-header">
+            <h3>Authorization Boundary</h3>
+          </div>
           <p class="ssp-field-value">{characteristics['authorization-boundary'].description}</p>
         </div>
       )}
@@ -232,9 +251,7 @@ const ImplementationPanel: FunctionComponent<ImplementationPanelProps> = ({ impl
               <div class="ssp-item-header">
                 <span class="ssp-component-type">{comp.type}</span>
                 <strong>{comp.title}</strong>
-                <span class={`ssp-status-badge ssp-status--${comp.status.state}`}>
-                  {comp.status.state}
-                </span>
+                <StatusBadge state={comp.status.state} />
               </div>
               <p class="ssp-item-description">{comp.description}</p>
               {comp.props && comp.props.length > 0 && (
@@ -297,9 +314,7 @@ const ControlImplementationPanel: FunctionComponent<ControlImplementationPanelPr
                             <span class="ssp-bc-uuid">{bc['component-uuid'].slice(0, 8)}...</span>
                             <p>{bc.description}</p>
                             {bc['implementation-status'] && (
-                              <span class={`ssp-impl-status ssp-impl-status--${bc['implementation-status'].state}`}>
-                                {bc['implementation-status'].state}
-                              </span>
+                              <StatusBadge state={bc['implementation-status'].state} />
                             )}
                           </div>
                         ))}

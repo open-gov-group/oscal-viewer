@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'preact/hooks'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'preact/hooks'
 import type { OscalDocumentData, Catalog, Profile, ComponentDefinition, SystemSecurityPlan } from '@/types/oscal'
 
 export interface SearchResult {
@@ -17,6 +17,18 @@ export interface UseSearchReturn {
 
 export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
   const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      setDebouncedQuery(query)
+    }, 200)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [query])
 
   const index = useMemo(() => {
     if (!data) return []
@@ -24,12 +36,12 @@ export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
   }, [data])
 
   const results = useMemo(() => {
-    const trimmed = query.trim().toLowerCase()
+    const trimmed = debouncedQuery.trim().toLowerCase()
     if (trimmed.length < 2 || index.length === 0) return []
     return index.filter(entry =>
       entry.searchText.includes(trimmed)
     ).map(({ searchText: _, ...rest }) => rest)
-  }, [query, index])
+  }, [debouncedQuery, index])
 
   const wrappedSetQuery = useCallback((q: string) => {
     setQuery(q)
@@ -39,7 +51,7 @@ export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
     query,
     setQuery: wrappedSetQuery,
     results,
-    isSearching: query.trim().length >= 2,
+    isSearching: debouncedQuery.trim().length >= 2,
   }
 }
 

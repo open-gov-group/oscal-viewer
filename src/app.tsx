@@ -1,8 +1,9 @@
-import { useState } from 'preact/hooks'
+import { useState, useCallback } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { OscalDocument } from '@/types/oscal'
 import { parseOscalDocument } from '@/parser'
 import { useSearch } from '@/hooks/use-search'
+import type { SearchResult } from '@/hooks/use-search'
 import { DocumentViewer } from '@/components/document-viewer'
 import { SearchBar } from '@/components/shared/search-bar'
 
@@ -11,6 +12,25 @@ export const App: FunctionComponent = () => {
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const { query, setQuery, results, isSearching } = useSearch(document?.data ?? null)
+
+  const handleSearchSelect = useCallback((result: SearchResult) => {
+    if (!document) return
+    let hash = ''
+    switch (document.data.type) {
+      case 'catalog':
+        if (result.type === 'control') hash = `/catalog/${result.id}`
+        break
+      case 'component-definition':
+        if (result.type !== 'requirement') hash = `/compdef/${result.id}`
+        break
+      case 'system-security-plan':
+        if (result.type === 'system') hash = '/ssp/characteristics'
+        else if (result.type === 'requirement') hash = '/ssp/controls'
+        else hash = '/ssp/implementation'
+        break
+    }
+    if (hash) location.hash = hash
+  }, [document])
 
   const handleFile = async (file: File) => {
     try {
@@ -26,6 +46,7 @@ export const App: FunctionComponent = () => {
 
       setDocument(result.data)
       setError(null)
+      history.replaceState(null, '', location.pathname + location.search)
     } catch (e) {
       setError(`Failed to parse file: ${e instanceof Error ? e.message : 'Unknown error'}`)
       setDocument(null)
@@ -76,10 +97,14 @@ export const App: FunctionComponent = () => {
               onQueryChange={setQuery}
               results={results}
               isSearching={isSearching}
+              onSelect={handleSearchSelect}
             />
             <button
               class="btn-clear"
-              onClick={() => setDocument(null)}
+              onClick={() => {
+                setDocument(null)
+                history.replaceState(null, '', location.pathname + location.search)
+              }}
             >
               Load another file
             </button>

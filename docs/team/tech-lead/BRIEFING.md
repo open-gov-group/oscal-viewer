@@ -143,6 +143,10 @@ src/
 | 2026-02-06 | Tech Lead | Alle | ADR-005 Performance-Strategie dokumentiert | Erledigt |
 | 2026-02-06 | Architect | Tech Lead | UI/UX Overhaul umgesetzt (Commit a567973). Neue Code-Patterns eingefuehrt | Info |
 | 2026-02-06 | Architect | Tech Lead | UX Redesign: Full-Width + Sticky Sidebar (CSS-only). Neue Layout-Patterns eingefuehrt | Info |
+| 2026-02-07 | Tech Lead | Alle | CODING_STANDARDS.md v2.0.0: 10 UI/UX-Patterns dokumentiert (CSS-Variablen, ARIA Tabs, Combobox, Mobile Sidebar, Layout) | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | Code Review: 6 neue Dateien (useDeepLink, useFilter, FilterBar, StatusBadge, Accordion, CopyLinkButton) - alle layer-konform | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | ESLint-Fix: `filter-bar.tsx:61` ASI-Safety Semikolon entfernt | Erledigt |
+| 2026-02-07 | Tech Lead | Alle | CODING_STANDARDS.md v3.0.0: Deep-Link, Filter, Accordion Patterns + Shared Components Uebersicht | Erledigt |
 
 ---
 
@@ -150,7 +154,7 @@ src/
 
 **Commit**: `a567973` | **Bundle**: 20.69 KB gzipped | **Tests**: 254 bestanden
 
-### Neue Code-Patterns (in CODING_STANDARDS.md aufnehmen)
+### Neue Code-Patterns (in CODING_STANDARDS.md aufnehmen) - ERLEDIGT (v2.0.0)
 
 1. **CSS-Variablen-Pflicht**: Keine hardcoded Farbwerte ausserhalb `:root`. Immer `var(--color-...)` nutzen.
    - 21 semantische Variablen mit Dark Mode Varianten in `base.css:3-75`
@@ -191,7 +195,7 @@ Die Aenderungen respektieren die Dreischicht-Architektur:
 
 **Layer-Konformitaet**: Vollstaendig konform. Alle Aenderungen ausschliesslich im Stylesheet (Presentation Layer). Keine Logik-, Hook- oder Parser-Aenderungen.
 
-### Neue CSS-Layout-Patterns (in CODING_STANDARDS.md aufnehmen)
+### Neue CSS-Layout-Patterns (in CODING_STANDARDS.md aufnehmen) - ERLEDIGT (v2.0.0)
 
 6. **Full-Width Layout**: Kein `max-width` auf View-Container, Inhalte nutzen vollen Viewport
    - `.document-view { width: 100% }` statt `max-width: 1200px`

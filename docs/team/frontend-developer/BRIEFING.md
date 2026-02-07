@@ -2,8 +2,8 @@
 
 **Rolle**: Frontend Developer
 **Projekt**: OSCAL Viewer
-**Stand**: 2026-02-06
-**Phase**: UX Redesign ABGESCHLOSSEN - Phase 3 als naechstes
+**Stand**: 2026-02-07
+**Phase**: Sprint 3 ABGESCHLOSSEN - Alle UI/UX Designer Aufgaben erledigt
 
 ---
 
@@ -199,3 +199,135 @@ Der UI/UX Designer hat nach Vergleich mit viewer.oscal.io ein Full-Width Layout 
 
 - Bundle: 10.71 KB JS + 5.59 KB CSS gzipped (kein Logik-Impact)
 - Tests: 254/254 bestanden (keine Regressionen)
+
+---
+
+## UI/UX Designer Aufgaben - Sprint 1 (ABGESCHLOSSEN)
+
+Umsetzung der Frontend-Aufgaben (FE1-FE12) aus dem UI/UX Designer Briefing.
+
+### Umgesetzte Aufgaben
+
+| ID | Aufgabe | Ergebnis |
+|----|---------|----------|
+| FE1 | Shared Accordion-Komponente | `src/components/shared/accordion.tsx` - WAI-ARIA Pattern, `headingLevel` Prop, count Badge |
+| FE2 | Title Box in Sidebars | CatalogView + CompDefView: `.nav-title-box` mit Doc-Type, Title, Version |
+| FE3 | Catalog ControlDetail Accordions | Content (defaultOpen), Parameters, Links, Control Enhancements - je mit h3 Heading |
+| FE4 | CompDef Detail Accordions | Control Implementations per CI als Accordion mit Source-Titel + Requirement-Count |
+| FE5 | Content-Boxes | CompDef: Description, Properties, Roles; SSP: Impact Level, Auth Boundary |
+| FE9 | Search Debounce | 200ms Debounce via `useRef`/`useEffect`/`setTimeout` in `useSearch` Hook |
+| FE12 | Prose max-width | Bereits in CSS (`max-width: 80ch` an 6 Stellen) |
+
+### Neue/geaenderte Dateien
+
+| Datei | Aenderung |
+|-------|-----------|
+| `src/components/shared/accordion.tsx` | **NEU** - Shared Accordion + AccordionGroup |
+| `src/components/catalog/control-detail.tsx` | Sections → Accordions mit `headingLevel={3}` |
+| `src/components/catalog/catalog-view.tsx` | Nav Title Box hinzugefuegt |
+| `src/components/component-def/component-def-view.tsx` | Nav Title Box, Content-Boxes, CI Accordions |
+| `src/components/ssp/ssp-view.tsx` | Content-Boxes mit h3 Headings (korrekte Hierarchie) |
+| `src/hooks/use-search.ts` | 200ms Debounce mit `debouncedQuery` + `timerRef` |
+
+### Build-Ergebnis
+
+- Bundle: 11.11 KB JS + 6.01 KB CSS gzipped
+- TypeScript: 0 Errors
+- Tests: 254/254 bestanden (inkl. axe-core a11y)
+
+---
+
+## UI/UX Designer Aufgaben - Sprint 2 (ABGESCHLOSSEN)
+
+Umsetzung der verbleibenden Frontend-Aufgaben aus dem UI/UX Designer Briefing.
+
+### Umgesetzte Aufgaben
+
+| ID | Aufgabe | Ergebnis |
+|----|---------|----------|
+| FE3b | CompDef CI-Accordions headingLevel | `headingLevel={3}` ergaenzt (Review R2 Quick-Fix) |
+| FE5b | Profile View Content-Boxes + Accordions | Imports/Params/Alters als Accordions, Merge als Content-Box |
+| FE6 | Deep-Linking (URL-Hash Routing) | `useDeepLink` Hook, Schema `#/{view}/{id}`, CatalogView + CompDefView + SspView integriert |
+| FE8 | Copy-to-Clipboard | `CopyLinkButton` Shared Component, in ControlDetail Header integriert |
+| FE10 | Status-Icons | `StatusBadge` Shared Component mit SVG-Icons (8 Zustaende), SSP-View integriert |
+| FE11 | Roving Tabindex + aria-level | WAI-ARIA TreeView Pattern, Arrow/Home/End Navigation, `aria-level` auf allen Treeitems |
+
+### Neue Dateien
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `src/hooks/use-deep-link.ts` | Application Layer Hook: URL-Hash lesen/schreiben, `hashchange`-Listener |
+| `src/components/shared/copy-link-button.tsx` | Button mit `navigator.clipboard.writeText()`, visuelles Feedback (Checkmark 2s) |
+| `src/components/shared/status-badge.tsx` | SVG-Icon + Text Badge, 8 Status-Zustaende (operational, planned, etc.) |
+
+### Geaenderte Dateien
+
+| Datei | Aenderung |
+|-------|-----------|
+| `src/components/catalog/catalog-view.tsx` | `useDeepLink('catalog')` statt `useState` fuer selectedControlId |
+| `src/components/catalog/control-detail.tsx` | `CopyLinkButton` im Control-Header |
+| `src/components/catalog/group-tree.tsx` | Roving Tabindex (`tabIndex={-1}` + `useEffect`/`onFocus`), Arrow-Key Navigation, `aria-level` |
+| `src/components/component-def/component-def-view.tsx` | `useDeepLink('compdef')`, `headingLevel={3}` auf CI-Accordion |
+| `src/components/profile/profile-view.tsx` | Sections als Accordions (Imports, Params, Alters), Merge als Content-Box |
+| `src/components/ssp/ssp-view.tsx` | `useDeepLink('ssp')` fuer Tab-Persistenz, `StatusBadge` statt hardcoded Spans |
+| `src/app.tsx` | Hash-Cleanup beim Laden neuer Dokumente |
+| `src/styles/base.css` | CSS fuer StatusBadge (Varianten + Icons) + CopyLinkButton |
+
+### Build-Ergebnis
+
+- Bundle: 12.59 KB JS + 6.20 KB CSS gzipped
+- TypeScript: 0 Errors
+- Tests: 254/254 bestanden (inkl. axe-core a11y)
+- Test-Fix: `beforeEach` Hash-Cleanup in 3 Testdateien (useDeepLink Hash-Persistenz)
+
+---
+
+## UI/UX Designer Aufgaben - Sprint 3 (ABGESCHLOSSEN)
+
+Umsetzung der verbleibenden Frontend-Aufgaben aus dem UI/UX Designer Briefing (Gap-Analyse).
+
+### Umgesetzte Aufgaben
+
+| ID | Aufgabe | Ergebnis |
+|----|---------|----------|
+| R6 | URL-Hash Cleanup | "Load another file" Button setzt `history.replaceState` (Hash entfernt) |
+| FE17 | Search-Result Navigation | `onSelect` Callback in SearchBar, `handleSearchSelect` in App, Deep-Linking per `location.hash` |
+| FE15 | AccordionGroup Expand/Collapse All | Preact Context-Signal-Pattern, "Expand all"/"Collapse all" Buttons in AccordionGroup |
+| FE16 | Accordion Session-Persist | `sessionStorage` Key `accordion-{id}`, Open/Close State bleibt bei Reload erhalten |
+| FE7 | Filter-Komponente (Sidebar, Chip-Bar) | `useFilter` Hook, `FilterBar` Component, Catalog (Family+Keyword), CompDef (Type+Keyword) |
+
+### Neue Dateien
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `src/hooks/use-filter.ts` | Application Layer Hook: Keyword + Chip State, addChip/removeChip/clearAll |
+| `src/components/shared/filter-bar.tsx` | FilterBar mit Input, Category-Selects, Chips, Clear-All Button |
+| `tests/hooks/use-filter.test.ts` | 7 Tests fuer useFilter Hook |
+| `tests/components/filter-bar.test.tsx` | 11 Tests fuer FilterBar Component |
+
+### Geaenderte Dateien
+
+| Datei | Aenderung |
+|-------|-----------|
+| `src/components/shared/accordion.tsx` | Preact Context fuer Expand/Collapse Signals, `sessionStorage` Persistenz |
+| `src/components/shared/search-bar.tsx` | `onSelect` Prop, `handleSelect`, Enter-Key + Click Handler |
+| `src/components/catalog/catalog-view.tsx` | FilterBar in Sidebar, `filterGroups`/`filterControlList` Hilfsfunktionen |
+| `src/components/component-def/component-def-view.tsx` | FilterBar in Sidebar, Type-Kategorien, Keyword-Filter auf Components |
+| `src/app.tsx` | `handleSearchSelect` Callback, Hash-Cleanup bei "Load another file" |
+| `src/styles/base.css` | CSS fuer FilterBar (`.filter-bar`, `.filter-chip`, `.filter-clear-all`) |
+| `tests/components/shared.test.tsx` | +5 AccordionGroup Tests, +5 Session-Persist Tests, `sessionStorage.clear()` |
+| `tests/components/component-def-view.test.tsx` | Anpassung "renders type badges" (getAllBy wegen Filter-Select) |
+
+### Build-Ergebnis
+
+- Bundle: 14.11 KB JS + 6.28 KB CSS gzipped
+- TypeScript: 0 Errors
+- Tests: 350/350 bestanden (96 neue Tests seit Sprint 2)
+- Neue Gaps geschlossen: G8 (Filter), G15 (Expand All), G16 (Session-Persist)
+
+### Offene FE-Aufgaben
+
+Alle FE-Aufgaben aus dem UI/UX Designer Briefing sind umgesetzt. Verbleibend im Backlog:
+- G9: Nav Pane breiter + resizable (Backlog)
+- G11: Loading State / Skeleton Screens (Backlog)
+- G17: Virtualisierung fuer grosse Dokumente (Backlog)

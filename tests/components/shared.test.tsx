@@ -1,6 +1,8 @@
-import { render, screen } from '@testing-library/preact'
+import { render, screen, fireEvent } from '@testing-library/preact'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyBadge, PropertyList } from '@/components/shared/property-badge'
+import { StatusBadge } from '@/components/shared/status-badge'
+import { Accordion, AccordionGroup } from '@/components/shared/accordion'
 import type { Metadata, Property } from '@/types/oscal'
 
 // ============================================================
@@ -169,5 +171,242 @@ describe('PropertyList', () => {
     const { container } = render(<PropertyList props={props} />)
     const list = container.querySelector('[aria-label="Properties"]')
     expect(list).toBeTruthy()
+  })
+})
+
+// ============================================================
+// StatusBadge Tests
+// ============================================================
+
+describe('StatusBadge', () => {
+  it('renders state text', () => {
+    render(<StatusBadge state="operational" />)
+    expect(screen.getByText('operational')).toBeInTheDocument()
+  })
+
+  it('renders with status-specific CSS class', () => {
+    const { container } = render(<StatusBadge state="operational" />)
+    expect(container.querySelector('.status-badge--operational')).toBeTruthy()
+  })
+
+  it('renders SVG icon for known states', () => {
+    const { container } = render(<StatusBadge state="operational" />)
+    const svg = container.querySelector('.status-badge-icon')
+    expect(svg).toBeTruthy()
+    expect(svg?.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('renders without SVG icon for unknown states', () => {
+    const { container } = render(<StatusBadge state="custom-state" />)
+    expect(container.querySelector('.status-badge-icon')).toBeNull()
+    expect(screen.getByText('custom-state')).toBeInTheDocument()
+  })
+
+  it('renders all predefined states', () => {
+    const states = ['operational', 'under-development', 'planned', 'disposition', 'implemented', 'partial', 'alternative', 'not-applicable']
+    for (const state of states) {
+      const { container, unmount } = render(<StatusBadge state={state} />)
+      expect(container.querySelector(`.status-badge--${state}`)).toBeTruthy()
+      expect(container.querySelector('.status-badge-icon')).toBeTruthy()
+      unmount()
+    }
+  })
+})
+
+// ============================================================
+// Accordion Tests
+// ============================================================
+
+describe('Accordion', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('renders trigger button with title', () => {
+    render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    expect(screen.getByText('Test Section')).toBeInTheDocument()
+  })
+
+  it('content is hidden by default', () => {
+    const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    const content = container.querySelector('#test-content')
+    expect(content?.hasAttribute('hidden')).toBe(true)
+  })
+
+  it('content is visible when defaultOpen is true', () => {
+    const { container } = render(<Accordion id="test" title="Test Section" defaultOpen><p>Content</p></Accordion>)
+    const content = container.querySelector('#test-content')
+    expect(content?.hasAttribute('hidden')).toBe(false)
+  })
+
+  it('clicking trigger toggles content visibility', () => {
+    const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    const trigger = container.querySelector('#test-trigger')!
+    fireEvent.click(trigger)
+    const content = container.querySelector('#test-content')
+    expect(content?.hasAttribute('hidden')).toBe(false)
+  })
+
+  it('trigger has aria-expanded attribute', () => {
+    const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    const trigger = container.querySelector('#test-trigger')
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(trigger!)
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('trigger has aria-controls pointing to content', () => {
+    const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    const trigger = container.querySelector('#test-trigger')
+    expect(trigger?.getAttribute('aria-controls')).toBe('test-content')
+  })
+
+  it('content region has aria-labelledby pointing to trigger', () => {
+    const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    const content = container.querySelector('#test-content')
+    expect(content?.getAttribute('role')).toBe('region')
+    expect(content?.getAttribute('aria-labelledby')).toBe('test-trigger')
+  })
+
+  it('renders count when provided', () => {
+    render(<Accordion id="test" title="Test Section" count={5}><p>Content</p></Accordion>)
+    expect(screen.getByText('5')).toBeInTheDocument()
+  })
+
+  it('wraps trigger in heading when headingLevel is provided', () => {
+    const { container } = render(<Accordion id="test" title="Test Section" headingLevel={3}><p>Content</p></Accordion>)
+    const heading = container.querySelector('h3.accordion-heading')
+    expect(heading).toBeTruthy()
+    expect(heading?.querySelector('#test-trigger')).toBeTruthy()
+  })
+
+  it('does not wrap in heading when headingLevel is not provided', () => {
+    const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    expect(container.querySelector('.accordion-heading')).toBeNull()
+  })
+})
+
+// ============================================================
+// Accordion Session Persistence Tests
+// ============================================================
+
+describe('Accordion - Session Persistence', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('saves open state to sessionStorage on toggle', () => {
+    const { container } = render(<Accordion id="persist-test" title="Persist"><p>Content</p></Accordion>)
+    fireEvent.click(container.querySelector('#persist-test-trigger')!)
+    expect(sessionStorage.getItem('accordion-persist-test')).toBe('true')
+  })
+
+  it('saves closed state to sessionStorage', () => {
+    const { container } = render(<Accordion id="persist-test" title="Persist" defaultOpen><p>Content</p></Accordion>)
+    fireEvent.click(container.querySelector('#persist-test-trigger')!)
+    expect(sessionStorage.getItem('accordion-persist-test')).toBe('false')
+  })
+
+  it('restores open state from sessionStorage', () => {
+    sessionStorage.setItem('accordion-restore-test', 'true')
+    const { container } = render(<Accordion id="restore-test" title="Restore"><p>Content</p></Accordion>)
+    expect(container.querySelector('#restore-test-content')?.hasAttribute('hidden')).toBe(false)
+  })
+
+  it('restores closed state from sessionStorage overriding defaultOpen', () => {
+    sessionStorage.setItem('accordion-override-test', 'false')
+    const { container } = render(<Accordion id="override-test" title="Override" defaultOpen><p>Content</p></Accordion>)
+    expect(container.querySelector('#override-test-content')?.hasAttribute('hidden')).toBe(true)
+  })
+
+  it('falls back to defaultOpen when no saved state', () => {
+    const { container } = render(<Accordion id="fallback-test" title="Fallback" defaultOpen><p>Content</p></Accordion>)
+    expect(container.querySelector('#fallback-test-content')?.hasAttribute('hidden')).toBe(false)
+  })
+})
+
+// ============================================================
+// AccordionGroup Tests
+// ============================================================
+
+describe('AccordionGroup', () => {
+  it('renders children', () => {
+    render(<AccordionGroup><p>Group content</p></AccordionGroup>)
+    expect(screen.getByText('Group content')).toBeInTheDocument()
+  })
+
+  it('has accordion-group class', () => {
+    const { container } = render(<AccordionGroup><p>Group content</p></AccordionGroup>)
+    expect(container.querySelector('.accordion-group')).toBeTruthy()
+  })
+
+  it('renders Expand all and Collapse all buttons', () => {
+    render(<AccordionGroup><p>Content</p></AccordionGroup>)
+    expect(screen.getByText('Expand all')).toBeInTheDocument()
+    expect(screen.getByText('Collapse all')).toBeInTheDocument()
+  })
+
+  it('Expand all opens all child accordions', () => {
+    const { container } = render(
+      <AccordionGroup>
+        <Accordion id="a1" title="First"><p>Content 1</p></Accordion>
+        <Accordion id="a2" title="Second"><p>Content 2</p></Accordion>
+      </AccordionGroup>
+    )
+    // Both closed by default
+    expect(container.querySelector('#a1-content')?.hasAttribute('hidden')).toBe(true)
+    expect(container.querySelector('#a2-content')?.hasAttribute('hidden')).toBe(true)
+
+    fireEvent.click(screen.getByText('Expand all'))
+
+    expect(container.querySelector('#a1-content')?.hasAttribute('hidden')).toBe(false)
+    expect(container.querySelector('#a2-content')?.hasAttribute('hidden')).toBe(false)
+  })
+
+  it('Collapse all closes all child accordions', () => {
+    const { container } = render(
+      <AccordionGroup>
+        <Accordion id="a1" title="First" defaultOpen><p>Content 1</p></Accordion>
+        <Accordion id="a2" title="Second" defaultOpen><p>Content 2</p></Accordion>
+      </AccordionGroup>
+    )
+    // Both open by default
+    expect(container.querySelector('#a1-content')?.hasAttribute('hidden')).toBe(false)
+    expect(container.querySelector('#a2-content')?.hasAttribute('hidden')).toBe(false)
+
+    fireEvent.click(screen.getByText('Collapse all'))
+
+    expect(container.querySelector('#a1-content')?.hasAttribute('hidden')).toBe(true)
+    expect(container.querySelector('#a2-content')?.hasAttribute('hidden')).toBe(true)
+  })
+
+  it('individual accordion toggle still works within group', () => {
+    const { container } = render(
+      <AccordionGroup>
+        <Accordion id="a1" title="First"><p>Content 1</p></Accordion>
+        <Accordion id="a2" title="Second"><p>Content 2</p></Accordion>
+      </AccordionGroup>
+    )
+    // Open only first
+    fireEvent.click(container.querySelector('#a1-trigger')!)
+    expect(container.querySelector('#a1-content')?.hasAttribute('hidden')).toBe(false)
+    expect(container.querySelector('#a2-content')?.hasAttribute('hidden')).toBe(true)
+  })
+
+  it('Expand all works after individual toggle', () => {
+    const { container } = render(
+      <AccordionGroup>
+        <Accordion id="a1" title="First" defaultOpen><p>Content 1</p></Accordion>
+        <Accordion id="a2" title="Second"><p>Content 2</p></Accordion>
+      </AccordionGroup>
+    )
+    // Close first manually
+    fireEvent.click(container.querySelector('#a1-trigger')!)
+    expect(container.querySelector('#a1-content')?.hasAttribute('hidden')).toBe(true)
+
+    // Expand all should open both
+    fireEvent.click(screen.getByText('Expand all'))
+    expect(container.querySelector('#a1-content')?.hasAttribute('hidden')).toBe(false)
+    expect(container.querySelector('#a2-content')?.hasAttribute('hidden')).toBe(false)
   })
 })

@@ -3,6 +3,9 @@ import { axe } from 'vitest-axe'
 import * as matchers from 'vitest-axe/matchers'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyBadge, PropertyList } from '@/components/shared/property-badge'
+import { StatusBadge } from '@/components/shared/status-badge'
+import { Accordion } from '@/components/shared/accordion'
+import { SearchBar } from '@/components/shared/search-bar'
 import { CatalogView } from '@/components/catalog/catalog-view'
 import { ControlDetail } from '@/components/catalog/control-detail'
 import { GroupTree } from '@/components/catalog/group-tree'
@@ -211,5 +214,58 @@ describe('Accessibility - SSP', () => {
     const { container } = render(<SspView ssp={testSsp} />)
     const results = await axe(container)
     expect(results).toHaveNoViolations()
+  })
+})
+
+// ============================================================
+// Accessibility Tests - StatusBadge
+// ============================================================
+
+describe('Accessibility - StatusBadge', () => {
+  it('StatusBadge has no a11y violations', async () => {
+    const { container } = render(<StatusBadge state="operational" />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+// ============================================================
+// Accessibility Tests - Accordion
+// ============================================================
+
+describe('Accessibility - Accordion', () => {
+  it('Accordion has no a11y violations', async () => {
+    const { container } = render(
+      <Accordion id="a11y-test" title="Test Section" headingLevel={3}>
+        <p>Accordion content</p>
+      </Accordion>
+    )
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+// ============================================================
+// Accessibility Tests - SearchBar Combobox
+// ============================================================
+
+describe('Accessibility - SearchBar Combobox', () => {
+  it('SearchBar with results has no a11y violations', async () => {
+    const searchResults = [
+      { id: 'ac-1', title: 'Policy', type: 'control', context: 'Access' },
+    ]
+    const { container } = render(
+      <SearchBar query="ac" onQueryChange={() => {}} results={searchResults} isSearching={true} />
+    )
+    const axeResults = await axe(container)
+    expect(axeResults).toHaveNoViolations()
+  })
+
+  it('SearchBar without results has no a11y violations', async () => {
+    const { container } = render(
+      <SearchBar query="" onQueryChange={() => {}} results={[]} isSearching={false} />
+    )
+    const axeResults = await axe(container)
+    expect(axeResults).toHaveNoViolations()
   })
 })

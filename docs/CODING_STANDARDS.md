@@ -1,7 +1,7 @@
 # OSCAL Viewer - Coding Standards
 
-**Version**: 1.0.0
-**Gueltig ab**: Phase 2
+**Version**: 3.0.0
+**Gueltig ab**: Phase 2 (Deep-Link / Filter / Accordion Update)
 
 ---
 
@@ -74,6 +74,10 @@ case 'profile':
 - [ ] Hauptkomponente `<Type>View` mit typisierter Props-Interface
 - [ ] `MetadataPanel` fuer Metadata-Anzeige genutzt
 - [ ] `PropertyList`/`PropertyBadge` fuer Properties genutzt
+- [ ] `StatusBadge` fuer Status-Anzeige genutzt (z.B. operational, under-development)
+- [ ] `Accordion` fuer auf-/zuklappbare Sektionen genutzt
+- [ ] `useDeepLink` fuer URL-Hash-Synchronisation integriert
+- [ ] `useFilter` + `FilterBar` fuer Filterung in Sidebar integriert (falls Listen vorhanden)
 - [ ] Integration in `DocumentViewer` (neuer `case`)
 - [ ] CSS-Klassen in `src/styles/base.css` ergaenzt
 - [ ] `useMemo` fuer teure Berechnungen (z.B. Listen-Aufbereitung)
@@ -126,15 +130,290 @@ import { GroupTree } from './group-tree'
 
 ## 4. CSS Conventions
 
+### 4.1 Grundregeln
+
 - Alle Styles in `src/styles/base.css` (kein CSS-in-JS)
 - BEM-aehnliche Namensgebung: `.profile-view`, `.profile-sidebar`, `.profile-content`
 - Komponenten-Prefix: `.catalog-*`, `.profile-*`, `.compdef-*`, `.ssp-*`
 - Responsive Design mit CSS Grid/Flexbox
-- Accessibility: Fokus-Styles nicht entfernen
+- Accessibility: `:focus-visible` Styles nie entfernen
+
+### 4.2 CSS-Variablen-Pflicht
+
+Keine hardcoded Farbwerte ausserhalb `:root`. Immer `var(--color-...)` nutzen.
+21 semantische Variablen sind in `base.css:3-51` definiert, jeweils mit Dark Mode Variante
+im `@media (prefers-color-scheme: dark)` Block.
+
+```css
+/* KORREKT */
+color: var(--color-text);
+background: var(--color-bg-secondary);
+border: 1px solid var(--color-border);
+
+/* FALSCH - hardcoded Farbe */
+color: #1f2937;
+background: #f9fafb;
+```
+
+### 4.3 Layout-Patterns
+
+**Full-Width Layout**: Kein `max-width` auf View-Container. Inhalte nutzen vollen Viewport.
+
+```css
+.document-view { width: 100%; }   /* NICHT max-width: 1200px */
+```
+
+**Full-Bleed Grid** (Referenz: `.catalog-layout` in base.css):
+
+```css
+.catalog-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0;
+  margin: 0 -2.5rem;
+  width: calc(100% + 5rem);
+  min-height: calc(100vh - 64px);
+}
+```
+
+**Sticky Sidebar** (Referenz: `.catalog-sidebar`, `.compdef-sidebar`):
+
+```css
+.catalog-sidebar {
+  position: sticky;
+  top: 64px;                              /* Header-Hoehe */
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border);  /* Divider statt Box-Border */
+}
+```
+
+**Page Scroll statt Container Scroll**: Content scrollt natuerlich mit der Seite.
+Kein `max-height` + `overflow-y: auto` auf Content-Bereichen.
+
+**Borderless Desktop Design**: Subtile Divider statt Box-Borders.
+- Sidebar: `border-right` statt `border` + `border-radius`
+- Metadata: `border-bottom` only
+
+### 4.4 Transitions
+
+Material Design Easing verwenden:
+
+```css
+transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+/* NICHT: transition: background 0.3s ease; */
+```
 
 ---
 
-## 5. Branch & Commit Conventions
+## 5. Accessibility & Interaction Patterns
+
+### 5.1 WAI-ARIA Tabs Pattern (Referenz: `ssp-view.tsx`)
+
+```tsx
+// Tab-Definitionen AUSSERHALB der Komponente (keine Re-Allokation)
+const tabDefs: Array<{ id: TabId; label: string }> = [
+  { id: 'tab-a', label: 'Tab A' },
+  { id: 'tab-b', label: 'Tab B' },
+]
+
+// Keyboard-Handler fuer Pfeiltasten + Home/End
+const handleTabKeyDown = (e: KeyboardEvent, currentTab: TabId) => {
+  const tabIds = tabDefs.map(t => t.id)
+  const idx = tabIds.indexOf(currentTab)
+  let next = idx
+
+  if (e.key === 'ArrowRight') next = (idx + 1) % tabIds.length
+  else if (e.key === 'ArrowLeft') next = (idx - 1 + tabIds.length) % tabIds.length
+  else if (e.key === 'Home') next = 0
+  else if (e.key === 'End') next = tabIds.length - 1
+  else return
+
+  e.preventDefault()
+  setActiveTab(tabIds[next])
+  document.getElementById(`tab-${tabIds[next]}`)?.focus()
+}
+
+// JSX: role="tablist", role="tab", aria-selected, aria-controls, tabIndex-Roving
+<nav role="tablist" aria-label="Sections">
+  {tabDefs.map(tab => (
+    <button
+      role="tab"
+      id={`tab-${tab.id}`}
+      aria-selected={activeTab === tab.id}
+      aria-controls={`panel-${tab.id}`}
+      tabIndex={activeTab === tab.id ? 0 : -1}
+      onClick={() => setActiveTab(tab.id)}
+      onKeyDown={(e) => handleTabKeyDown(e as unknown as KeyboardEvent, tab.id)}
+    >{tab.label}</button>
+  ))}
+</nav>
+<div role="tabpanel" id={`panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
+  {/* Panel-Inhalt */}
+</div>
+```
+
+### 5.2 Combobox / Search Pattern (Referenz: `search-bar.tsx`)
+
+```tsx
+<input
+  type="search"
+  role="combobox"
+  aria-haspopup="listbox"
+  aria-expanded={showResults}
+  aria-controls={showResults ? 'results-listbox' : undefined}
+  aria-activedescendant={activeIndex >= 0 ? `result-${activeIndex}` : undefined}
+  autocomplete="off"
+/>
+{showResults && (
+  <div id="results-listbox" role="listbox">
+    {results.map((r, i) => (
+      <div role="option" id={`result-${i}`} aria-selected={i === activeIndex}>
+        {r.title}
+      </div>
+    ))}
+  </div>
+)}
+```
+
+Keyboard: ArrowUp/Down fuer Navigation, Escape zum Schliessen.
+`activeIndex` als `useState<number>(-1)` tracken.
+
+### 5.3 Mobile Sidebar Toggle Pattern (Referenz: `catalog-view.tsx`)
+
+```tsx
+const [sidebarOpen, setSidebarOpen] = useState(false)
+
+// Handler schliesst Sidebar nach Auswahl
+const handleSelect = (id: string) => {
+  setSelectedId(id)
+  setSidebarOpen(false)
+}
+
+return (
+  <>
+    {/* Backdrop */}
+    <div class={`sidebar-backdrop ${sidebarOpen ? 'visible' : ''}`}
+         onClick={() => setSidebarOpen(false)} />
+
+    {/* Sidebar mit .open Klasse */}
+    <aside class={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      {/* Navigation */}
+    </aside>
+
+    {/* FAB-Button: display:none auf Desktop, flex auf Mobile */}
+    <button
+      class="sidebar-toggle"
+      onClick={() => setSidebarOpen(!sidebarOpen)}
+      aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
+      aria-expanded={sidebarOpen}
+    >
+      {/* Icon */}
+    </button>
+  </>
+)
+```
+
+### 5.4 Deep-Link Pattern (Referenz: `use-deep-link.ts`, `catalog-view.tsx`)
+
+URL-Hash-basierte Navigation fuer direktes Ansteuern von Elementen.
+Hook lebt im Application Layer, URL-Format: `#/<viewType>/<id>`.
+
+```tsx
+import { useDeepLink } from '@/hooks/use-deep-link'
+
+const { selectedId, setSelectedId } = useDeepLink('catalog')
+// URL wird automatisch zu #/catalog/<id> synchronisiert
+
+// In Kombination mit CopyLinkButton (shared Component):
+import { CopyLinkButton } from '@/components/shared/copy-link-button'
+<CopyLinkButton viewType="catalog" elementId={control.id} />
+```
+
+Jeder Renderer SOLL `useDeepLink` integrieren, damit Nutzer Links auf
+spezifische Elemente teilen koennen.
+
+### 5.5 Filter Pattern (Referenz: `use-filter.ts`, `filter-bar.tsx`, `catalog-view.tsx`)
+
+Generisches Filter-System mit Keyword + Chip-Filtern.
+Hook (`useFilter`) im Application Layer, UI (`FilterBar`) im Presentation Layer.
+
+```tsx
+import { useFilter } from '@/hooks/use-filter'
+import { FilterBar } from '@/components/shared/filter-bar'
+import type { FilterCategory } from '@/components/shared/filter-bar'
+
+const filter = useFilter()
+
+// Kategorien fuer Chip-Filter aus Daten ableiten (useMemo!)
+const categories = useMemo((): FilterCategory[] => {
+  return [{ key: 'family', label: 'Family', options: [...] }]
+}, [data])
+
+// Gefilterte Daten mit useMemo (WICHTIG: nicht bei jedem Render neu berechnen)
+const filtered = useMemo(() => {
+  if (!filter.hasActiveFilters) return data
+  return applyFilters(data, filter.keyword, filter.chips)
+}, [data, filter.keyword, filter.chips, filter.hasActiveFilters])
+
+// JSX
+<FilterBar
+  keyword={filter.keyword}
+  onKeywordChange={filter.setKeyword}
+  chips={filter.chips}
+  onAddChip={filter.addChip}
+  onRemoveChip={filter.removeChip}
+  onClearAll={filter.clearAll}
+  hasActiveFilters={filter.hasActiveFilters}
+  categories={categories}
+  placeholder="Filter controls..."
+/>
+```
+
+### 5.6 Accordion Pattern (Referenz: `accordion.tsx`)
+
+Auf-/zuklappbare Sektionen mit Session-Persistenz und Expand/Collapse All.
+WAI-ARIA konform (`aria-expanded`, `aria-controls`, `role="region"`).
+
+```tsx
+import { Accordion, AccordionGroup } from '@/components/shared/accordion'
+
+// Einzelnes Accordion
+<Accordion id="section-1" title="Details" count={5} defaultOpen={true} headingLevel={3}>
+  {/* Inhalt */}
+</Accordion>
+
+// Gruppe mit Expand/Collapse All Buttons
+<AccordionGroup>
+  <Accordion id="sec-a" title="Section A">...</Accordion>
+  <Accordion id="sec-b" title="Section B">...</Accordion>
+</AccordionGroup>
+```
+
+- `id` muss eindeutig sein (wird fuer SessionStorage-Key verwendet)
+- `headingLevel` optional: erzeugt semantisches `<h2>`-`<h6>` Element
+- `count` optional: zeigt Zaehler neben dem Titel
+- Zustand wird in `sessionStorage` persistiert (bleibt innerhalb Tab-Sitzung)
+
+---
+
+## 6. Shared Components Uebersicht
+
+| Component | Datei | Zweck |
+|-----------|-------|-------|
+| `MetadataPanel` | `shared/metadata-panel.tsx` | OSCAL Metadata (Titel, Version, Rollen) |
+| `PropertyBadge` | `shared/property-badge.tsx` | Einzelne Property als Badge |
+| `PropertyList` | `shared/property-badge.tsx` | Liste von Properties |
+| `StatusBadge` | `shared/status-badge.tsx` | Status mit Icon (operational, etc.) |
+| `Accordion` | `shared/accordion.tsx` | Auf-/zuklappbare Sektion mit Persistenz |
+| `AccordionGroup` | `shared/accordion.tsx` | Expand/Collapse All Steuerung |
+| `SearchBar` | `shared/search-bar.tsx` | Combobox-Suche mit Keyboard-Navigation |
+| `FilterBar` | `shared/filter-bar.tsx` | Keyword + Chip-Filter-Leiste |
+| `CopyLinkButton` | `shared/copy-link-button.tsx` | URL in Zwischenablage kopieren |
+
+---
+
+## 7. Branch & Commit Conventions
 
 - Branch-Naming: `feature/<issue-nr>-<beschreibung>` (z.B. `feature/4-profile-renderer`)
 - Commit-Messages: `<type>: <beschreibung>` (z.B. `feat: implement profile renderer`)
