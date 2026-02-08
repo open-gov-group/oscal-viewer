@@ -7,6 +7,14 @@
     {
       "title": "FedRAMP High Baseline",
       "url": "https://raw.githubusercontent.com/GSA/fedramp-automation/master/dist/content/rev5/baselines/json/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.json"
+    },
+    {
+      "title": "BSI Grundschutz",
+      "url": "https://raw.githubusercontent.com/BSI-Bund/Stand-der-Technik-Bibliothek/refs/heads/main/Quellkataloge/Methodik-Grundschutz%2B%2B/BSI-Methodik-Grundschutz%2B%2B-catalog.json"
+    },
+    {
+      "title": "DP Kompendium",
+      "url": "https://raw.githubusercontent.com/open-gov-group/opengov-privacy-oscal/refs/heads/main/oscal/catalog/open_privacy_catalog.json"
     }
   ]
 }
