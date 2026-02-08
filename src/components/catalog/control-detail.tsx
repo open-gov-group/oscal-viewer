@@ -1,3 +1,11 @@
+/**
+ * ControlDetail — Detail panel for an individual OSCAL control.
+ *
+ * Renders control metadata (id, title, class), properties, content parts,
+ * parameters, links, and sub-controls (enhancements) in collapsible Accordions.
+ * Sub-controls are rendered recursively via self-reference.
+ * Parts are rendered recursively via PartView with depth-based heading levels (h4→h5→h6).
+ */
 import type { FunctionComponent } from 'preact'
 import type { Control, Part } from '@/types/oscal'
 import { PropertyList } from '@/components/shared/property-badge'
@@ -95,6 +103,11 @@ interface PartViewProps {
   depth?: number
 }
 
+/**
+ * Recursive part renderer. Parts without a title render as flat content.
+ * Parts with a title or children render inside a nested Accordion.
+ * Heading level increases with depth: h4 (depth 0) → h5 (depth 1) → h6 (depth 2+).
+ */
 const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
   const partLabel = formatPartName(part.name)
   const title = part.title ?? partLabel
@@ -136,6 +149,7 @@ const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
   )
 }
 
+/** Maps OSCAL part names to human-readable labels. Falls back to title-cased hyphen-split. */
 function formatPartName(name: string): string {
   const labels: Record<string, string> = {
     statement: 'Statement',

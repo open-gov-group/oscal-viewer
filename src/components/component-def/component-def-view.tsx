@@ -1,3 +1,11 @@
+/**
+ * ComponentDefView — Sidebar + detail view for OSCAL Component Definition documents.
+ *
+ * Sidebar lists all defined components with type badges, filterable by type category
+ * and keyword. Detail pane shows description, purpose, properties, responsible roles,
+ * and control implementations. Deep-linked via useDeepLink('compdef').
+ * Capabilities section shown below when present.
+ */
 import { useState, useMemo } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { ComponentDefinition, DefinedComponent, ControlImplementation, ImplementedRequirement } from '@/types/oscal'
@@ -13,11 +21,13 @@ interface ComponentDefViewProps {
   componentDef: ComponentDefinition
 }
 
+/** Renders an OSCAL Component Definition with sidebar navigation, filtering, and detail pane. */
 export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ componentDef }) => {
   const { selectedId: selectedComponentId, setSelectedId: setSelectedComponentId } = useDeepLink('compdef')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const filter = useFilter()
 
+  // Count total implemented requirements across all components and their control-implementations
   const stats = useMemo(() => {
     const components = componentDef.components ?? []
     const totalImplementations = components.reduce((sum, c) =>
@@ -30,6 +40,7 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
     }
   }, [componentDef])
 
+  /** Build filter dropdown categories from unique component types. Hidden if only one type exists. */
   const typeCategories = useMemo((): FilterCategory[] => {
     const components = componentDef.components ?? []
     const types = [...new Set(components.map(c => c.type))]
@@ -37,6 +48,7 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
     return [{ key: 'type', label: 'Type', options: types.map(t => ({ value: t, label: t })) }]
   }, [componentDef])
 
+  /** Filter components by active type chips and keyword (matches title, type, description). */
   const filteredComponents = useMemo(() => {
     const components = componentDef.components ?? []
     if (!filter.hasActiveFilters) return components
@@ -58,6 +70,7 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
     return componentDef.components?.find(c => c.uuid === selectedComponentId) ?? null
   }, [componentDef, selectedComponentId])
 
+  /** Select a component by UUID, sync to URL hash, and close mobile sidebar. */
   const handleComponentSelect = (uuid: string) => {
     setSelectedComponentId(uuid)
     setSidebarOpen(false)
@@ -182,6 +195,7 @@ interface ComponentDetailProps {
   component: DefinedComponent
 }
 
+/** Detail view for a single component: description, purpose, properties, roles, and control implementations. */
 const ComponentDetail: FunctionComponent<ComponentDetailProps> = ({ component }) => {
   return (
     <article class="compdef-detail" aria-labelledby={`comp-${component.uuid}-title`}>
@@ -223,6 +237,7 @@ const ComponentDetail: FunctionComponent<ComponentDetailProps> = ({ component })
         </div>
       )}
 
+      {/* Each component can reference multiple control frameworks via control-implementations */}
       {component['control-implementations'] && component['control-implementations'].length > 0 && (
         <div class="compdef-subsection">
           {component['control-implementations'].map(ci => (
@@ -247,6 +262,7 @@ interface ControlImplementationViewProps {
   implementation: ControlImplementation
 }
 
+/** Renders a control implementation with source reference, description, and requirement cards. */
 const ControlImplementationView: FunctionComponent<ControlImplementationViewProps> = ({ implementation }) => {
   return (
     <div class="compdef-ci">
@@ -271,6 +287,7 @@ interface RequirementCardProps {
   requirement: ImplementedRequirement
 }
 
+/** Renders a single implemented requirement with control-id, description, properties, and statements. */
 const RequirementCard: FunctionComponent<RequirementCardProps> = ({ requirement }) => {
   return (
     <div class="compdef-requirement">
@@ -281,6 +298,7 @@ const RequirementCard: FunctionComponent<RequirementCardProps> = ({ requirement 
       {requirement.props && requirement.props.length > 0 && (
         <PropertyList props={requirement.props} />
       )}
+      {/* Statements break down implementation narrative by control part (e.g. ac-1_smt.a) */}
       {requirement.statements && requirement.statements.length > 0 && (
         <div class="compdef-statements">
           {requirement.statements.map(stmt => (

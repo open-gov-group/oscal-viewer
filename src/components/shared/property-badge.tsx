@@ -1,3 +1,9 @@
+/**
+ * PropertyBadge / PropertyList — Renders OSCAL properties as compact name:value badges.
+ *
+ * PropertyBadge displays a single property. PropertyList renders an accessible
+ * list of PropertyBadges with role="list" for screen readers.
+ */
 import type { FunctionComponent } from 'preact'
 import type { Property } from '@/types/oscal'
 

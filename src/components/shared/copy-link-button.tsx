@@ -1,3 +1,9 @@
+/**
+ * CopyLinkButton — Copies a deep-link URL to the clipboard.
+ *
+ * Constructs a shareable URL from viewType and elementId (e.g. `#/catalog/ac-1`),
+ * copies it via the Clipboard API, and shows a brief "copied" confirmation.
+ */
 import { useState, useCallback } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 

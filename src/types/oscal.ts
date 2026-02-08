@@ -1,6 +1,10 @@
-// OSCAL Type Definitions
-// Based on NIST OSCAL v1.0.x - v1.1.2+ JSON Schema
-// All property names use kebab-case matching the official OSCAL JSON format
+/**
+ * OSCAL Type Definitions — TypeScript interfaces for all four OSCAL model types.
+ *
+ * Based on NIST OSCAL v1.0.x – v1.1.2+ JSON Schema.
+ * All property names use kebab-case matching the official OSCAL JSON format.
+ * Optional fields with `?` are present in some but not all OSCAL versions.
+ */
 
 // ============================================================
 // Common / Shared Types

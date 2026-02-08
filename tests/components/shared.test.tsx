@@ -287,6 +287,23 @@ describe('Accordion', () => {
     const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
     expect(container.querySelector('.accordion-heading')).toBeNull()
   })
+
+  it('QA1: trigger is a button element (inherent Enter/Space keyboard support)', () => {
+    const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    const trigger = container.querySelector('#test-trigger')
+    expect(trigger?.tagName).toBe('BUTTON')
+  })
+
+  it('QA1: trigger toggles on repeated clicks (keyboard Enter/Space fires click)', () => {
+    const { container } = render(<Accordion id="test" title="Test Section"><p>Content</p></Accordion>)
+    const trigger = container.querySelector('#test-trigger')!
+    // Open
+    fireEvent.click(trigger)
+    expect(container.querySelector('#test-content')?.hasAttribute('hidden')).toBe(false)
+    // Close again
+    fireEvent.click(trigger)
+    expect(container.querySelector('#test-content')?.hasAttribute('hidden')).toBe(true)
+  })
 })
 
 // ============================================================
@@ -429,5 +446,34 @@ describe('CopyLinkButton (QS15)', () => {
     const { container } = render(<CopyLinkButton viewType="catalog" elementId="ac-1" />)
     const btn = container.querySelector('.copy-link-btn')
     expect(btn?.getAttribute('aria-label')).toBe('Copy link to ac-1')
+  })
+
+  it('QA5: clicking button calls clipboard.writeText with correct URL', async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText: writeTextMock } })
+    const { container } = render(<CopyLinkButton viewType="catalog" elementId="ac-1" />)
+    const btn = container.querySelector('.copy-link-btn') as HTMLElement
+    await fireEvent.click(btn)
+    expect(writeTextMock).toHaveBeenCalledTimes(1)
+    expect(writeTextMock.mock.calls[0][0]).toContain('#/catalog/ac-1')
+  })
+
+  it('QA5: aria-label changes to "Link copied" after click', async () => {
+    Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } })
+    const { container } = render(<CopyLinkButton viewType="catalog" elementId="ac-1" />)
+    const btn = container.querySelector('.copy-link-btn') as HTMLElement
+    await fireEvent.click(btn)
+    // Wait for state update
+    await new Promise(r => setTimeout(r, 10))
+    expect(btn.getAttribute('aria-label')).toBe('Link copied')
+  })
+
+  it('QA5: button gets "copied" class after click', async () => {
+    Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } })
+    const { container } = render(<CopyLinkButton viewType="catalog" elementId="ac-1" />)
+    const btn = container.querySelector('.copy-link-btn') as HTMLElement
+    await fireEvent.click(btn)
+    await new Promise(r => setTimeout(r, 10))
+    expect(btn.classList.contains('copied')).toBe(true)
   })
 })

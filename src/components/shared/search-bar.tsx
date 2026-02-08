@@ -1,3 +1,11 @@
+/**
+ * SearchBar — Accessible combobox for full-text document search.
+ *
+ * Features a text input with ARIA combobox role, a dropdown listbox of results
+ * (max 50 shown), keyboard navigation (Arrow keys, Enter, Escape),
+ * and active-descendant focus management.
+ * Pairs with the useSearch hook for query state and result computation.
+ */
 import { useState, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { SearchResult } from '@/hooks/use-search'
@@ -23,6 +31,7 @@ export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryCha
     setActiveIndex(-1)
   }
 
+  /** Keyboard handler: ArrowDown/Up navigate results, Enter selects, Escape clears. */
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!isSearching || results.length === 0) return
     const max = Math.min(results.length, 50) - 1

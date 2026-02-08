@@ -1,10 +1,20 @@
+/**
+ * useSearch — Full-text search hook for OSCAL documents.
+ *
+ * Builds a search index from the loaded document (per document type),
+ * then performs case-insensitive substring matching with 200ms debounce.
+ * Minimum query length: 2 characters.
+ */
 import { useState, useMemo, useCallback, useEffect, useRef } from 'preact/hooks'
 import type { OscalDocumentData, Catalog, Profile, ComponentDefinition, SystemSecurityPlan } from '@/types/oscal'
 
+/** A single search result shown in the SearchBar dropdown. */
 export interface SearchResult {
   id: string
   title: string
+  /** Result category: 'control', 'group', 'import', 'parameter', 'requirement', 'user', 'system', etc. */
   type: string
+  /** Additional context shown below the title (e.g. group name, description snippet). */
   context?: string
 }
 
@@ -12,14 +22,21 @@ export interface UseSearchReturn {
   query: string
   setQuery: (q: string) => void
   results: SearchResult[]
+  /** True when the debounced query has >= 2 characters. */
   isSearching: boolean
 }
 
+/**
+ * Provides full-text search over a loaded OSCAL document.
+ * @param data - The parsed document data, or null if no document is loaded.
+ * @returns Search state with query, results, and setter.
+ */
 export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Debounce: delay search execution by 200ms after last keystroke
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => {
@@ -30,11 +47,13 @@ export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
     }
   }, [query])
 
+  // Build flat search index when document changes (memoized)
   const index = useMemo(() => {
     if (!data) return []
     return buildIndex(data)
   }, [data])
 
+  // Filter index entries by debounced query (case-insensitive substring match)
   const results = useMemo(() => {
     const trimmed = debouncedQuery.trim().toLowerCase()
     if (trimmed.length < 2 || index.length === 0) return []
@@ -55,10 +74,17 @@ export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
   }
 }
 
+/** Internal index entry with pre-computed lowercase searchText for fast matching. */
 export interface IndexEntry extends SearchResult {
   searchText: string
 }
 
+/**
+ * Builds a flat search index from the document data.
+ * Delegates to type-specific indexers (catalog, profile, compdef, ssp).
+ * @param data - The typed document data to index.
+ * @returns Flat array of IndexEntry with concatenated searchText fields.
+ */
 export function buildIndex(data: OscalDocumentData): IndexEntry[] {
   switch (data.type) {
     case 'catalog':
@@ -72,6 +98,7 @@ export function buildIndex(data: OscalDocumentData): IndexEntry[] {
   }
 }
 
+/** Index catalog groups and controls (recursively), including control prose text. */
 function indexCatalog(catalog: Catalog): IndexEntry[] {
   const entries: IndexEntry[] = []
 
@@ -113,6 +140,7 @@ function indexCatalog(catalog: Catalog): IndexEntry[] {
   return entries
 }
 
+/** Index profile imports, alterations, and set-parameters. */
 function indexProfile(profile: Profile): IndexEntry[] {
   const entries: IndexEntry[] = []
 
@@ -152,6 +180,7 @@ function indexProfile(profile: Profile): IndexEntry[] {
   return entries
 }
 
+/** Index components and their implemented requirements. */
 function indexComponentDef(compDef: ComponentDefinition): IndexEntry[] {
   const entries: IndexEntry[] = []
 
@@ -184,6 +213,7 @@ function indexComponentDef(compDef: ComponentDefinition): IndexEntry[] {
   return entries
 }
 
+/** Index SSP system characteristics, components, users, and implemented requirements. */
 function indexSSP(ssp: SystemSecurityPlan): IndexEntry[] {
   const entries: IndexEntry[] = []
 

@@ -1,3 +1,13 @@
+/**
+ * SspView — Tabbed view for OSCAL System Security Plan documents.
+ *
+ * Three tabs with WAI-ARIA tab pattern (Arrow key navigation, roving tabindex):
+ * - System Characteristics: description, impact levels, authorization boundary
+ * - System Implementation: users, components, inventory items
+ * - Control Implementation: implemented requirements with by-component narratives
+ *
+ * Tab state is synced with the URL hash via useDeepLink.
+ */
 import { useState, useMemo, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { SystemSecurityPlan, SystemCharacteristics, SystemImplementation, SspControlImplementation } from '@/types/oscal'
@@ -12,19 +22,23 @@ interface SspViewProps {
 
 type SspTab = 'characteristics' | 'implementation' | 'controls'
 
+/** Tab definitions for the three SSP sections, used for rendering and keyboard navigation. */
 const tabDefs: Array<{ id: SspTab; label: string }> = [
   { id: 'characteristics', label: 'System Characteristics' },
   { id: 'implementation', label: 'System Implementation' },
   { id: 'controls', label: 'Control Implementation' },
 ]
 
+/** Valid tab IDs for URL hash validation (prevents invalid deep-link values). */
 const validTabs: SspTab[] = ['characteristics', 'implementation', 'controls']
 
+/** Renders an OSCAL System Security Plan with three tabbed sections and deep-link support. */
 export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
   const { selectedId: hashTab, setSelectedId: setHashTab } = useDeepLink('ssp')
   const initialTab = hashTab && validTabs.includes(hashTab as SspTab) ? hashTab as SspTab : 'characteristics'
   const [activeTab, setActiveTabState] = useState<SspTab>(initialTab)
 
+  /** Update active tab state and sync to URL hash for deep-linking. */
   const setActiveTab = (tab: SspTab) => {
     setActiveTabState(tab)
     setHashTab(tab)
@@ -42,6 +56,10 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
     requirements: ssp['control-implementation']['implemented-requirements'].length,
   }), [ssp])
 
+  /**
+   * WAI-ARIA Tabs keyboard handler: ArrowRight/Left cycle tabs, Home/End jump to first/last.
+   * Moves focus to the newly activated tab button.
+   */
   const handleTabKeyDown = (e: KeyboardEvent, currentTab: SspTab) => {
     const tabIds = tabDefs.map(t => t.id)
     const currentIndex = tabIds.indexOf(currentTab)
@@ -136,6 +154,7 @@ interface CharacteristicsPanelProps {
   characteristics: SystemCharacteristics
 }
 
+/** Renders system description, IDs, security impact levels, authorization boundary, and properties. */
 const CharacteristicsPanel: FunctionComponent<CharacteristicsPanelProps> = ({ characteristics }) => {
   return (
     <div class="ssp-characteristics">
@@ -215,6 +234,7 @@ interface ImplementationPanelProps {
   implementation: SystemImplementation
 }
 
+/** Renders system users (with roles), components (with status badges), and inventory items. */
 const ImplementationPanel: FunctionComponent<ImplementationPanelProps> = ({ implementation }) => {
   return (
     <div class="ssp-implementation">
@@ -285,6 +305,7 @@ interface ControlImplementationPanelProps {
   controlImpl: SspControlImplementation
 }
 
+/** Renders implemented requirements with statements and by-component implementation narratives. */
 const ControlImplementationPanel: FunctionComponent<ControlImplementationPanelProps> = ({ controlImpl }) => {
   return (
     <div class="ssp-control-impl">

@@ -1,3 +1,7 @@
+/**
+ * DocumentViewer — Router component that delegates to the correct view
+ * based on the OSCAL document type (catalog, profile, component-definition, SSP).
+ */
 import type { FunctionComponent } from 'preact'
 import type { OscalDocumentData } from '@/types/oscal'
 import { CatalogView } from '@/components/catalog/catalog-view'

@@ -1,3 +1,4 @@
+/** Detection utilities: identify OSCAL document type, version, and extract metadata from raw JSON. */
 import type { DocumentType, Metadata } from '@/types/oscal'
 
 const DOCUMENT_TYPE_KEYS: readonly DocumentType[] = [

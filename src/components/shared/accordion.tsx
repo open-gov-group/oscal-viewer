@@ -1,7 +1,17 @@
+/**
+ * Accordion — Collapsible content panel with session persistence.
+ *
+ * Features:
+ * - Open/close state persisted in sessionStorage (survives page navigation, not tab close)
+ * - Optional heading level wrapper (h2–h6) for document outline semantics
+ * - AccordionGroup context for "Expand all" / "Collapse all" bulk actions
+ * - ARIA: aria-expanded on trigger, aria-controls + role="region" on content panel
+ */
 import { useState, useEffect, useContext } from 'preact/hooks'
 import type { FunctionComponent, ComponentChildren } from 'preact'
 import { createElement, createContext } from 'preact'
 
+/** Context for AccordionGroup expand/collapse signals (counter-based to trigger useEffect). */
 interface AccordionGroupContextValue {
   expandSignal: number
   collapseSignal: number
@@ -20,6 +30,7 @@ interface AccordionProps {
 
 const STORAGE_PREFIX = 'accordion-'
 
+/** Read accordion open/close state from sessionStorage. Returns null if unavailable. */
 function readSavedState(id: string): boolean | null {
   try {
     const v = sessionStorage.getItem(STORAGE_PREFIX + id)
@@ -29,6 +40,7 @@ function readSavedState(id: string): boolean | null {
   }
 }
 
+/** Persist accordion state to sessionStorage. Silently fails in private mode. */
 function writeSavedState(id: string, open: boolean): void {
   try {
     sessionStorage.setItem(STORAGE_PREFIX + id, String(open))
@@ -98,6 +110,7 @@ interface AccordionGroupProps {
   children: ComponentChildren
 }
 
+/** Wraps multiple Accordions, providing "Expand all" / "Collapse all" buttons via Context. */
 export const AccordionGroup: FunctionComponent<AccordionGroupProps> = ({ children }) => {
   const [expandSignal, setExpandSignal] = useState(0)
   const [collapseSignal, setCollapseSignal] = useState(0)

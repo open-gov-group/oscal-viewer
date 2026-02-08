@@ -1,3 +1,9 @@
+/**
+ * StatusBadge — Visual indicator for OSCAL status/state values.
+ *
+ * Maps state strings (operational, under-development, planned, implemented, partial, etc.)
+ * to SVG icons and CSS modifier classes (e.g. `.status-badge--operational`).
+ */
 import type { FunctionComponent } from 'preact'
 
 interface StatusBadgeProps {

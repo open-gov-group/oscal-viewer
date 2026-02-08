@@ -5,6 +5,7 @@
 
 import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
+import jsdoc from 'eslint-plugin-jsdoc'
 
 export default tseslint.config(
   // Global ignores (replaces ignorePatterns)
@@ -110,6 +111,27 @@ export default tseslint.config(
           { group: ['@/components/*', '@/components/**'], message: 'hooks/ must not import from components/ (layer violation)' },
           { group: ['../components/*', '../components/**'], message: 'hooks/ must not import from components/ (layer violation)' },
         ],
+      }],
+    },
+  },
+
+  // -------------------------------------------------------
+  // JSDoc: require-jsdoc on exported functions (E4 — QA Audit)
+  // Level: warn (not error) — gradual adoption while E2 is in progress
+  // Scope: src/ only (publicOnly = exported functions/components)
+  // -------------------------------------------------------
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/main.tsx'],
+    plugins: { jsdoc },
+    rules: {
+      'jsdoc/require-jsdoc': ['warn', {
+        publicOnly: true,
+        require: {
+          FunctionDeclaration: true,
+          FunctionExpression: true,
+          ArrowFunctionExpression: true,
+        },
       }],
     },
   },

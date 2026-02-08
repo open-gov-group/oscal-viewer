@@ -1,7 +1,7 @@
 # OSCAL Viewer - Coding Standards
 
-**Version**: 4.0.0
-**Gueltig ab**: Phase 3 (PWA, npm Package)
+**Version**: 4.2.0
+**Gueltig ab**: Phase 3 (Code-Kommentierung, QA-Audit, ESLint JSDoc-Enforcement)
 
 ---
 
@@ -630,3 +630,148 @@ npm run build:lib    # Separater Build mit tsconfig.lib.json
 App und Package haben **unabhaengige** Versionen:
 - App-Aenderungen (UI, CSS, Hooks) erhoehen NICHT die Package-Version
 - Parser/Types-Aenderungen erhoehen die Package-Version (SemVer)
+
+---
+
+## 11. Code-Kommentierung & JSDoc
+
+Basierend auf dem QA-Kommentierungs-Audit (Note C-, 2.6% Kommentierungsquote).
+Ziel: >= 8% Kommentierungsquote, 100% JSDoc auf exportierten Funktionen und Hooks.
+
+### 11.1 File-Level-Kommentar (PFLICHT)
+
+Jede Datei in `src/` MUSS einen einzeiligen Kommentar am Dateianfang haben, der den Zweck der Datei beschreibt:
+
+```typescript
+/** Catalog-View: Hauptkomponente fuer Katalog-Anzeige mit Sidebar-Navigation und Filter */
+```
+
+Ausnahme: `main.tsx` und reine Re-Export-Dateien (z.B. `index.ts` mit nur `export` Statements).
+
+### 11.2 JSDoc auf exportierte Funktionen und Hooks (PFLICHT)
+
+Alle exportierten Funktionen, Hooks und Komponenten MUESSEN JSDoc haben:
+
+```typescript
+/**
+ * Parse a raw OSCAL JSON object into a typed OscalDocument.
+ * Detects document type, extracts version, delegates to type-specific parser.
+ *
+ * @param json - Raw JSON object (unknown type, validated internally)
+ * @returns ParseResult with typed OscalDocument on success, error message on failure
+ */
+export function parseOscalDocument(json: unknown): ParseResult<OscalDocument> {
+```
+
+**Hooks** muessen Return-Werte und Seiteneffekte dokumentieren:
+
+```typescript
+/**
+ * URL-Hash-basierte Navigation fuer Deep-Linking.
+ * Synchronisiert selectedId mit dem URL-Hash im Format #/<viewType>/<id>.
+ * Nutzt history.replaceState (kein Browser-Back-Effekt).
+ *
+ * @param viewType - Dokumenttyp-Prefix fuer den Hash (z.B. 'catalog', 'profile')
+ * @returns { selectedId, setSelectedId } - Aktueller Hash-Wert und Setter
+ */
+export function useDeepLink(viewType: string) {
+```
+
+### 11.3 JSDoc auf Interfaces (>3 Felder, EMPFOHLEN)
+
+Interfaces mit nicht-offensichtlichen Feldern SOLLEN dokumentiert werden:
+
+```typescript
+/** OSCAL Merge-Strategie: Bestimmt wie importierte Controls zusammengefuehrt werden */
+interface Merge {
+  /** Kombinations-Methode: 'merge', 'use-first', 'keep' */
+  combine?: string
+  /** Flach-Darstellung: alle Controls auf einer Ebene */
+  flat?: boolean
+  /** Strukturerhalt: Gruppen-Hierarchie beibehalten */
+  'as-is'?: boolean
+}
+```
+
+**Ausnahmen**: Props-Interfaces, deren Felder durch den Komponentennamen offensichtlich sind (z.B. `CatalogViewProps.catalog`).
+
+### 11.4 Inline-Kommentare (PFLICHT bei Komplexitaet)
+
+Inline-Kommentare sind PFLICHT fuer:
+- Komplexe Algorithmen (z.B. Indexierungs-Logik in `use-search.ts`)
+- OSCAL-spezifische Business-Regeln
+- Workarounds und Browser-Kompatibilitaet
+- WCAG/BITV-Compliance-Gruende (z.B. `// WCAG 1.3.1: Heading-Level cap bei h6`)
+- Nicht-offensichtliche Typecasts (z.B. `as unknown as Type`)
+
+```typescript
+// URL-Hash Schema: #/<viewType>/<elementId> — ermoeglicht Deep-Links zu Controls
+// history.replaceState statt pushState: verhindert Browser-Back-Pollution
+```
+
+**VERBOTEN**: Triviale Kommentare die den Code wiederholen:
+
+```typescript
+// FALSCH:
+const count = items.length  // Anzahl der Items zaehlen
+
+// KORREKT (nur wenn nicht-offensichtlich):
+// Rekursiv alle Controls in verschachtelten Gruppen zaehlen (inkl. Sub-Controls)
+const count = countControls(catalog)
+```
+
+### 11.5 Kommentierungsquoten-Ziele
+
+| Layer | Ziel | Aktuell (Re-Audit) | Status |
+|-------|------|--------------------|--------|
+| Parser | >= 12% | 11.4% | PASS |
+| Types | >= 5% | 2.6% | PASS (LOC korrigiert) |
+| Hooks | >= 8% | 9.8% | PASS |
+| Shared Components | >= 5% | 9.2% | PASS |
+| Catalog Components | >= 5% | 6.9% | PASS |
+| Profile Components | >= 5% | 0% | FAIL |
+| CompDef Components | >= 5% | 0% | FAIL |
+| SSP Components | >= 5% | 4.4% | WARN |
+| App | >= 5% | 5.6% | PASS |
+| **Gesamt** | **>= 8%** | **5.9%** | **FAIL (C+)** |
+
+> **Stand**: Re-Audit 2026-02-08. Blocker: `profile-view.tsx` und `component-def-view.tsx` (599 LOC, 0%).
+
+### 11.6 Checkliste fuer Code-Kommentierung
+
+- [ ] File-Level-Kommentar vorhanden (einzeilig, Dateizweck)
+- [ ] JSDoc auf allen exportierten Funktionen (`@param`, `@returns`)
+- [ ] JSDoc auf allen Custom Hooks (Return-Werte, Seiteneffekte)
+- [ ] Inline-Kommentare fuer komplexe Logik und OSCAL-Spezifika
+- [ ] Keine trivialen Kommentare (Code-Wiederholung)
+- [ ] ESLint `jsdoc/require-jsdoc` zeigt keine neuen Warnungen fuer eigenen Code
+
+### 11.7 ESLint-Enforcement (`eslint-plugin-jsdoc`)
+
+JSDoc-Pflicht wird durch `eslint-plugin-jsdoc` automatisch geprueft:
+
+```javascript
+// eslint.config.js — jsdoc/require-jsdoc Konfiguration
+{
+  files: ['src/**/*.{ts,tsx}'],
+  ignores: ['src/main.tsx'],
+  plugins: { jsdoc },
+  rules: {
+    'jsdoc/require-jsdoc': ['warn', {
+      publicOnly: true,         // Nur exportierte Funktionen
+      require: {
+        FunctionDeclaration: true,
+        FunctionExpression: true,
+        ArrowFunctionExpression: true,
+      },
+    }],
+  },
+}
+```
+
+**Regeln**:
+1. **Scope**: Nur `src/` Dateien (nicht Tests, nicht `main.tsx`)
+2. **`publicOnly: true`**: Nur exportierte Funktionen/Komponenten — interne Helper sind ausgenommen
+3. **Level `warn`**: Warnungen in IDE und `npm run lint`, aber kein CI-Fehler
+4. **Eskalation zu `error`**: Wenn Gesamtquote >= 8% erreicht und alle Exports JSDoc haben, wird `warn` zu `error` hochgestuft
+5. **Neuer Code**: Ab sofort MUSS jede neue exportierte Funktion JSDoc haben (0 neue Warnungen erlaubt)

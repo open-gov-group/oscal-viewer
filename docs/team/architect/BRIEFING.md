@@ -55,4 +55,6 @@ Der OSCAL Viewer ist ein clientseitiger Viewer fuer OSCAL-Dokumente (Open Securi
 | Datum | Von | An | Thema | Status |
 |-------|-----|-----|-------|--------|
 | 2026-02-06 | Architect | Alle | Projektstart & Briefing | Erstellt |
+| 2026-02-07 | QA Engineer | Architect | Code-Kommentierungs-Audit abgeschlossen: Note C- (2.6% Quote). Parser A, Types B, Hooks D, Components D. 4 Empfehlungen: E1 CODING_STANDARDS Sektion 11 (Tech Lead), E2 Code nachkommentieren (Frontend Dev), E3 PR-Template Checkbox (Tech Lead), E4 ESLint-Plugin evaluieren (Tech Lead). Geschaetzter Gesamtaufwand ~11h. Details: `docs/team/qa-engineer/BRIEFING.md` Abschnitt "Code-Kommentierungs-Audit" | Abgeschlossen |
+| 2026-02-08 | QA Engineer | Architect | Re-Audit: Note C+ (5.9%, vorher C- 2.6%). E1+E3 (Tech Lead) ERLEDIGT, E2 Prio 1+3 (Frontend Dev) ERLEDIGT. **Verbleibend**: profile-view.tsx + component-def-view.tsx (je 0%, 599 LOC) — letzter Blocker fuer >= 8% Ziel | Abgeschlossen |
 

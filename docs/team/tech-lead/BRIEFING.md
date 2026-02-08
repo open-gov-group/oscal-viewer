@@ -160,6 +160,14 @@ src/
 | 2026-02-07 | Tech Lead | Alle | TL-N3: ESLint Layer-Regel fuer src/lib/ hinzugefuegt (hooks + components Import verboten) | Erledigt |
 | 2026-02-07 | Tech Lead | Alle | TL-D3: ADR Index aktualisiert (ADR-006 + ADR-007) | Erledigt |
 | 2026-02-07 | Tech Lead | Alle | Validierung: ESLint 0 Fehler, TypeScript 0 Fehler, 390/390 Tests, 27 axe-core | Erledigt |
+| 2026-02-07 | QA Engineer | Tech Lead | AKTION: Code-Kommentierungs-Audit — Note C- (2.6%). CODING_STANDARDS Sektion 11 (JSDoc/Kommentierung) erstellen + PR-Template Checkbox. Details: `docs/team/qa-engineer/BRIEFING.md` Abschnitt "Code-Kommentierungs-Audit" | Erledigt |
+| 2026-02-08 | Tech Lead | Alle | E1: CODING_STANDARDS.md v4.1.0 — Sektion 11 "Code-Kommentierung & JSDoc" (11.1-11.6: File-Level, JSDoc Funktionen/Hooks, Interfaces, Inline, Quoten-Ziele, Checkliste) | Erledigt |
+| 2026-02-08 | Tech Lead | Alle | E3: PR-Template — Checkbox "Code-Kommentierung: File-Level-Kommentar, JSDoc auf exportierte Funktionen/Hooks" unter Code Quality | Erledigt |
+| 2026-02-08 | Tech Lead | Alle | Validierung: ESLint 0 Fehler, TypeScript 0 Fehler, 472/472 Tests bestanden | Erledigt |
+| 2026-02-08 | QA Engineer | Tech Lead | Re-Audit: E1 + E3 ERLEDIGT. Note C+ (5.9%). Verbleibend: Frontend Dev muss profile-view.tsx + component-def-view.tsx kommentieren | Abgeschlossen |
+| 2026-02-08 | Tech Lead | Alle | E4: `eslint-plugin-jsdoc` installiert und konfiguriert — `jsdoc/require-jsdoc` (warn, publicOnly) in eslint.config.js. 16 Warnungen auf bestehenden Exports, 0 Fehler | Erledigt |
+| 2026-02-08 | Tech Lead | Alle | CODING_STANDARDS.md v4.2.0 — Sektion 11.5 Quoten-Tabelle aktualisiert (Re-Audit-Daten), neue Sektion 11.7 ESLint-Enforcement dokumentiert | Erledigt |
+| 2026-02-08 | Tech Lead | Alle | Validierung: ESLint 0 Fehler + 16 Warnungen (jsdoc), TypeScript 0 Fehler, 472/472 Tests bestanden | Erledigt |
 
 ---
 

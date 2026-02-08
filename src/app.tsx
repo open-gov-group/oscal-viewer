@@ -1,3 +1,10 @@
+/**
+ * App — Root application component for the OSCAL Viewer.
+ *
+ * Orchestrates document loading (file drop, file input, URL fetch, query-parameter auto-load),
+ * config presets, full-text search, PWA offline detection, and document rendering.
+ * No backend — all processing happens client-side.
+ */
 import { useState, useCallback, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { OscalDocument } from '@/types/oscal'
@@ -8,6 +15,7 @@ import type { SearchResult } from '@/hooks/use-search'
 import { DocumentViewer } from '@/components/document-viewer'
 import { SearchBar } from '@/components/shared/search-bar'
 
+/** Root component. Manages global state: loaded document, errors, offline status, presets. */
 export const App: FunctionComponent = () => {
   const [document, setDocument] = useState<OscalDocument | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +36,7 @@ export const App: FunctionComponent = () => {
     }
   }, [])
 
-  // Load config presets
+  // Load preset entries from public/config.json (max 5 quick-load buttons on the dropzone)
   useEffect(() => {
     fetch(new URL('config.json', window.location.href).toString())
       .then(r => r.ok ? r.json() as Promise<AppConfig> : null)
@@ -46,6 +54,7 @@ export const App: FunctionComponent = () => {
 
   const { query, setQuery, results, isSearching } = useSearch(document?.data ?? null)
 
+  /** Navigate to a search result by setting the URL hash to the appropriate deep-link. */
   const handleSearchSelect = useCallback((result: SearchResult) => {
     if (!document) return
     let hash = ''
@@ -65,6 +74,7 @@ export const App: FunctionComponent = () => {
     if (hash) location.hash = hash
   }, [document])
 
+  /** Parse a local OSCAL JSON file (from drop or file input) and set it as the active document. */
   const handleFile = async (file: File) => {
     try {
       const text = await file.text()
@@ -89,6 +99,7 @@ export const App: FunctionComponent = () => {
     }
   }
 
+  /** Fetch an OSCAL document from a remote URL, parse it, and update the ?url= query parameter. */
   const handleUrl = async (url: string) => {
     setLoading(true)
     setError(null)
@@ -125,7 +136,7 @@ export const App: FunctionComponent = () => {
     }
   }
 
-  // Auto-load from ?url= query parameter
+  // Auto-load: if ?url=<docUrl> is present, fetch the document on first mount
   useEffect(() => {
     const urlParam = new URLSearchParams(window.location.search).get('url')
     if (urlParam) {
@@ -167,6 +178,7 @@ export const App: FunctionComponent = () => {
     }
   }
 
+  /** Reset to the dropzone: clear loaded document, URL input, and ?url= query parameter. */
   const handleClear = () => {
     setDocument(null)
     setUrlInput('')

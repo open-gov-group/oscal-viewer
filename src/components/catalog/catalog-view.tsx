@@ -1,3 +1,10 @@
+/**
+ * CatalogView — Main view for OSCAL Catalog documents.
+ *
+ * Layout: sidebar (navigation tree + filter bar) + content area (control detail).
+ * Provides keyword and family-chip filtering, deep-linking to individual controls,
+ * and a responsive sidebar toggle for mobile.
+ */
 import { useState, useMemo } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { Catalog, Control, Group } from '@/types/oscal'
@@ -136,6 +143,10 @@ export const CatalogView: FunctionComponent<CatalogViewProps> = ({ catalog }) =>
   )
 }
 
+/**
+ * Builds a flat id→Control lookup map from the nested catalog structure.
+ * Recursively walks groups and their controls (including sub-controls / enhancements).
+ */
 function buildControlMap(catalog: Catalog): Map<string, Control> {
   const map = new Map<string, Control>()
 
@@ -165,17 +176,24 @@ function buildControlMap(catalog: Catalog): Map<string, Control> {
   return map
 }
 
+/** Case-insensitive substring match on control id or title. */
 function controlMatchesKeyword(control: Control, keyword: string): boolean {
   const kw = keyword.toLowerCase()
   return control.id.toLowerCase().includes(kw) || control.title.toLowerCase().includes(kw)
 }
 
+/** Filters top-level controls (outside groups) by keyword. Keeps parent if any sub-control matches. */
 function filterControlList(controls: Control[] | undefined, keyword: string): Control[] | undefined {
   if (!controls || !keyword) return controls
   return controls.filter(c => controlMatchesKeyword(c, keyword) ||
     (c.controls && c.controls.some(sub => controlMatchesKeyword(sub, keyword))))
 }
 
+/**
+ * Recursively filters catalog groups by family chips and keyword.
+ * A group is included if: it matches a family chip, its id/title matches the keyword,
+ * or any of its controls or sub-groups match.
+ */
 function filterGroups(groups: Group[] | undefined, keyword: string, familyIds: string[]): Group[] | undefined {
   if (!groups) return groups
 

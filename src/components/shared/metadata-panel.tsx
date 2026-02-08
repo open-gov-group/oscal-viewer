@@ -1,3 +1,9 @@
+/**
+ * MetadataPanel — Collapsible panel displaying OSCAL document metadata.
+ *
+ * Shows title, version, OSCAL version, dates, roles, parties (as cards with
+ * contact info), links, and remarks. Used by all four document views.
+ */
 import type { FunctionComponent } from 'preact'
 import type { Metadata, Party } from '@/types/oscal'
 
@@ -83,6 +89,7 @@ interface PartyCardProps {
   party: Party
 }
 
+/** Renders a single party as a card with name, type badge, email, phone, and remarks. */
 const PartyCard: FunctionComponent<PartyCardProps> = ({ party }) => {
   const name = party.name ?? party['short-name'] ?? party.uuid
 

@@ -1,3 +1,10 @@
+/**
+ * ProfileView — View for OSCAL Profile documents.
+ *
+ * Displays profile metadata, import sources (with include/exclude control selections),
+ * merge strategy (combine method, flat, as-is), and modifications
+ * (parameter settings + control alterations with add/remove badges).
+ */
 import { useMemo } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { Profile, ProfileImport, Modify, Alter, SetParameter } from '@/types/oscal'
@@ -9,7 +16,9 @@ interface ProfileViewProps {
   profile: Profile
 }
 
+/** Renders a complete OSCAL Profile with import sources, merge strategy, and modifications. */
 export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) => {
+  // Aggregate stats for the profile summary bar (imports, parameter overrides, alterations)
   const stats = useMemo(() => ({
     imports: profile.imports.length,
     setParameters: profile.modify?.['set-parameters']?.length ?? 0,
@@ -71,7 +80,9 @@ interface ImportCardProps {
   index: number
 }
 
+/** Renders a single profile import source with href, include/exclude control selections. */
 const ImportCard: FunctionComponent<ImportCardProps> = ({ import_, index }) => {
+  // OSCAL profiles support three control selection modes: include-all, include by ID/pattern, exclude by ID/pattern
   const hasIncludeAll = import_['include-all'] !== undefined
   const includeControls = import_['include-controls']
   const excludeControls = import_['exclude-controls']
@@ -113,6 +124,7 @@ interface ControlSelectionProps {
   type: 'include' | 'exclude'
 }
 
+/** Renders control selection criteria (by ID or pattern matching) as color-coded tags. */
 const ControlSelection: FunctionComponent<ControlSelectionProps> = ({ selection, type }) => {
   return (
     <div class="control-selection">
@@ -124,6 +136,7 @@ const ControlSelection: FunctionComponent<ControlSelectionProps> = ({ selection,
           pattern: {m.pattern}
         </span>
       ))}
+      {/* with-child-controls flag includes all descendant controls of the selected IDs */}
       {selection['with-child-controls'] === 'yes' && (
         <span class="import-tag import-tag--info">+ child controls</span>
       )}
@@ -135,6 +148,10 @@ interface MergeInfoProps {
   merge: Profile['merge']
 }
 
+/**
+ * Displays the profile merge strategy: combine method (use-first/merge/keep), flat, or as-is.
+ * OSCAL profiles use merge to define how imported controls are combined into a single catalog.
+ */
 const MergeInfo: FunctionComponent<MergeInfoProps> = ({ merge }) => {
   if (!merge) return null
 
@@ -166,6 +183,7 @@ interface ModifySectionProps {
   modify: Modify
 }
 
+/** Renders the modify section: parameter settings and control alterations in Accordions. */
 const ModifySection: FunctionComponent<ModifySectionProps> = ({ modify }) => {
   const setParams = modify['set-parameters']
   const alters = modify.alters
@@ -210,6 +228,7 @@ interface SetParameterCardProps {
   param: SetParameter
 }
 
+/** Renders a parameter override card with id, label, values, selection, and constraints. */
 const SetParameterCard: FunctionComponent<SetParameterCardProps> = ({ param }) => {
   return (
     <div class="profile-param-card">
@@ -228,6 +247,7 @@ const SetParameterCard: FunctionComponent<SetParameterCardProps> = ({ param }) =
           ))}
         </div>
       )}
+      {/* OSCAL select.how-many: 'one-or-more' allows multi-select, default is single-select */}
       {param.select && (
         <div class="param-select">
           <span class="param-select-label">
@@ -253,6 +273,10 @@ interface AlterCardProps {
   alter: Alter
 }
 
+/**
+ * Renders a control alteration card with control-id, removal count, and addition count badges.
+ * Removals target parts/props by name, class, id, or namespace. Additions specify position and content.
+ */
 const AlterCard: FunctionComponent<AlterCardProps> = ({ alter }) => {
   return (
     <div class="profile-alter-card">

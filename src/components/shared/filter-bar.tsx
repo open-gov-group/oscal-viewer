@@ -1,11 +1,20 @@
+/**
+ * FilterBar — Presentation component for combined keyword + chip filtering.
+ *
+ * Renders a text input for free-text keyword filtering, optional category dropdowns
+ * that add chips, and a chip bar showing active filters with remove buttons.
+ * Pairs with the useFilter hook (application layer) for state management.
+ */
 import type { FunctionComponent } from 'preact'
 import type { FilterChip } from '@/hooks/use-filter'
 
+/** A selectable option within a filter category dropdown. */
 export interface FilterOption {
   value: string
   label: string
 }
 
+/** A filter category rendered as a dropdown (e.g. "Family" for catalog groups). */
 export interface FilterCategory {
   key: string
   label: string

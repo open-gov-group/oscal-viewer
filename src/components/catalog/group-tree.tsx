@@ -1,3 +1,10 @@
+/**
+ * GroupTree — WAI-ARIA TreeView component for catalog group/control navigation.
+ *
+ * Implements the full TreeView keyboard pattern (Arrow keys, Home, End)
+ * with roving tabindex for focus management. Groups are expandable branches,
+ * controls are selectable leaf/branch nodes.
+ */
 import { useState, useRef, useCallback, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { Group, Control } from '@/types/oscal'
@@ -17,6 +24,7 @@ export const GroupTree: FunctionComponent<GroupTreeProps> = ({
 }) => {
   const treeRef = useRef<HTMLUListElement>(null)
 
+  /** Collects all focusable tree items (group headers + control buttons) in DOM order. */
   const getVisibleItems = useCallback((): HTMLElement[] => {
     if (!treeRef.current) return []
     return Array.from(treeRef.current.querySelectorAll<HTMLElement>(
@@ -43,7 +51,13 @@ export const GroupTree: FunctionComponent<GroupTreeProps> = ({
     }
   }, [getVisibleItems])
 
-  // WAI-ARIA TreeView keyboard navigation
+  /**
+   * WAI-ARIA TreeView keyboard navigation handler.
+   * - ArrowDown/Up: Move focus to next/previous visible item
+   * - ArrowRight: Expand closed node, or move to first child of open node
+   * - ArrowLeft: Collapse open node, or move to parent node
+   * - Home/End: Jump to first/last visible item
+   */
   const handleTreeKeyDown = useCallback((e: KeyboardEvent) => {
     const target = e.target as HTMLElement
     if (!target.classList.contains('tree-group-header') && !target.classList.contains('tree-control-btn')) return
@@ -155,6 +169,7 @@ interface GroupNodeProps {
   depth?: number
 }
 
+/** Expandable group branch node. Shows chevron, id, title, and recursive control count. */
 const GroupNode: FunctionComponent<GroupNodeProps> = ({
   group,
   selectedControlId,
@@ -212,6 +227,7 @@ interface ControlNodeProps {
   depth: number
 }
 
+/** Selectable control node. Becomes a branch when it has sub-controls (enhancements). */
 const ControlNode: FunctionComponent<ControlNodeProps> = ({
   control,
   selectedControlId,
@@ -266,6 +282,7 @@ const ControlNode: FunctionComponent<ControlNodeProps> = ({
   )
 }
 
+/** Recursively counts all controls within a group, including sub-controls and nested sub-groups. */
 function countGroupControls(group: Group): number {
   let count = group.controls?.length ?? 0
   if (group.controls) {

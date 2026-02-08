@@ -1,3 +1,8 @@
+/**
+ * ParameterItem — Renders a single OSCAL parameter with id, label, usage,
+ * values, selection constraints, and guidelines.
+ * Shared across Catalog (top-level + control params) and Profile views.
+ */
 import type { FunctionComponent } from 'preact'
 import type { Parameter } from '@/types/oscal'
 

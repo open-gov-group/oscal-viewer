@@ -16,6 +16,7 @@ Closes #<!-- Issue-Nummer -->
 - [ ] TypeScript kompiliert fehlerfrei (`tsc --noEmit`)
 - [ ] Keine `any` Types eingefuehrt
 - [ ] Layer-Regeln eingehalten (types -> parser -> hooks -> components)
+- [ ] Code-Kommentierung: File-Level-Kommentar, JSDoc auf exportierte Funktionen/Hooks
 
 ### Testing
 - [ ] Tests geschrieben/aktualisiert
