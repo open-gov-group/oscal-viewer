@@ -167,8 +167,9 @@ tests/
 | 2026-02-07 | Architect | Frontend Developer | Stakeholder-Feedback: 3 Aufgaben (S1: Nav-Titel, S2: Part-Akkordions, S3: IFG/BITV). Details im Abschnitt "AKTUELLER AUFTRAG" | Erledigt |
 | 2026-02-07 | Frontend Developer | Architect | Stakeholder-Feedback komplett: S1 CSS-only, S2 PartView rekursiv, S3 lang+aria-live. 390 Tests, 14.20 KB JS + 6.36 KB CSS | Erledigt |
 | 2026-02-07 | Architect | Frontend Developer | Phase 3 Briefing: Issues #8-#10 (PWA, Doku, npm Package). Details im Abschnitt "AKTUELLER AUFTRAG Phase 3" | Aktiv |
-| 2026-02-07 | QA Engineer | Frontend Dev | AKTION: Code-Kommentierungs-Audit — Bestehenden Code nachkommentieren. Prio 1 SOFORT: Hooks (use-search, use-deep-link, use-filter). Prio 2: Komplexe Components (app.tsx, catalog-view, group-tree, control-detail, ssp-view). Prio 3: Shared+Types. Details: `docs/team/qa-engineer/BRIEFING.md` Abschnitt "Code-Kommentierungs-Audit" Empfehlung E2 | Teilweise erledigt |
-| 2026-02-08 | QA Engineer | Frontend Dev | Re-Audit: E2 Prio 1 ERLEDIGT (Hooks 9.8%), E2 Prio 3 ERLEDIGT (Shared 9.2%). **OFFEN: profile-view.tsx (302 LOC, 0%) + component-def-view.tsx (297 LOC, 0%) + ssp-view.tsx Helper (3 Stk.)** — Blocker fuer Gesamtquote >= 8% | Offen |
+| 2026-02-07 | QA Engineer | Frontend Dev | AKTION: Code-Kommentierungs-Audit — Bestehenden Code nachkommentieren. Prio 1 SOFORT: Hooks (use-search, use-deep-link, use-filter). Prio 2: Komplexe Components (app.tsx, catalog-view, group-tree, control-detail, ssp-view). Prio 3: Shared+Types. Details: `docs/team/qa-engineer/BRIEFING.md` Abschnitt "Code-Kommentierungs-Audit" Empfehlung E2 | Erledigt |
+| 2026-02-08 | QA Engineer | Frontend Dev | Re-Audit: E2 Prio 1 ERLEDIGT (Hooks 9.8%), E2 Prio 3 ERLEDIGT (Shared 9.2%). **OFFEN: profile-view.tsx (302 LOC, 0%) + component-def-view.tsx (297 LOC, 0%) + ssp-view.tsx Helper (3 Stk.)** — Blocker fuer Gesamtquote >= 8% | Erledigt |
+| 2026-02-08 | QA Engineer | Frontend Dev | Audit ABGESCHLOSSEN: Alle Kommentierungsaufgaben erledigt. profile-view 5.2%, component-def-view 5.0%. Gesamtnote A- (7.1%) | Abgeschlossen |
 
 ---
 

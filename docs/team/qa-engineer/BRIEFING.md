@@ -321,12 +321,13 @@ tests/
 | 2026-02-07 | QA Engineer | Frontend Dev | Fehlende npm-Package Konfiguration: `build:lib` Script fehlt in package.json, `main`/`types`/`exports`/`files` Felder fehlen | Offen |
 | 2026-02-07 | Architect | QA Engineer | Code-Kommentierungs-Audit angefordert: Best-Practice-Vorgabe nicht eingehalten | Aktiv |
 | 2026-02-07 | QA Engineer | Architect | Kommentierungs-Audit abgeschlossen: Note C- gesamt (2.6%), Parser A, Hooks D, Components D. 4 Empfehlungen (E1-E4) | Abgeschlossen |
-| 2026-02-07 | QA Engineer | Tech Lead | AKTION: CODING_STANDARDS Sektion 11 (Kommentierung/JSDoc) erstellen + PR-Template Checkbox ergaenzen | Offen |
-| 2026-02-07 | QA Engineer | Frontend Dev | AKTION: Bestehenden Code nachkommentieren — Prio 1: Hooks (3 Dateien), Prio 2: Components (7 Dateien), Prio 3: Shared+Types (12 Dateien) | Offen |
+| 2026-02-07 | QA Engineer | Tech Lead | AKTION: CODING_STANDARDS Sektion 11 (Kommentierung/JSDoc) erstellen + PR-Template Checkbox ergaenzen | Erledigt |
+| 2026-02-07 | QA Engineer | Frontend Dev | AKTION: Bestehenden Code nachkommentieren — Prio 1: Hooks (3 Dateien), Prio 2: Components (7 Dateien), Prio 3: Shared+Types (12 Dateien) | Erledigt |
 | 2026-02-07 | QA Engineer | Alle | Code-Kommentierungs-Audit Report: Ergebnisse und Empfehlungen im QA-Briefing dokumentiert | Info |
 | 2026-02-08 | QA Engineer | Architect | Re-Audit: Note C+ (5.9%, vorher C- 2.6%). E1 ERLEDIGT, E2 TEILWEISE. Blocker: profile-view.tsx + component-def-view.tsx je 0%. Details im Abschnitt "Re-Audit" | Abgeschlossen |
-| 2026-02-08 | QA Engineer | Frontend Dev | AKTION: profile-view.tsx (302 LOC, 0%) und component-def-view.tsx (297 LOC, 0%) kommentieren — letzter Blocker fuer Gesamtquote >= 8% | Offen |
+| 2026-02-08 | QA Engineer | Frontend Dev | AKTION: profile-view.tsx (302 LOC, 0%) und component-def-view.tsx (297 LOC, 0%) kommentieren — letzter Blocker fuer Gesamtquote >= 8% | Erledigt |
 | 2026-02-08 | QA Engineer | Tech Lead | Re-Audit: E1 ERLEDIGT (v4.1.0 Sektion 11) + E3 ERLEDIGT (PR-Template Checkbox). Beide Empfehlungen vollstaendig umgesetzt | Abgeschlossen |
+| 2026-02-08 | QA Engineer | Architect | **AUDIT ABGESCHLOSSEN**: Code-Kommentierungs-Audit finalisiert. Note A- (7.1%, von C- 2.6%). Alle 4 Empfehlungen (E1-E4) umgesetzt. CODING_STANDARDS v4.2.0, eslint-plugin-jsdoc aktiv. 485 Tests, 18 Testdateien. Verbleibende Luecken: ssp-view.tsx 3.6%, 5 Parser File-Level, Gesamtquote 7.1% (knapp unter 8%-Ziel) | Abgeschlossen |
 
 ---
 
