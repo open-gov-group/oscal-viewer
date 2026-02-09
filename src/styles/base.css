@@ -2614,6 +2614,95 @@ body {
   display: block;
 }
 
+/* ============================================================
+   Phase 4: OSCAL Resolution UI Components
+   ============================================================ */
+
+/* Link-Relation Badges (UX-R1) — shows relationship type for OSCAL links[].rel */
+.link-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--border-radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.link-badge--implements { background: var(--color-status-success-bg); color: var(--color-status-success-text); }
+.link-badge--required { background: var(--color-status-error-bg); color: var(--color-status-error-text); }
+.link-badge--related { background: var(--color-status-info-bg); color: var(--color-status-info-text); }
+.link-badge--bsi { background: var(--color-status-orange-bg); color: var(--color-status-orange-text); }
+.link-badge--template { background: var(--color-bg-secondary); color: var(--color-text-secondary); }
+.link-badge--default { background: var(--color-bg-secondary); color: var(--color-text); }
+
+/* Fragment Links (UX-R2) — non-clickable URN references */
+.link-urn {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  cursor: default;
+}
+
+/* Import-Status Indicators (UX-R6) — per-source loading state in import panel */
+.import-status--loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.import-status--loaded {
+  color: var(--color-status-success-text);
+}
+
+.import-status--error {
+  color: var(--color-status-warning-text);
+}
+
+.import-status--urn {
+  color: var(--color-text-secondary);
+}
+
+/* Unresolved Reference Warning (UX-R4) */
+.unresolved-ref {
+  padding: 0.75rem 1rem;
+  background-color: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+  border-left: 3px solid var(--color-accent-amber);
+  border-radius: var(--border-radius);
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.unresolved-ref code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  word-break: break-all;
+}
+
+.unresolved-ref .unresolved-ref-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.unresolved-ref button {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.unresolved-ref button:hover {
+  background: var(--color-bg-secondary);
+}
+
 @media (max-width: 768px) {
   /* Responsive Typography */
   html {

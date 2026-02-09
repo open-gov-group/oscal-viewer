@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/preact'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyBadge, PropertyList } from '@/components/shared/property-badge'
 import { StatusBadge } from '@/components/shared/status-badge'
+import { LinkBadge } from '@/components/shared/link-badge'
 import { Accordion, AccordionGroup } from '@/components/shared/accordion'
 import { CopyLinkButton } from '@/components/shared/copy-link-button'
 import type { Metadata, Property } from '@/types/oscal'
@@ -213,6 +214,57 @@ describe('StatusBadge', () => {
       expect(container.querySelector('.status-badge-icon')).toBeTruthy()
       unmount()
     }
+  })
+})
+
+// ============================================================
+// LinkBadge Tests
+// ============================================================
+
+describe('LinkBadge', () => {
+  it('renders "Implements" label for implements rel', () => {
+    render(<LinkBadge rel="implements" />)
+    expect(screen.getByText('Implements')).toBeInTheDocument()
+  })
+
+  it('renders "Required" label for required rel', () => {
+    render(<LinkBadge rel="required" />)
+    expect(screen.getByText('Required')).toBeInTheDocument()
+  })
+
+  it('renders "Related" label for related-control rel', () => {
+    render(<LinkBadge rel="related-control" />)
+    expect(screen.getByText('Related')).toBeInTheDocument()
+  })
+
+  it('renders "BSI Baustein" label for bsi-baustein rel', () => {
+    render(<LinkBadge rel="bsi-baustein" />)
+    expect(screen.getByText('BSI Baustein')).toBeInTheDocument()
+  })
+
+  it('renders "Template" label for template rel', () => {
+    render(<LinkBadge rel="template" />)
+    expect(screen.getByText('Template')).toBeInTheDocument()
+  })
+
+  it('renders raw rel text for unknown relation', () => {
+    render(<LinkBadge rel="custom-rel" />)
+    expect(screen.getByText('custom-rel')).toBeInTheDocument()
+  })
+
+  it('uses correct CSS modifier for implements', () => {
+    const { container } = render(<LinkBadge rel="implements" />)
+    expect(container.querySelector('.link-badge--implements')).toBeTruthy()
+  })
+
+  it('uses correct CSS modifier for required', () => {
+    const { container } = render(<LinkBadge rel="required" />)
+    expect(container.querySelector('.link-badge--required')).toBeTruthy()
+  })
+
+  it('uses default CSS modifier for unknown relation', () => {
+    const { container } = render(<LinkBadge rel="unknown" />)
+    expect(container.querySelector('.link-badge--default')).toBeTruthy()
   })
 })
 

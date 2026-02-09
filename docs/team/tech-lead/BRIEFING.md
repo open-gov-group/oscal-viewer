@@ -2,8 +2,8 @@
 
 **Rolle**: Tech Lead
 **Projekt**: OSCAL Viewer
-**Stand**: 2026-02-06
-**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
+**Stand**: 2026-02-09
+**Phase**: Phase 4 — OSCAL Resolution (Import-Ketten, Cross-Referenzen, Profile Resolution)
 
 ---
 
@@ -169,6 +169,13 @@ src/
 | 2026-02-08 | Tech Lead | Alle | CODING_STANDARDS.md v4.2.0 — Sektion 11.5 Quoten-Tabelle aktualisiert (Re-Audit-Daten), neue Sektion 11.7 ESLint-Enforcement dokumentiert | Erledigt |
 | 2026-02-08 | Tech Lead | Alle | Validierung: ESLint 0 Fehler + 16 Warnungen (jsdoc), TypeScript 0 Fehler, 472/472 Tests bestanden | Erledigt |
 | 2026-02-08 | QA Engineer | Tech Lead | Audit ABGESCHLOSSEN: Alle Tech-Lead-Empfehlungen (E1, E3, E4) vollstaendig umgesetzt. Finalnote A- (7.1%). CODING_STANDARDS v4.2.0 ist Referenz-Standard | Abgeschlossen |
+| 2026-02-09 | Architect | Tech Lead | Phase 4 Briefing: OSCAL Resolution — TL-R1 bis TL-R5. Details im Abschnitt "NEUER AUFTRAG Phase 4" | Aktiv |
+| 2026-02-09 | Tech Lead | Alle | TL-R1: ADR-008 Resolution Service Architecture erstellt (3 Module: HrefParser, DocumentCache, ResolutionService, Layer-Konformitaet, CORS-Strategie) | Erledigt |
+| 2026-02-09 | Tech Lead | Alle | TL-R2: ESLint Layer-Regeln fuer src/services/ hinzugefuegt (hooks/components/preact Import verboten) | Erledigt |
+| 2026-02-09 | Tech Lead | Alle | TL-R3: CODING_STANDARDS.md v5.0.0 — Sektion 1 (services/ Layer), Sektion 12 (Patterns 19-22: HREF Resolution, Document Cache, Resolution Hooks, Link-Badges) | Erledigt |
+| 2026-02-09 | Tech Lead | Alle | ADR Index aktualisiert (ADR-008 hinzugefuegt) | Erledigt |
+| 2026-02-09 | Tech Lead | Alle | Validierung: ESLint 0 Fehler + 13 Warnungen (jsdoc), TypeScript 0 Fehler, 485/485 Tests bestanden | Erledigt |
+| 2026-02-09 | QA Engineer | Tech Lead | **Phase 4a QA-Report**: CODING_STANDARDS v5.0.0 Konformitaet 8/9 PASS. Sektion 12 Patterns 19-22 korrekt implementiert. ESLint services/-Layer-Regeln greifen (0 Fehler). 1 Abweichung: LinkBadge fehlt `aria-label` (Sektion 12.4 Regel 4). 531 Tests, 29 axe-core | Zur Kenntnis |
 
 ---
 
@@ -584,3 +591,199 @@ Verifizieren dass die bestehenden Layer-Regeln den Package-Export absichern:
 - Neue Dev-Dependencies: `vite-plugin-pwa`
 - Tests: 390 bestehende Tests + neue PWA/Package Tests
 - Neue Dateien: 2 ADRs, CONTRIBUTING.md, CHANGELOG.md, tsconfig.lib.json, src/lib/index.ts
+
+---
+
+## NEUER AUFTRAG: Phase 4 — OSCAL Resolution (2026-02-09)
+
+**Prioritaet**: HOCH | **Quelle**: OSCAL Expert Briefing via Hauptprogrammleitung
+**Referenz-Dokument**: `docs/architecture/OSCAL_IMPORT_GUIDE.md`
+**Leitprinzip**: Leichtgewichtiger Viewer mit vollem Funktionsumfang. Weiterhin "Web"-App (PWA).
+
+### Kontext
+
+Der OSCAL-Experte hat die vollstaendige Import- und Referenzierungskette definiert:
+
+```
+SSP → Profile → Catalog(e)
+       ↕              ↕
+ Component-Defs    Cross-Refs
+```
+
+Der Viewer muss diese Kette clientseitig aufloesen koennen. Bestehender ADR-003 (Import Resolution) beschreibt den Hybrid-Ansatz (Lazy Loading + Fallback). Jetzt wird die konkrete Implementierung geplant.
+
+---
+
+### TL-R1: ADR-008 Resolution Service Architecture [HOCH]
+
+**Datei**: `docs/architecture/decisions/ADR_008_resolution_service.md` (NEU)
+
+**Entscheidungen zu dokumentieren**:
+
+1. **Services Layer im Domain Layer**: Neuer Ordner `src/services/` neben `types/` und `parser/`
+   - **Begruendung**: Reine Funktionen, kein Framework-Abhaengigkeit, testbar ohne Browser
+   - Services importieren aus `types/` und `parser/`, nie aus `hooks/` oder `components/`
+   - Bestehende Layer-Hierarchie bleibt: Domain → Application → Presentation
+
+2. **3 Service-Module**:
+
+   a) **HrefParser** (`src/services/href-parser.ts`):
+   ```typescript
+   type HrefType = 'relative' | 'fragment' | 'absolute-url' | 'urn'
+   interface ParsedHref {
+     type: HrefType
+     path: string
+     fragment?: string
+     isResolvable: boolean
+   }
+   function parseHref(href: string): ParsedHref
+   ```
+   - URN (`urn:...`) → `isResolvable: false`, als Referenz-Label anzeigen
+   - Fragment (`#ID`) → Internes Lookup im geladenen Dokument
+   - Relative Pfade (`../catalog/file.json`) → relativ zum Basisdokument aufloesen
+   - Absolute URLs (`https://...`) → `fetch()` mit CORS-Handling
+
+   b) **DocumentCache** (`src/services/document-cache.ts`):
+   ```typescript
+   class DocumentCache {
+     get(url: string): OscalDocument | undefined
+     set(url: string, doc: OscalDocument): void
+     private normalize(url: string): string  // Fragment entfernen, lowercase
+   }
+   ```
+   - Verhindert doppeltes Laden bei Mehrfach-Referenzen
+   - URL-Normalisierung: Fragment entfernen, lowercase
+
+   c) **ResolutionService** (`src/services/resolver.ts`):
+   ```typescript
+   interface ResolutionService {
+     resolveHref(href: string, baseUrl: string): Promise<ResolvedReference>
+     resolveProfile(profile: Profile): Promise<ResolvedCatalog>
+     resolveSSP(ssp: SSP): Promise<ResolvedSSP>
+   }
+   ```
+
+3. **CORS-Strategie**: GitHub raw URLs (`raw.githubusercontent.com`) direkt. Fehlermeldung bei CORS-Blockade mit Hinweis auf lokalen Download. Kein Proxy.
+
+4. **Leichtgewichts-Prinzip**: Services ~200 LOC, geschaetzter Bundle-Impact +1-2 KB gzipped
+
+**Layer-Konformitaet**:
+```
+src/services/ → src/types/   ✅ Domain → Domain
+src/services/ → src/parser/  ✅ Domain → Domain
+src/services/ → src/hooks/   ❌ VERBOTEN
+src/services/ → src/components/ ❌ VERBOTEN
+```
+
+---
+
+### TL-R2: ESLint Layer-Regeln fuer services/ [HOCH]
+
+**Datei**: `eslint.config.js`
+
+Neuer Abschnitt fuer `src/services/`:
+```javascript
+{
+  files: ['src/services/**/*.ts'],
+  rules: {
+    'no-restricted-imports': ['error', {
+      patterns: [
+        { group: ['@/hooks/*', '../hooks/*'], message: 'Services (Domain) cannot import from hooks (Application)' },
+        { group: ['@/components/*', '../components/*'], message: 'Services (Domain) cannot import from components (Presentation)' },
+        { group: ['preact', 'preact/*'], message: 'Services must be framework-independent' }
+      ]
+    }]
+  }
+}
+```
+
+---
+
+### TL-R3: CODING_STANDARDS.md v5.0.0 [MITTEL]
+
+Neue Patterns fuer Phase 4:
+
+#### Pattern 19: HREF Resolution
+```
+- parseHref() fuer alle href-Attribute nutzen (nie manuelles String-Parsing)
+- URNs (urn:...) als nicht-aufloesbar markieren, Label anzeigen
+- Fragment-IDs (#ID) intern aufloesen, nicht netzwerk-laden
+- Relative Pfade relativ zum Basisdokument aufloesen
+```
+
+#### Pattern 20: Document Cache
+```
+- Alle geladenen Dokumente im DocumentCache registrieren
+- Cache-Key ist normalisierte URL (ohne Fragment, lowercase)
+- Cache-Miss → fetch() → parse → cache → return
+- Kein TTL (Session-basiert, Reload = frischer Cache)
+```
+
+#### Pattern 21: Resolution Hooks
+```
+- ResolutionService im Domain Layer (reine Funktionen)
+- Hook-Wrapper (useResolver) im Application Layer fuer State + Loading + Error
+- Components nutzen nur den Hook, nie den Service direkt
+```
+
+#### Pattern 22: Link-Relation Badges
+```
+- rel="implements" → Gruen (PropertyBadge-Stil)
+- rel="required" → Rot
+- rel="related-control" → Blau
+- rel="bsi-baustein" → Orange
+- rel="template" → Grau
+- Unbekannte rel-Werte → Standard-Badge
+```
+
+---
+
+### TL-R4: Code Review Fokus Phase 4 [MITTEL]
+
+| Sub-Phase | Review-Fokus |
+|-----------|-------------|
+| 4a (MVP) | HrefParser: Alle 4 Patterns korrekt? Fragment-Aufloesung robust? |
+| 4b (Profile) | Profile Resolution Pipeline: imports → filter → merge → modify korrekt? |
+| 4c (SSP/CompDef) | SSP-Kette: import-profile → by-components Mapping korrekt? |
+
+**Performance-Ueberlegungen** (ADR-005):
+- DocumentCache verhindert doppelte Netzwerk-Requests
+- Profile Resolution kann mehrere Cataloge laden → parallel `Promise.all`
+- Grosse Cataloge (NIST 800-53: ~18.000 Zeilen): Parsing-Performance testen
+- `useMemo` auf aufgeloeste Daten (nicht bei jedem Render neu aufloesen)
+
+---
+
+### TL-R5: Validierungsregeln [NIEDRIG]
+
+Der OSCAL-Experte empfiehlt Warnungen fuer:
+
+| Regel | Pruefung |
+|-------|---------|
+| Namespace | `ns` muss gueltige URI sein |
+| Leere Arrays | `parts[]`, `props[]`, `links[]` duerfen nicht `[]` sein |
+| UUID-Format | Muss UUIDv4 sein |
+| OSCAL-Version | `metadata.oscal-version` muss vorhanden sein |
+| Broken Links | `href`-Ziele muessen existieren |
+
+→ Spaeter als optionalen Validierungs-Layer implementieren (nach Phase 4b).
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Sub-Phase | Aufwand | Abhaengigkeit |
+|---|---------|-----------|---------|---------------|
+| 1 | TL-R1: ADR-008 | 4a | Mittel | Keine |
+| 2 | TL-R2: ESLint services/ | 4a | Klein | TL-R1 |
+| 3 | TL-R3: CODING_STANDARDS v5.0.0 | 4a | Mittel | TL-R1 |
+| 4 | TL-R4: Code Review 4a | 4a | Klein | FE-Implementierung |
+| 5 | TL-R4: Code Review 4b | 4b | Mittel | FE-Implementierung |
+| 6 | TL-R5: Validierungsregeln | 4c | Klein | Nach 4b |
+
+### Build-Erwartung Phase 4
+
+- Bundle-Impact: +1-2 KB gzipped (Services + UI)
+- Neue Dateien: ADR-008, 3 Service-Dateien, 1-2 UI-Komponenten
+- Tests: Bestehende 485 Tests + neue Service-Tests + Integration-Tests
+- Budget: ~30 KB → ~32 KB gzipped (weiterhin weit unter 100 KB Limit)

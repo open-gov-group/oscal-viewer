@@ -1,6 +1,6 @@
 // ESLint Flat Configuration - OSCAL Viewer
-// Layer Architecture Rules (ADR-003):
-//   Domain (types/, parser/) -> Application (hooks/) -> Presentation (components/)
+// Layer Architecture Rules (ADR-003 + ADR-008):
+//   Domain (types/, parser/, services/, lib/) -> Application (hooks/) -> Presentation (components/)
 //   Each layer may only import from the same or lower layers.
 
 import eslint from '@eslint/js'
@@ -100,8 +100,32 @@ export default tseslint.config(
   },
 
   // -------------------------------------------------------
+  // Layer Rule: src/services/ - Domain Services (ADR-008)
+  // May import from types/ and parser/, but NOT from hooks/, components/, or preact
+  // Ensures services remain framework-independent and testable
+  // -------------------------------------------------------
+  {
+    files: ['src/services/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          { group: ['@/hooks/*', '@/hooks'], message: 'services/ must not import from hooks/ (Domain cannot import Application)' },
+          { group: ['@/components/*', '@/components/**'], message: 'services/ must not import from components/ (Domain cannot import Presentation)' },
+          { group: ['../hooks/*', '../hooks'], message: 'services/ must not import from hooks/ (layer violation)' },
+          { group: ['../components/*', '../components/**'], message: 'services/ must not import from components/ (layer violation)' },
+        ],
+        paths: [
+          { name: 'preact', message: 'services/ must be framework-independent (no Preact imports)' },
+          { name: 'preact/hooks', message: 'services/ must be framework-independent (no Preact imports)' },
+          { name: 'preact/compat', message: 'services/ must be framework-independent (no Preact imports)' },
+        ],
+      }],
+    },
+  },
+
+  // -------------------------------------------------------
   // Layer Rule: src/hooks/ - Application Layer
-  // May import from types/ and parser/, but NOT from components/
+  // May import from types/, parser/, and services/, but NOT from components/
   // -------------------------------------------------------
   {
     files: ['src/hooks/**/*.{ts,tsx}'],

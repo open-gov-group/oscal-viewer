@@ -7,11 +7,14 @@
  * Parts are rendered recursively via PartView with depth-based heading levels (h4→h5→h6).
  */
 import type { FunctionComponent } from 'preact'
-import type { Control, Part } from '@/types/oscal'
+import type { Control, Part, Link } from '@/types/oscal'
+import type { ParsedHref } from '@/services/href-parser'
+import { parseHref } from '@/services/href-parser'
 import { PropertyList } from '@/components/shared/property-badge'
 import { Accordion } from '@/components/shared/accordion'
 import { CopyLinkButton } from '@/components/shared/copy-link-button'
 import { ParameterItem } from '@/components/shared/parameter-item'
+import { LinkBadge } from '@/components/shared/link-badge'
 
 interface ControlDetailProps {
   control: Control
@@ -70,10 +73,8 @@ export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control }
           <ul class="links-list">
             {control.links.map((link, i) => (
               <li key={`${link.href}-${i}`}>
-                <a href={link.href} rel="noopener noreferrer">
-                  {link.text ?? link.href}
-                </a>
-                {link.rel && <span class="link-rel">{link.rel}</span>}
+                {renderLink(parseHref(link.href), link)}
+                {link.rel && <LinkBadge rel={link.rel} />}
               </li>
             ))}
           </ul>
@@ -96,6 +97,36 @@ export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control }
       )}
     </article>
   )
+}
+
+/** Renders a link element based on parsed href type. */
+function renderLink(parsed: ParsedHref, link: Link) {
+  const label = link.text ?? link.href
+
+  if (parsed.type === 'fragment') {
+    return (
+      <a
+        href={`#/catalog/${parsed.fragment}`}
+        onClick={(e: MouseEvent) => {
+          e.preventDefault()
+          location.hash = `#/catalog/${parsed.fragment}`
+        }}
+      >
+        {label}
+      </a>
+    )
+  }
+
+  if (parsed.type === 'absolute-url') {
+    return (
+      <a href={link.href} target="_blank" rel="noopener noreferrer">
+        {label}
+      </a>
+    )
+  }
+
+  // URN and relative paths: not navigable in Phase 4a
+  return <span class="link-urn">{label}</span>
 }
 
 interface PartViewProps {

@@ -2,8 +2,8 @@
 
 **Rolle**: UI/UX Designer
 **Projekt**: OSCAL Viewer
-**Stand**: 2026-02-07
-**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
+**Stand**: 2026-02-09
+**Phase**: Phase 4 — OSCAL Resolution (Import-Ketten, Cross-Referenzen, Profile Resolution)
 
 ---
 
@@ -402,6 +402,7 @@ Muessen als CSS Custom Properties formalisiert werden.
 | 2026-02-07 | Architect | UI/UX Designer | Phase 3 Briefing: Issues #8-#10 (PWA, Doku, npm Package). Details im Abschnitt "AKTUELLER AUFTRAG Phase 3" | Aktiv |
 | 2026-02-07 | QA Engineer | Alle | INFO: Code-Kommentierungs-Audit — Note C- (2.6%). Neue Standards werden durch Tech Lead in CODING_STANDARDS Sektion 11 definiert. Details: `docs/team/qa-engineer/BRIEFING.md` | Info |
 | 2026-02-08 | QA Engineer | Alle | INFO: Code-Kommentierungs-Audit ABGESCHLOSSEN — Finalnote A- (7.1%). CODING_STANDARDS v4.2.0 Sektion 11 + eslint-plugin-jsdoc aktiv | Abgeschlossen |
+| 2026-02-09 | Architect | UI/UX Designer | Phase 4 Briefing: OSCAL Resolution — UX-R1 bis UX-R7 (LinkBadge, Fragment-Links, Import-Panel, Unresolved UI, Kontrast, Loading State, SSP/CompDef Import-Ketten). Basiert auf OSCAL Expert Briefing | Aktiv |
 
 ---
 
@@ -1866,3 +1867,375 @@ Zusaetzlich: Heading-Hierarchie (QS14, 2 Tests), Badge-Kontrast (QS16, 10 Tests)
 **Ergebnis**: 6/8 QA-Aufgaben vollstaendig abgedeckt, 2 als Playwright-Backlog deferred.
 
 **Build**: 485 Tests | 18 Testdateien | 0 TS Errors
+
+---
+
+## NEUER AUFTRAG: Phase 4 — OSCAL Resolution (2026-02-09)
+
+**Prioritaet**: HOCH | **Quelle**: OSCAL Expert Briefing via Hauptprogrammleitung
+**Referenz-Dokument**: `docs/architecture/OSCAL_IMPORT_GUIDE.md`
+**Leitprinzip**: Leichtgewichtiger Viewer mit vollem Funktionsumfang. Weiterhin "Web"-App (PWA).
+
+### Kontext
+
+OSCAL-Dokumente bilden eine hierarchische Referenzkette:
+
+```
+SSP → Profile → Catalog(e)
+       ↕              ↕
+ Component-Defs    Cross-Refs
+```
+
+Der Viewer muss diese Kette clientseitig aufloesen und visualisieren. Phase 4 fuehrt neue UI-Elemente ein:
+- **Link-Relation Badges**: Farbkodierte Badges fuer `links[].rel` Werte
+- **Import-Visualisierung**: Panel das zeigt woher Controls importiert werden
+- **Unaufgeloeste Referenzen**: Warnung bei CORS/Netzwerk-Fehlern
+- **Fragment-Navigation**: Klickbare `#CONTROL-ID` Links innerhalb eines Dokuments
+
+---
+
+### UX-R1: Link-Relation Badges Design [HOCH — Sub-Phase 4a]
+
+Neue Shared Component fuer `links[].rel` Attribut-Werte. Zeigt die Art der Beziehung zwischen OSCAL-Dokumenten/Controls an.
+
+**Badge-Design-Spezifikation**:
+
+| `rel`-Wert | Label | Farbe (Light) | Farbe (Dark) | CSS-Token |
+|------------|-------|---------------|-------------|-----------|
+| `implements` | "Implementiert" | `--color-status-success-bg/text` (Gruen) | `--color-status-success-bg/text` | `.link-badge--implements` |
+| `required` | "Erforderlich" | `--color-status-error-bg/text` (Rot) | `--color-status-error-bg/text` | `.link-badge--required` |
+| `related-control` | "Verwandt" | `--color-status-info-bg/text` (Blau) | `--color-status-info-bg/text` | `.link-badge--related` |
+| `bsi-baustein` | "BSI Baustein" | `--color-status-orange-bg/text` (Orange) | `--color-status-orange-bg/text` | `.link-badge--bsi` |
+| `template` | "Vorlage" | `--color-bg-secondary` + `--color-text-secondary` (Grau) | Analog | `.link-badge--template` |
+| (unbekannt) | rel-Wert als Label | `--color-bg-secondary` + `--color-text` | Analog | `.link-badge--default` |
+
+**Visuelles Design**:
+- Stil analog zu bestehenden `PropertyBadge` (Pill-Form, kleiner Font, inline)
+- Kontrast >= 4.5:1 (bereits durch bestehende Status-Token garantiert — Kontrast-Audit Phase 2 bestanden)
+- Kein Icon noetig — Text + Farbe reicht (WCAG: Information nicht nur durch Farbe, sondern auch durch Text vermittelt)
+
+**Platzierung**: In `control-detail.tsx` Links-Sektion, nach dem `<a>` Tag jedes Links
+
+**CSS** (in `base.css`):
+```css
+.link-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--border-radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.link-badge--implements { background: var(--color-status-success-bg); color: var(--color-status-success-text); }
+.link-badge--required { background: var(--color-status-error-bg); color: var(--color-status-error-text); }
+.link-badge--related { background: var(--color-status-info-bg); color: var(--color-status-info-text); }
+.link-badge--bsi { background: var(--color-status-orange-bg); color: var(--color-status-orange-text); }
+.link-badge--template { background: var(--color-bg-secondary); color: var(--color-text-secondary); }
+.link-badge--default { background: var(--color-bg-secondary); color: var(--color-text); }
+```
+
+**Kontrast**: Alle Token-Kombinationen wurden im Kontrast-Audit (B4) als PASS bewertet. Kein zusaetzlicher Audit noetig.
+
+---
+
+### UX-R2: Fragment-Link Verhalten [MITTEL — Sub-Phase 4a]
+
+Links mit `href="#CONTROL-ID"` (Fragment-only) sollen klickbar sein und zum referenzierten Control navigieren.
+
+**Verhalten**:
+
+| HREF-Typ | Visuelles Verhalten | Aktion bei Klick |
+|----------|---------------------|------------------|
+| Fragment (`#ACC-01`) | Blauer Link (standard) | Deep-Link: `location.hash = '/catalog/ACC-01'` |
+| Absolute URL (`https://...`) | Blauer Link mit External-Icon (optional) | `<a target="_blank">` — neuer Tab |
+| URN (`urn:iso:...`) | Grauer Text (kein Link) | Nicht klickbar, als Referenz-Label angezeigt |
+| Relativer Pfad (`../catalog/file.json`) | Blauer Link | Phase 4b: Dokument laden und anzeigen |
+
+**Visuelles Design**:
+- Fragment-Links: Standard Link-Styling (`--color-primary`, underline on hover)
+- URN-Labels: `--color-text-secondary`, kein underline, `cursor: default`
+- External-Links: Optional kleines externes-Link Icon (↗) — Backlog
+
+---
+
+### UX-R3: Import-Visualisierung Panel [MITTEL — Sub-Phase 4b]
+
+Fuer Profile-Dokumente anzeigen, woher Controls importiert werden.
+
+**Design-Spezifikation**:
+
+```
+┌─────────────────────────────────────────┐
+│ Importierte Quellen:                     │
+│   📁 OPC Privacy Catalog (lokal)         │
+│      → 4 Controls ausgewaehlt            │
+│   🌐 BSI Grundschutz++ (extern)          │
+│      → 2 Controls ausgewaehlt            │
+├─────────────────────────────────────────┤
+│ Merge-Strategie: merge                   │
+│ Modifikationen: 3 Parameter, 1 Alter    │
+└─────────────────────────────────────────┘
+```
+
+**Visuelles Design**:
+- Bestehende `.content-box` Klasse wiederverwenden
+- Quellen-Liste: Icon (📁 lokal / 🌐 extern) + Titel + Control-Count
+- Status-Badges fuer Merge-Strategie (`merge`, `flat`, `as-is`)
+- Klickbare Import-HREFs (navigieren zum importierten Dokument)
+- Fallback bei CORS-Fehler: Warnung statt Link (siehe UX-R4)
+
+**Platzierung**: In `profile-view.tsx` als Ersatz/Erweiterung der bestehenden Import-Sektion. Soll als erstes Panel nach der Metadata angezeigt werden.
+
+**Responsive**: Linear-Layout, Icons + Text untereinander auf Mobile.
+
+---
+
+### UX-R4: Unaufgeloeste Referenzen UI [NIEDRIG — Sub-Phase 4c]
+
+Wenn eine externe Referenz nicht geladen werden kann (CORS, Netzwerk, 404):
+
+**Design-Spezifikation**:
+
+```
+┌─────────────────────────────────────────┐
+│ ⚠ Externe Referenz nicht verfuegbar      │
+│   href: https://github.com/.../cat.json │
+│   Grund: Netzwerkfehler / CORS          │
+│                                          │
+│   [Manuell laden]  [Ignorieren]          │
+└─────────────────────────────────────────┘
+```
+
+**Visuelles Design**:
+- Hintergrund: `var(--color-status-warning-bg)` (gelb)
+- Text: `var(--color-status-warning-text)`
+- Border: `2px solid var(--color-accent-amber)` (links, analog Error-Pattern)
+- `role="alert"` fuer Screen-Reader
+- "Manuell laden" Button: Oeffnet File-Dialog fuer lokalen Download
+- "Ignorieren" Button: Blendet Warnung aus (dieser Session)
+
+**a11y**: `role="alert"` + `aria-live="assertive"` (wichtige Warnung).
+
+---
+
+### UX-R5: Kontrast-Audit fuer neue Link-Badges [NIEDRIG]
+
+**Ergebnis: KEIN ZUSAETZLICHER AUDIT NOETIG**
+
+Alle Link-Badge Farben nutzen bestehende Status-Token (`--color-status-success/error/info/orange/warning`), die im Kontrast-Audit B4 bereits als PASS bewertet wurden (22/22 Kombinationen >= 4.5:1).
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Sub-Phase | Aufwand | Abhaengigkeit |
+|---|---------|-----------|---------|---------------|
+| 1 | UX-R1: LinkBadge CSS-Design | 4a | Klein | Keine |
+| 2 | UX-R2: Fragment-Link Spezifikation | 4a | Klein | Keine |
+| 3 | UX-R3: Import-Panel Design | 4b | Mittel | Keine |
+| 4 | UX-R4: Unresolved Reference Design | 4c | Klein | Keine |
+| 5 | UX-R5: Kontrast-Audit | 4a | Keine Aktion | — |
+
+### Design-Entscheidungen Phase 4
+
+**DE-4: Link-Badge vs. inline Styling**
+- Badge-Stil (Pill-Form) statt Inline-Text — konsistent mit bestehenden PropertyBadge + StatusBadge Patterns.
+- Farben nutzen bestehende semantische Token — kein neues Farbsystem noetig.
+
+**DE-5: URN-Darstellung**
+- URNs als nicht-klickbarer Text mit Secondary-Color — vermeidet Nutzer-Frustration durch nicht-aufloesbare Links.
+- Kein "broken link" Icon — URNs sind bewusst nicht aufloesbar, kein Fehler.
+
+**DE-6: Import-Panel vs. bestehende Import-Sektion**
+- Import-Panel erweitert die bestehende Import-Sektion in `profile-view.tsx` (kein Ersatz).
+- Bestehende Import-Cards bleiben, werden um Status (geladen/fehlgeschlagen) und Control-Count ergaenzt.
+
+### Build-Erwartung Phase 4
+
+- **CSS-Impact**: +~0.3 KB gzipped (LinkBadge + Import-Panel + Unresolved-Reference Styles)
+- **Keine neuen Design-Token noetig** — alle Farben aus bestehendem System
+- **Kein neuer Kontrast-Audit noetig** — bestehende Token sind geprueft
+- **Bundle**: ~30 KB → ~32 KB gzipped (weiterhin weit unter 100 KB)
+
+---
+
+### UX-R6: Resolution Loading/Progress State [MITTEL — Sub-Phase 4b]
+
+Phase 4 fuehrt erstmals **asynchrone fetch-Operationen** ein (externe Cataloge laden). Die bestehende Gap G11 (Loading States) wird damit relevant.
+
+**Design-Spezifikation**:
+
+#### Loading-Indikator im Import-Panel
+
+Waehrend ein importierter Catalog geladen wird:
+
+```
+┌─────────────────────────────────────────┐
+│ Importierte Quellen:                     │
+│   📁 OPC Privacy Catalog                │
+│      ✅ 4 Controls geladen              │
+│   🌐 BSI Grundschutz++                  │
+│      ⏳ Wird geladen...                 │
+└─────────────────────────────────────────┘
+```
+
+**Status pro Import-Quelle**:
+
+| Status | Icon | Text | CSS |
+|--------|------|------|-----|
+| Pending | `⏳` | "Wird geladen..." | `.import-status--loading` |
+| Geladen | `✅` | "{n} Controls geladen" | `.import-status--loaded` |
+| Fehler | `⚠` | "Nicht erreichbar" | `.import-status--error` |
+| URN (nicht aufloesbar) | `📋` | "Nur Referenz" | `.import-status--urn` |
+
+**Visuelles Design**:
+- **Loading**: Pulsierendes Opacity-Animation (`@keyframes pulse`) auf dem Quellen-Eintrag
+- **Kein Spinner**: Zu dominant fuer Inline-Status. Dezente Opacity-Animation genuegt
+- **Kein Skeleton Screen**: Over-Engineering fuer wenige Sekunden Ladezeit
+- **Keine Blockade**: Nicht-geladene Referenzen blockieren NICHT die restliche Anzeige. Profile-Daten (Metadata, Merge-Strategie, eigene Controls) werden sofort gezeigt
+
+**CSS** (in `base.css`):
+```css
+.import-status--loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.import-status--error {
+  color: var(--color-status-warning-text);
+}
+```
+
+**a11y**:
+- `aria-live="polite"` auf dem Status-Text (Screen-Reader erhaelt Update bei Status-Wechsel)
+- `aria-busy="true"` auf dem Import-Panel waehrend Laden
+
+---
+
+### UX-R7: SSP/CompDef Import-Ketten Visualisierung [NIEDRIG — Sub-Phase 4c]
+
+SSP und Component-Definition Dokumente haben eigene Referenzketten die visuell dargestellt werden muessen.
+
+#### SSP: Import-Profile Referenz
+
+SSP-Dokumente referenzieren ein Profile via `import-profile.href`. Diese Referenz wird im System-Header (Characteristics Tab) dargestellt:
+
+```
+┌─────────────────────────────────────────┐
+│ Import-Profile:                          │
+│   📁 Integrated Privacy & Security      │
+│      → Basiert auf 2 Catalogen          │
+│      [Details anzeigen]                  │
+└─────────────────────────────────────────┘
+```
+
+**Design**: Bestehende `.content-box` wiederverwenden. "Details anzeigen" oeffnet das aufgeloeste Profile in einem Accordion.
+
+#### CompDef: Source-Catalog Referenz
+
+Component-Definition Dokumente referenzieren Cataloge via `source` in `control-implementations`:
+
+```
+┌─────────────────────────────────────────┐
+│ Control-Implementations                  │
+│   Quelle: OPC Privacy Catalog            │
+│   ├── GOV-01: Governance Policy          │
+│   ├── ACC-01: Access Control             │
+│   └── LAW-01: Legal Compliance           │
+└─────────────────────────────────────────┘
+```
+
+**Design**: Source-Catalog als Gruppen-Header ueber den Control-Implementations. Bestehende Accordion-Struktur bleibt erhalten. Source-Name wird aus dem geladenen Catalog-Metadata gelesen (Fallback: HREF als Code-Element).
+
+**Design-Entscheidung DE-7: Kein Dependency-Graph**
+- Ein visueller Dependency-Graph (SSP → Profile → Catalog) waere visuell ansprechend, aber Over-Engineering fuer den MVP
+- Stattdessen: Lineare Darstellung der Referenzkette in Content-Boxes
+- Backlog: Graph-Visualisierung nach Phase 4c falls Stakeholder-Feedback positiv
+
+---
+
+### Zusammenfassung Phase 4 UI/UX Aufgaben
+
+| # | Aufgabe | Sub-Phase | Prio | Aufwand | Status |
+|---|---------|-----------|------|---------|--------|
+| UX-R1 | LinkBadge CSS-Design | 4a | Hoch | Klein | Spezifiziert |
+| UX-R2 | Fragment-Link Spezifikation | 4a | Mittel | Klein | Spezifiziert |
+| UX-R3 | Import-Panel Design | 4b | Mittel | Mittel | Spezifiziert |
+| UX-R4 | Unresolved Reference Design | 4c | Niedrig | Klein | Spezifiziert |
+| UX-R5 | Kontrast-Audit | 4a | — | Keine Aktion | Nicht noetig |
+| UX-R6 | Resolution Loading State | 4b | Mittel | Klein | Spezifiziert |
+| UX-R7 | SSP/CompDef Import-Ketten | 4c | Niedrig | Mittel | Spezifiziert |
+
+**Gesamt CSS-Impact**: ~0.5 KB gzipped (LinkBadge + Import-Panel + Loading + Unresolved)
+
+### Verbleibende Backlog-Items
+
+| # | Aufgabe | Kontext |
+|---|---------|---------|
+| 1 | Dependency-Graph Visualisierung (DE-7) | Nach Phase 4c falls gewuenscht |
+| 2 | External-Link Icon (↗) bei absolute URLs | Visueller Hinweis auf neue Tabs |
+| 3 | Manueller Dark Mode Toggle (G23) | Nutzer-Praeferenz persistieren |
+| 4 | Loading State / Skeleton Screens erweitern (G11) | Fuer grosse Cataloge (NIST 800-53) |
+
+---
+
+## Phase 4 CSS-Implementierung (2026-02-09)
+
+### Umgesetzte Aufgaben
+
+| # | Aufgabe | Status | Details |
+| --- | ------- | ------ | ------- |
+| UX-R1 | LinkBadge CSS | **IMPLEMENTIERT** | 6 Badge-Varianten (implements, required, related, bsi, template, default) in `base.css` |
+| UX-R2 | Fragment-Link CSS | **IMPLEMENTIERT** | `.link-urn` Klasse fuer nicht-klickbare URN-Referenzen |
+| UX-R4 | Unresolved Reference CSS | **IMPLEMENTIERT** | `.unresolved-ref` mit Warning-Farben, Border-Left, Action-Buttons |
+| UX-R6 | Loading-Animation CSS | **IMPLEMENTIERT** | `@keyframes pulse` + 4 Status-Klassen (loading, loaded, error, urn) |
+| UX-D1 | ACCESSIBILITY_STATEMENT.md | **ERSTELLT** | BITV 2.0 Erklaerung mit 10 WCAG-Kriterien, Einschraenkungen, Feedback, Durchsetzung |
+
+### Neue CSS-Klassen in `base.css`
+
+```css
+/* Phase 4: OSCAL Resolution UI Components */
+.link-badge                  — Basis-Stil (Pill-Form, inline)
+.link-badge--implements      — Gruen (Success-Token)
+.link-badge--required        — Rot (Error-Token)
+.link-badge--related         — Blau (Info-Token)
+.link-badge--bsi             — Orange (Orange-Token)
+.link-badge--template        — Grau (Secondary-Token)
+.link-badge--default         — Grau (Text-Token)
+.link-urn                    — URN-Referenz (nicht-klickbar)
+.import-status--loading      — Pulse-Animation
+.import-status--loaded       — Success-Farbe
+.import-status--error        — Warning-Farbe
+.import-status--urn          — Secondary-Farbe
+.unresolved-ref              — Warning-Box mit Border-Left
+.unresolved-ref-actions      — Button-Leiste
+```
+
+### Neue Datei
+
+- `docs/ACCESSIBILITY_STATEMENT.md` — BITV 2.0 Barrierefreiheitserklaerung (Pflichtangabe fuer oeffentliche Stellen)
+
+### Build
+
+- Bundle: 15.98 KB JS + 7.26 KB CSS gzipped (+0.79 KB CSS fuer Phase 4 Styles)
+- Tests: 485/485 bestanden | 18 Testdateien
+- TypeScript: 0 Errors
+
+### Aktualisierter Aufgaben-Status
+
+| # | Aufgabe | Sub-Phase | Status |
+| --- | ------- | --------- | ------ |
+| UX-R1 | LinkBadge CSS-Design | 4a | **IMPLEMENTIERT** |
+| UX-R2 | Fragment-Link CSS | 4a | **IMPLEMENTIERT** |
+| UX-R3 | Import-Panel Design | 4b | Spezifiziert (CSS durch FE bei Komponenten-Bau) |
+| UX-R4 | Unresolved Reference CSS | 4c | **IMPLEMENTIERT** |
+| UX-R5 | Kontrast-Audit | 4a | Nicht noetig (bestehende Token) |
+| UX-R6 | Resolution Loading State CSS | 4b | **IMPLEMENTIERT** |
+| UX-R7 | SSP/CompDef Import-Ketten | 4c | Spezifiziert (CSS durch FE bei Komponenten-Bau) |
+| UX-D1 | ACCESSIBILITY_STATEMENT.md | — | **ERSTELLT** |

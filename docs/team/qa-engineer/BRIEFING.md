@@ -2,8 +2,8 @@
 
 **Rolle**: QA Engineer
 **Projekt**: OSCAL Viewer
-**Stand**: 2026-02-06
-**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
+**Stand**: 2026-02-09
+**Phase**: Phase 4 — OSCAL Resolution (Import-Ketten, Cross-Referenzen, Profile Resolution)
 
 ---
 
@@ -1232,3 +1232,267 @@ L1-L4 kommentiert. Ergebnisse:
 - Gesamtquote 7.1% (unter 8%-Ziel, aber deutliche Verbesserung von 2.6% → 5.9% → 7.1%)
 
 ---
+
+## NEUER AUFTRAG: Phase 4 — OSCAL Resolution QA-Strategie (2026-02-09)
+
+**Prioritaet**: HOCH | **Quelle**: OSCAL Expert Briefing via Hauptprogrammleitung
+**Referenz-Dokument**: `docs/architecture/OSCAL_IMPORT_GUIDE.md`
+**Leitprinzip**: Leichtgewichtiger Viewer mit vollem OSCAL-Referenzketten-Funktionsumfang
+
+### Kontext
+
+Phase 4 fuehrt einen neuen `src/services/` Layer ein (Domain Layer), der OSCAL-Referenzketten clientseitig aufloest. Neue Module:
+
+- **HrefParser** (`src/services/href-parser.ts`) — 4 HREF-Patterns erkennen
+- **DocumentCache** (`src/services/document-cache.ts`) — Geladene Dokumente cachen
+- **ResolutionService** (`src/services/resolver.ts`) — Profile/SSP Import-Ketten aufloesen
+
+Dazu kommen neue UI-Komponenten (LinkBadge, ImportPanel) und ein neuer Hook (useResolver).
+
+---
+
+### QA-R1: HrefParser Tests [HOCH — Sub-Phase 4a]
+
+**Testdatei**: `tests/services/href-parser.test.ts` (NEU)
+
+Mindest-Testfaelle:
+
+| # | Testfall | Eingabe | Erwartung |
+|---|---------|---------|-----------|
+| 1 | Relativer Pfad | `../catalog/file.json` | `type: 'relative', path: '../catalog/file.json', isResolvable: true` |
+| 2 | Relativer Pfad mit Fragment | `catalog.json#GOV-01` | `type: 'relative', fragment: 'GOV-01'` |
+| 3 | Fragment-only | `#ACC-01` | `type: 'fragment', fragment: 'ACC-01', path: ''` |
+| 4 | Absolute URL | `https://github.com/.../catalog.json` | `type: 'absolute-url', isResolvable: true` |
+| 5 | Absolute URL mit Fragment | `https://example.com/cat.json#C-1` | `type: 'absolute-url', fragment: 'C-1'` |
+| 6 | URN | `urn:iso:std:iso-iec:27701` | `type: 'urn', isResolvable: false` |
+| 7 | Leerer String | `""` | Definiertes Verhalten (kein Crash) |
+| 8 | Nur Fragment-Zeichen | `#` | `type: 'fragment', fragment: ''` |
+
+**Pattern**: Reine Unit-Tests, kein DOM noetig, kein Preact.
+
+---
+
+### QA-R2: DocumentCache Tests [HOCH — Sub-Phase 4b]
+
+**Testdatei**: `tests/services/document-cache.test.ts` (NEU)
+
+| # | Testfall | Beschreibung |
+|---|---------|-------------|
+| 1 | Cache-Miss | `get()` auf unbekannte URL → `undefined` |
+| 2 | Cache-Hit | `set()` dann `get()` → gleiches Dokument |
+| 3 | URL-Normalisierung | `set('URL#frag')` → `get('URL')` findet es |
+| 4 | Case-Insensitiv | `set('HTTP://X.COM/A')` → `get('http://x.com/a')` findet es |
+| 5 | has() Methode | `has()` vor und nach `set()` |
+| 6 | Verschiedene URLs | Verschiedene Dokumente unter verschiedenen URLs |
+
+---
+
+### QA-R3: ResolutionService Tests [HOCH — Sub-Phase 4b]
+
+**Testdatei**: `tests/services/resolver.test.ts` (NEU)
+
+**Herausforderung**: `fetch()` muss gemockt werden (kein echtes Netzwerk in Tests).
+
+**Strategie**: `vi.stubGlobal('fetch', mockFetch)` mit vorbereiteten Responses.
+
+| # | Testfall | Beschreibung |
+|---|---------|-------------|
+| 1 | resolveHref relativer Pfad | Mock-Fetch fuer relative URL, Parser aufrufen |
+| 2 | resolveHref Fragment | Kein Fetch, internes Lookup |
+| 3 | resolveHref URN | Kein Fetch, `isResolvable: false` |
+| 4 | resolveHref HTTP-Fehler | Mock-Fetch mit `status: 404` → Error |
+| 5 | resolveHref CORS-Fehler | Mock-Fetch wirft `TypeError` → spezifische Meldung |
+| 6 | resolveProfile einfach | 1 Import, 2 Controls → gefilterter Catalog |
+| 7 | resolveProfile multi-import | 2 Imports parallel → zusammengefuehrter Catalog |
+| 8 | resolveProfile mit modify | set-parameters + alters angewandt |
+| 9 | Cache-Nutzung | Zweiter Aufruf gleicher URL → kein erneuter Fetch |
+
+**Test-Fixtures**: Minimale OSCAL-Profile und Cataloge als JSON-Objekte im Testfile.
+
+---
+
+### QA-R4: LinkBadge Component Tests [MITTEL — Sub-Phase 4a]
+
+**Testdatei**: `tests/components/link-badge.test.tsx` (NEU)
+
+| # | Testfall | Beschreibung |
+|---|---------|-------------|
+| 1 | rel="implements" | Rendert "Implementiert" mit gruener Klasse |
+| 2 | rel="required" | Rendert "Erforderlich" mit roter Klasse |
+| 3 | rel="related-control" | Rendert "Verwandt" mit blauer Klasse |
+| 4 | Unbekannter rel | Rendert den rel-Wert als Label mit Default-Klasse |
+| 5 | axe-core | Keine a11y Violations |
+
+---
+
+### QA-R5: useResolver Hook Tests [MITTEL — Sub-Phase 4b]
+
+**Testdatei**: `tests/hooks/use-resolver.test.ts` (NEU)
+
+| # | Testfall | Beschreibung |
+|---|---------|-------------|
+| 1 | Initial State | `loading: false, error: null, resolvedDoc: null` |
+| 2 | Erfolgreicher Resolve | `loading` Uebergang, `resolvedDoc` gesetzt |
+| 3 | Fetch-Fehler | `error` gesetzt, `resolvedDoc: null` |
+| 4 | CORS-Fehler | Spezifische Fehlermeldung |
+
+---
+
+### QA-R6: Integration Tests [NIEDRIG — Sub-Phase 4c]
+
+| # | Testfall | Beschreibung |
+|---|---------|-------------|
+| 1 | Profile mit aufgeloestem Catalog | Profile laden → Import aufloesen → Controls anzeigen |
+| 2 | Fragment-Navigation | Link mit `#CONTROL-ID` klicken → Deep-Link gesetzt |
+| 3 | Unaufgeloeste Referenz | CORS-Fehler → Warnung angezeigt |
+
+---
+
+### OSCAL-Validierungsregeln Tests [NIEDRIG — nach Phase 4b]
+
+Der OSCAL-Experte empfiehlt Validierungs-Warnungen. Falls implementiert, Tests fuer:
+
+| Regel | Testfall |
+|-------|---------|
+| Leere Arrays | `parts: []` → Warnung |
+| UUID-Format | Ungueltige UUID → Warnung |
+| OSCAL-Version fehlt | `metadata` ohne `oscal-version` → Warnung |
+| Namespace ungueltig | `ns: "nicht-uri"` → Warnung |
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Testdatei | Sub-Phase | Aufwand | Abhaengigkeit |
+|---|-----------|-----------|---------|---------------|
+| 1 | href-parser.test.ts | 4a | Klein | FE-R1 |
+| 2 | link-badge.test.tsx | 4a | Klein | FE-R3 |
+| 3 | document-cache.test.ts | 4b | Klein | FE-R4 |
+| 4 | resolver.test.ts | 4b | Hoch | FE-R5 |
+| 5 | use-resolver.test.ts | 4b | Mittel | FE-R6 |
+| 6 | Integration Tests | 4c | Mittel | Alle Services |
+
+### Test-Erwartung Phase 4
+
+- **Neue Testdateien**: 5-6 Dateien
+- **Geschaetzte neue Tests**: 30-50 Tests
+- **Gesamt**: 485 + ~40 = ~525 Tests
+- **Coverage-Ziel**: Services >= 90% (reine Funktionen, gut testbar)
+- **axe-core**: LinkBadge + ImportPanel + UnresolvedReference pruefen
+- **Keine neuen Dependencies**: `vi.stubGlobal('fetch', ...)` fuer Netzwerk-Mocks
+
+---
+
+## Phase 4a QA-Report (2026-02-09)
+
+**Scope**: Sub-Phase 4a MVP — HrefParser + Fragment-ID + Link-Badges
+**Implementierung**: FE-R1 (HrefParser), FE-R2 (Fragment-Resolution), FE-R3 (LinkBadge)
+
+### Bestandsaufnahme
+
+| Datei | Typ | LOC | Status |
+|-------|-----|-----|--------|
+| `src/services/href-parser.ts` | Domain Service (NEU) | 74 | Implementiert |
+| `src/components/shared/link-badge.tsx` | Shared Component (NEU) | 45 | Implementiert |
+| `src/components/catalog/control-detail.tsx` | Component (GEAENDERT) | 195 | Refactored: `renderLink()` + `parseHref()` + `LinkBadge` |
+| `tests/services/href-parser.test.ts` | Unit-Tests (NEU) | 131 | 18 Tests |
+| `tests/components/catalog-view.test.tsx` | Integration-Tests (ERWEITERT) | +100 | Link Resolution (7) + LinkBadge Integration (7) |
+| `tests/components/shared.test.tsx` | Unit-Tests (ERWEITERT) | +50 | LinkBadge (9) |
+| `tests/accessibility.test.tsx` | axe-core (ERWEITERT) | +14 | LinkBadge a11y (2) |
+| `src/styles/base.css` | CSS (ERWEITERT) | +16 | `.link-badge--*` Klassen |
+| `eslint.config.js` | ESLint (ERWEITERT) | +22 | `src/services/` Layer-Regeln |
+| `docs/CODING_STANDARDS.md` | Standards (ERWEITERT) | v5.0.0 | Sektion 12 (4 Patterns) |
+
+### Verifikations-Ergebnis
+
+| Pruefung | Ergebnis |
+|----------|----------|
+| TypeScript strict | 0 Errors |
+| ESLint | 0 Errors, 13 Warnings (vorbestehend — jsdoc/require-jsdoc) |
+| Tests | **531/531** bestanden (+2 neue axe-core, +44 in vorherigen Sessions) |
+| axe-core a11y | **29/29** bestanden (2 neue: LinkBadge known + unknown rel) |
+| Build | Erfolgreich |
+| Bundle JS (gzip) | 16.35 KB |
+| Bundle CSS (gzip) | 7.26 KB |
+| **Bundle Total (gzip)** | **~30.64 KB** (< 100 KB Limit) |
+
+### QA-R1 Verifikation: HrefParser Tests
+
+| # | Briefing-Testfall | Testdatei Zeile | Status |
+|---|---|---|---|
+| 1 | Relativer Pfad | href-parser.test.ts:95-98 | PASS |
+| 2 | Relativer Pfad + Fragment | href-parser.test.ts:105-109 | PASS |
+| 3 | Fragment-only | href-parser.test.ts:67-85 | PASS |
+| 4 | Absolute URL | href-parser.test.ts:33-41 | PASS |
+| 5 | Absolute URL + Fragment | href-parser.test.ts:48-52 | PASS |
+| 6 | URN | href-parser.test.ts:5-23 | PASS |
+| 7 | Leerer String | href-parser.test.ts:118-123 | PASS |
+| 8 | Nur `#` | href-parser.test.ts:87-91 | PASS |
+
+**Ergebnis**: 8/8 Briefing-Testfaelle + 10 zusaetzliche Edge Cases = **18 Tests PASS**
+
+### QA-R4 Verifikation: LinkBadge Tests
+
+| # | Briefing-Testfall | Testdatei | Status |
+|---|---|---|---|
+| 1 | rel="implements" rendert | shared.test.tsx:225-228 | PASS |
+| 2 | rel="required" rendert | shared.test.tsx:230-233 | PASS |
+| 3 | rel="related-control" rendert | shared.test.tsx:235-238 | PASS |
+| 4 | Unbekannter rel → Default | shared.test.tsx:250-253 | PASS |
+| 5 | axe-core (known rel) | accessibility.test.tsx (NEU) | PASS |
+| 6 | axe-core (unknown rel) | accessibility.test.tsx (NEU) | PASS |
+
+**Ergebnis**: 5/5 Briefing-Testfaelle + 6 zusaetzliche (CSS-Modifier, Badges-Count) = **11+ Tests PASS**
+
+### CODING_STANDARDS v5.0.0 Konformitaets-Audit
+
+| Regel | Beschreibung | Status | Severity |
+|-------|-------------|--------|----------|
+| 12.1 R1 | Kein manuelles href-Parsing | **PASS** | — |
+| 12.1 R3 | Fragment ohne Netzwerk-Request | **PASS** | — |
+| 12.1 R4 | Relative Pfade relativ zu Basisdokument | FAIL (Design) | LOW — Phase 4b |
+| 12.4 R3 | CSS-Variablen fuer Badge-Farben | **PASS** | — |
+| **12.4 R4** | **aria-label auf LinkBadge** | **FAIL** | **HOCH** |
+| 11.1 | File-Level-Kommentar (3 Dateien) | **PASS** | — |
+| 1.0 | ESLint services/ Layer-Regeln | **PASS** | — |
+
+**Score**: 8/9 PASS (89%)
+
+### Findings
+
+#### F1: LinkBadge fehlt `aria-label` [HOCH — Frontend Dev]
+
+**Betroffene Datei**: `src/components/shared/link-badge.tsx` Zeile 41
+
+**Problem**: CODING_STANDARDS v5.0.0 Sektion 12.4 Regel 4 verlangt:
+> "Badges muessen aria-label fuer Screenreader haben (z.B. aria-label='Beziehung: Implementiert')"
+
+**Aktuell**:
+```tsx
+<span class={`link-badge link-badge--${modifier}`}>
+  {label}
+</span>
+```
+
+**Erwartet**:
+```tsx
+<span class={`link-badge link-badge--${modifier}`} aria-label={`Link: ${label}`}>
+  {label}
+</span>
+```
+
+**Severity**: HOCH — WCAG 4.1.2 (Accessible Name). Der sichtbare Text ("Implements") gibt Screenreadern keinen Kontext, dass es sich um eine Beziehungs-Klassifikation handelt.
+
+#### F2: Relative Pfade nicht aufloesbar [NIEDRIG — Design]
+
+**Betroffene Datei**: `src/services/href-parser.ts` Zeile 66
+
+**Problem**: Relative Pfade werden als `isResolvable: false` markiert. CODING_STANDARDS 12.1 Regel 4 verlangt Aufloesung relativ zum Basisdokument.
+
+**Bewertung**: Erwartetes Verhalten in Phase 4a (kein Base-URL-Kontext verfuegbar). Phase 4b/4c wird dies mit `resolveHref(href, baseUrl, cache)` loesen. **Kein Blocker.**
+
+### Naechste Schritte
+
+1. **Frontend Dev**: F1 beheben — `aria-label` auf LinkBadge ergaenzen
+2. **QA**: Nach F1-Fix Re-Test des axe-core Tests (sollte weiterhin PASS sein)
+3. **Phase 4b**: QA-R2 (DocumentCache Tests), QA-R3 (ResolutionService Tests), QA-R5 (useResolver Tests) — warten auf FE-R4, FE-R5, FE-R6 Implementierung

@@ -4,6 +4,7 @@ import * as matchers from 'vitest-axe/matchers'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyBadge, PropertyList } from '@/components/shared/property-badge'
 import { StatusBadge } from '@/components/shared/status-badge'
+import { LinkBadge } from '@/components/shared/link-badge'
 import { Accordion } from '@/components/shared/accordion'
 import { SearchBar } from '@/components/shared/search-bar'
 import { CatalogView } from '@/components/catalog/catalog-view'
@@ -224,6 +225,24 @@ describe('Accessibility - SSP', () => {
 describe('Accessibility - StatusBadge', () => {
   it('StatusBadge has no a11y violations', async () => {
     const { container } = render(<StatusBadge state="operational" />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+// ============================================================
+// Accessibility Tests - LinkBadge (QA-R4)
+// ============================================================
+
+describe('Accessibility - LinkBadge (QA-R4)', () => {
+  it('LinkBadge with known rel has no a11y violations', async () => {
+    const { container } = render(<LinkBadge rel="implements" />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+
+  it('LinkBadge with unknown rel has no a11y violations', async () => {
+    const { container } = render(<LinkBadge rel="custom-unknown" />)
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   })

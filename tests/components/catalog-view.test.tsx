@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/preact'
 import { CatalogView } from '@/components/catalog/catalog-view'
 import { GroupTree } from '@/components/catalog/group-tree'
 import { ControlDetail } from '@/components/catalog/control-detail'
-import type { Catalog, Control, Group } from '@/types/oscal'
+import type { Catalog, Control, Group, Link } from '@/types/oscal'
 
 // Clean up URL hash between tests to prevent state leaking via useDeepLink
 beforeEach(() => {
@@ -793,5 +793,127 @@ describe('ControlDetail - Tab Order & Keyboard (QS17-QS18)', () => {
     const copyBtn = container.querySelector('.copy-link-btn')
     expect(copyBtn).toBeTruthy()
     expect(copyBtn?.tagName.toLowerCase()).toBe('button')
+  })
+})
+
+// ============================================================
+// ControlDetail - Link Resolution Tests
+// ============================================================
+
+const allLinkTypes: Link[] = [
+  { href: '#ac-1', rel: 'related-control', text: 'See AC-1' },
+  { href: 'https://example.com/nist.json', rel: 'implements', text: 'NIST Doc' },
+  { href: 'urn:iso:std:27001:2022', rel: 'required' },
+  { href: './other-catalog.json#ctrl-1', rel: 'template', text: 'Other Catalog' },
+  { href: 'https://bsi.bund.de/baustein', rel: 'bsi-baustein' },
+]
+
+const controlWithAllLinks: Control = {
+  id: 'link-test',
+  title: 'Link Resolution Test Control',
+  links: allLinkTypes,
+}
+
+describe('ControlDetail - Link Resolution', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+    history.replaceState(null, '', window.location.pathname)
+  })
+
+  it('fragment link renders as anchor with catalog deep-link href', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    const link = container.querySelector('a[href="#/catalog/ac-1"]')
+    expect(link).toBeTruthy()
+    expect(link?.textContent).toBe('See AC-1')
+  })
+
+  it('fragment link click sets location hash', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    const link = container.querySelector('a[href="#/catalog/ac-1"]') as HTMLAnchorElement
+    fireEvent.click(link)
+    expect(location.hash).toBe('#/catalog/ac-1')
+  })
+
+  it('absolute URL renders as external link with target="_blank"', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    const link = container.querySelector('a[href="https://example.com/nist.json"]')
+    expect(link).toBeTruthy()
+    expect(link?.getAttribute('target')).toBe('_blank')
+    expect(link?.getAttribute('rel')).toBe('noopener noreferrer')
+    expect(link?.textContent).toBe('NIST Doc')
+  })
+
+  it('URN renders as non-clickable span', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    const urnSpan = container.querySelector('.link-urn')
+    expect(urnSpan).toBeTruthy()
+    expect(urnSpan?.textContent).toBe('urn:iso:std:27001:2022')
+    expect(urnSpan?.tagName.toLowerCase()).toBe('span')
+  })
+
+  it('relative path renders as non-clickable span', () => {
+    render(<ControlDetail control={controlWithAllLinks} />)
+    expect(screen.getByText('Other Catalog')).toBeInTheDocument()
+    const span = screen.getByText('Other Catalog')
+    expect(span.tagName.toLowerCase()).toBe('span')
+    expect(span.classList.contains('link-urn')).toBe(true)
+  })
+
+  it('absolute URL without text shows href as label', () => {
+    const ctrl: Control = {
+      id: 'no-text',
+      title: 'No Text Links',
+      links: [{ href: 'https://example.com/doc' }],
+    }
+    render(<ControlDetail control={ctrl} />)
+    expect(screen.getByText('https://example.com/doc')).toBeInTheDocument()
+  })
+})
+
+// ============================================================
+// ControlDetail - LinkBadge Integration Tests
+// ============================================================
+
+describe('ControlDetail - LinkBadge Integration', () => {
+  it('renders LinkBadge for implements rel', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    expect(container.querySelector('.link-badge--implements')).toBeTruthy()
+  })
+
+  it('renders LinkBadge for required rel', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    expect(container.querySelector('.link-badge--required')).toBeTruthy()
+  })
+
+  it('renders LinkBadge for related-control rel', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    expect(container.querySelector('.link-badge--related')).toBeTruthy()
+  })
+
+  it('renders LinkBadge for bsi-baustein rel', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    expect(container.querySelector('.link-badge--bsi')).toBeTruthy()
+  })
+
+  it('renders LinkBadge for template rel', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    expect(container.querySelector('.link-badge--template')).toBeTruthy()
+  })
+
+  it('does not render LinkBadge when link has no rel', () => {
+    const ctrl: Control = {
+      id: 'no-rel',
+      title: 'No Rel Test',
+      links: [{ href: 'https://example.com' }],
+    }
+    const { container } = render(<ControlDetail control={ctrl} />)
+    expect(container.querySelector('.link-badge')).toBeNull()
+  })
+
+  it('renders correct badge count matching links with rel', () => {
+    const { container } = render(<ControlDetail control={controlWithAllLinks} />)
+    const badges = container.querySelectorAll('.link-badge')
+    // All 5 links have rel attributes
+    expect(badges.length).toBe(5)
   })
 })

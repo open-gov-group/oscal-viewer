@@ -1,23 +1,25 @@
 # OSCAL Viewer - Coding Standards
 
-**Version**: 4.2.0
-**Gueltig ab**: Phase 3 (Code-Kommentierung, QA-Audit, ESLint JSDoc-Enforcement)
+**Version**: 5.0.0
+**Gueltig ab**: Phase 4 (OSCAL Resolution, Services Layer, Link-Badges)
 
 ---
 
-## 1. Architektur-Schichten (ADR-003)
+## 1. Architektur-Schichten (ADR-003 + ADR-008)
 
 ```
-Domain (types/, parser/)  ->  Application (hooks/)  ->  Presentation (components/)
+Domain (types/, parser/, services/, lib/)  ->  Application (hooks/)  ->  Presentation (components/)
 ```
 
-**Import-Regeln** (durch ESLint erzwungen):
+**Import-Regeln** (durch ESLint erzwungen in `eslint.config.js`):
 - `types/` importiert NUR aus externen Packages
 - `parser/` importiert aus `types/` und externen Packages
-- `hooks/` importiert aus `types/`, `parser/` und externen Packages
+- `services/` importiert aus `types/`, `parser/` und externen Packages (KEIN Preact)
+- `lib/` importiert aus `types/`, `parser/` und externen Packages
+- `hooks/` importiert aus `types/`, `parser/`, `services/` und externen Packages
 - `components/` importiert aus allen Layern
 
-Verletzungen werden durch `.eslintrc.cjs` als Fehler erkannt.
+Verletzungen werden durch `eslint.config.js` als Fehler erkannt.
 
 ---
 
@@ -775,3 +777,83 @@ JSDoc-Pflicht wird durch `eslint-plugin-jsdoc` automatisch geprueft:
 3. **Level `warn`**: Warnungen in IDE und `npm run lint`, aber kein CI-Fehler
 4. **Eskalation zu `error`**: Wenn Gesamtquote >= 8% erreicht und alle Exports JSDoc haben, wird `warn` zu `error` hochgestuft
 5. **Neuer Code**: Ab sofort MUSS jede neue exportierte Funktion JSDoc haben (0 neue Warnungen erlaubt)
+
+---
+
+## 12. OSCAL Resolution — Services Layer (ADR-008)
+
+Phase 4 fuehrt `src/services/` als neuen Domain-Layer-Ordner ein. Services loesen OSCAL-Import- und Referenzierungsketten clientseitig auf.
+
+### 12.1 HREF Resolution (Pattern 19)
+
+Alle `href`-Attribute in OSCAL-Dokumenten MUESSEN ueber `parseHref()` klassifiziert werden:
+
+```typescript
+import { parseHref } from '@/services/href-parser'
+
+const parsed = parseHref(link.href)
+// parsed.type: 'relative' | 'fragment' | 'absolute-url' | 'urn'
+// parsed.path: Dateipfad oder URL
+// parsed.fragment: Control-ID nach # (ohne #-Zeichen)
+// parsed.isResolvable: false bei URNs
+```
+
+**Regeln**:
+1. **Kein manuelles String-Parsing** von `href`-Werten — immer `parseHref()` verwenden
+2. **URNs** (`urn:...`) als nicht-aufloesbar markieren, Referenz-Label anzeigen
+3. **Fragment-IDs** (`#ID`) intern im geladenen Dokument aufloesen, KEIN Netzwerk-Request
+4. **Relative Pfade** relativ zum Basisdokument aufloesen (nicht relativ zur App-URL)
+5. **Absolute URLs**: `fetch()` mit CORS-Fehlerbehandlung
+
+### 12.2 Document Cache (Pattern 20)
+
+Alle extern geladenen OSCAL-Dokumente MUESSEN im `DocumentCache` registriert werden:
+
+```typescript
+import { DocumentCache } from '@/services/document-cache'
+
+const cache = new DocumentCache()
+cache.set('https://example.com/catalog.json', parsedDoc)
+const doc = cache.get('https://example.com/catalog.json#GOV-01') // Fragment wird ignoriert
+```
+
+**Regeln**:
+1. Cache-Key ist die **normalisierte URL** (Fragment entfernt, lowercase)
+2. **Cache-Miss** → `fetch()` → `parse()` → `cache.set()` → return
+3. **Kein TTL** — Cache ist Session-basiert, Browser-Reload = frischer Cache
+4. Cache wird als expliziter Parameter an Resolver-Funktionen uebergeben (kein Singleton)
+
+### 12.3 Resolution Hooks (Pattern 21)
+
+Die Dreischicht-Trennung MUSS auch fuer Resolution eingehalten werden:
+
+```
+src/services/resolver.ts     → Domain Layer (reine async Funktionen)
+src/hooks/use-resolver.ts    → Application Layer (State + Loading + Error)
+src/components/*/             → Presentation Layer (nutzt nur den Hook)
+```
+
+**Regeln**:
+1. **Services** sind reine Funktionen mit expliziten Parametern (kein versteckter State)
+2. **Hooks** wrappen Services mit Preact-State (`loading`, `error`, `resolvedDoc`)
+3. **Components** rufen NUR den Hook auf, NIEMALS den Service direkt
+4. `fetch()`-Aufrufe geschehen NUR in Services, NIE in Hooks oder Components
+
+### 12.4 Link-Relation Badges (Pattern 22)
+
+OSCAL `links[].rel`-Werte werden als farbcodierte Badges dargestellt:
+
+| `rel`-Wert | Badge-Label | Farbe | CSS-Klasse |
+|------------|-------------|-------|------------|
+| `implements` | "Implementiert" | Gruen | `.link-badge--implements` |
+| `required` | "Erforderlich" | Rot | `.link-badge--required` |
+| `related-control` | "Verwandt" | Blau | `.link-badge--related` |
+| `bsi-baustein` | "BSI Baustein" | Orange | `.link-badge--bsi` |
+| `template` | "Vorlage" | Grau | `.link-badge--template` |
+| (unbekannt) | rel-Wert als Label | Standard | `.link-badge--default` |
+
+**Regeln**:
+1. CSS-Klassen mit Prefix `.link-badge--` (Komponenten-Prefix-Konvention)
+2. Unbekannte `rel`-Werte werden mit dem Originalwert als Label und Default-Styling angezeigt
+3. Farben ueber CSS-Variablen definieren (keine hardcoded Werte, s. Sektion 4)
+4. Badges muessen `aria-label` fuer Screenreader haben (z.B. `aria-label="Beziehung: Implementiert"`)

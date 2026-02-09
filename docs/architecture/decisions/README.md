@@ -13,6 +13,7 @@ Dieses Verzeichnis enthält Architecture Decision Records (ADRs) für den OSCAL 
 | 005 | [Performance-Strategie](ADR_005_performance_strategy.md) | Accepted | 2026-02-06 |
 | 006 | [PWA-Strategie](ADR_006_pwa.md) | Accepted | 2026-02-07 |
 | 007 | [npm Package Architecture](ADR_007_npm_package.md) | Accepted | 2026-02-07 |
+| 008 | [Resolution Service Architecture](ADR_008_resolution_service.md) | Accepted | 2026-02-09 |
 
 ## Neues ADR erstellen
 

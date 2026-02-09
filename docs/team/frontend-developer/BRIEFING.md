@@ -2,8 +2,8 @@
 
 **Rolle**: Frontend Developer
 **Projekt**: OSCAL Viewer
-**Stand**: 2026-02-07
-**Phase**: Phase 3 (PWA, Dokumentation, npm Package)
+**Stand**: 2026-02-09
+**Phase**: Phase 4 — OSCAL Resolution (Import-Ketten, Cross-Referenzen, Profile Resolution)
 
 ---
 
@@ -170,6 +170,7 @@ tests/
 | 2026-02-07 | QA Engineer | Frontend Dev | AKTION: Code-Kommentierungs-Audit — Bestehenden Code nachkommentieren. Prio 1 SOFORT: Hooks (use-search, use-deep-link, use-filter). Prio 2: Komplexe Components (app.tsx, catalog-view, group-tree, control-detail, ssp-view). Prio 3: Shared+Types. Details: `docs/team/qa-engineer/BRIEFING.md` Abschnitt "Code-Kommentierungs-Audit" Empfehlung E2 | Erledigt |
 | 2026-02-08 | QA Engineer | Frontend Dev | Re-Audit: E2 Prio 1 ERLEDIGT (Hooks 9.8%), E2 Prio 3 ERLEDIGT (Shared 9.2%). **OFFEN: profile-view.tsx (302 LOC, 0%) + component-def-view.tsx (297 LOC, 0%) + ssp-view.tsx Helper (3 Stk.)** — Blocker fuer Gesamtquote >= 8% | Erledigt |
 | 2026-02-08 | QA Engineer | Frontend Dev | Audit ABGESCHLOSSEN: Alle Kommentierungsaufgaben erledigt. profile-view 5.2%, component-def-view 5.0%. Gesamtnote A- (7.1%) | Abgeschlossen |
+| 2026-02-09 | QA Engineer | Frontend Dev | **Phase 4a QA-Report — Finding F1 (HOCH)**: LinkBadge (`src/components/shared/link-badge.tsx`) fehlt `aria-label` gemaess CODING_STANDARDS v5.0.0 Sektion 12.4 Regel 4. Fix: `<span aria-label={label} ...>`. 531 Tests bestanden, 29 axe-core Tests (inkl. 2 neue LinkBadge). HrefParser 18/18 Tests PASS. Details: `docs/team/qa-engineer/BRIEFING.md` Abschnitt "Phase 4a QA-Report" | Offen |
 
 ---
 
@@ -693,3 +694,300 @@ export { detectDocumentType, detectVersion } from '@/parser/detect'
 - Neue Dev-Dependency: `vite-plugin-pwa`
 - Tests: 390 bestehende Tests muessen bestehen + neue PWA-Tests
 - Budget: 14.20 KB JS + 6.36 KB CSS → weiterhin weit unter 100 KB
+
+---
+
+## NEUER AUFTRAG: Phase 4 — OSCAL Resolution (2026-02-09)
+
+**Prioritaet**: HOCH | **Quelle**: OSCAL Expert Briefing via Hauptprogrammleitung
+**Referenz-Dokument**: `docs/architecture/OSCAL_IMPORT_GUIDE.md`
+**Leitprinzip**: Leichtgewichtiger Viewer mit vollem Funktionsumfang. "Web"-App (PWA bleibt).
+
+### Kontext
+
+OSCAL-Dokumente bilden eine **hierarchische Referenzkette**:
+
+```
+SSP → Profile → Catalog(e)
+       ↕              ↕
+ Component-Defs    Cross-Refs
+```
+
+Der Viewer muss diese Kette clientseitig aufloesen koennen. Es wird ein neuer `src/services/` Ordner im Domain Layer eingefuehrt (reine Funktionen, kein Preact).
+
+### Neue Verzeichnisstruktur
+
+```
+src/
+├── types/                       # Domain: Interfaces (bestehend)
+├── parser/                      # Domain: Dokumentverarbeitung (bestehend)
+├── services/                    # Domain: Resolution & Caching (NEU)
+│   ├── href-parser.ts           #   HREF-Typ-Erkennung (4 Patterns)
+│   ├── document-cache.ts        #   Cache fuer geladene Dokumente
+│   └── resolver.ts              #   Resolution Service
+├── hooks/                       # Application: State & Logik (bestehend)
+│   ├── use-search.ts            #   (bestehend)
+│   ├── use-deep-link.ts         #   (bestehend)
+│   ├── use-filter.ts            #   (bestehend)
+│   └── use-resolver.ts          #   NEU: Hook-Wrapper fuer ResolutionService
+├── components/                  # Presentation: UI (bestehend)
+│   ├── shared/
+│   │   ├── link-badge.tsx       #   NEU: Link-Relation Badges
+│   │   └── import-panel.tsx     #   NEU: Import-Visualisierung
+│   └── ...
+└── ...
+```
+
+---
+
+### Sub-Phase 4a: MVP — Catalog Enhancement
+
+#### FE-R1: HrefParser (`src/services/href-parser.ts`) [HOCH]
+
+Reine Funktion zur Erkennung der 4 HREF-Patterns:
+
+```typescript
+type HrefType = 'relative' | 'fragment' | 'absolute-url' | 'urn'
+
+interface ParsedHref {
+  type: HrefType
+  path: string           // Dateipfad oder URL
+  fragment?: string      // Control-ID nach #
+  isResolvable: boolean  // URNs sind nicht aufloesbar
+}
+
+function parseHref(href: string): ParsedHref {
+  if (href.startsWith('urn:'))
+    return { type: 'urn', path: href, isResolvable: false }
+
+  if (href.startsWith('http://') || href.startsWith('https://')) {
+    const [path, fragment] = href.split('#')
+    return { type: 'absolute-url', path, fragment, isResolvable: true }
+  }
+
+  if (href.startsWith('#'))
+    return { type: 'fragment', path: '', fragment: href.slice(1), isResolvable: true }
+
+  const [path, fragment] = href.split('#')
+  return { type: 'relative', path, fragment, isResolvable: true }
+}
+```
+
+**Layer**: Domain (keine Preact-Imports!)
+**Tests**: Mindestens 4 Tests (einer pro Pattern) + Edge Cases
+
+---
+
+#### FE-R2: Fragment-ID Aufloesung in Catalog [MITTEL]
+
+Bestehende Links in `control-detail.tsx` (`links[]` mit `href="#CONTROL-ID"`) klickbar machen:
+
+- `parseHref(link.href)` aufrufen
+- Bei `type: 'fragment'` → Deep-Link setzen: `location.hash = /catalog/${fragment}`
+- Bei `type: 'absolute-url'` → `<a>` mit `target="_blank"` (externer Link)
+- Bei `type: 'urn'` → Nur als Label anzeigen (nicht klickbar)
+
+**Betroffene Datei**: `src/components/catalog/control-detail.tsx` (Links-Sektion, ca. Zeile 54-72)
+
+---
+
+#### FE-R3: Link-Relation Badges (`src/components/shared/link-badge.tsx`) [MITTEL]
+
+Neue Shared Component fuer `links[].rel` Werte:
+
+```tsx
+interface LinkBadgeProps {
+  rel: string
+}
+
+const REL_STYLES: Record<string, { label: string; className: string }> = {
+  'implements': { label: 'Implementiert', className: 'link-badge--implements' },
+  'required': { label: 'Erforderlich', className: 'link-badge--required' },
+  'related-control': { label: 'Verwandt', className: 'link-badge--related' },
+  'bsi-baustein': { label: 'BSI Baustein', className: 'link-badge--bsi' },
+  'template': { label: 'Vorlage', className: 'link-badge--template' },
+}
+
+export const LinkBadge: FunctionComponent<LinkBadgeProps> = ({ rel }) => {
+  const style = REL_STYLES[rel] ?? { label: rel, className: 'link-badge--default' }
+  return <span class={`link-badge ${style.className}`}>{style.label}</span>
+}
+```
+
+**CSS** (in `base.css`):
+- `.link-badge--implements` → `var(--color-success)` (Gruen)
+- `.link-badge--required` → `var(--color-error)` (Rot)
+- `.link-badge--related` → `var(--color-primary)` (Blau)
+- `.link-badge--bsi` → `var(--color-accent)` (Orange)
+- `.link-badge--template` → `var(--color-text-secondary)` (Grau)
+
+**Integration**: In `control-detail.tsx` Links-Sektion nach dem `<a>` Tag das `<LinkBadge rel={link.rel} />` anzeigen (nur wenn `link.rel` vorhanden).
+
+---
+
+### Sub-Phase 4b: Profile Resolution
+
+#### FE-R4: DocumentCache (`src/services/document-cache.ts`) [HOCH]
+
+```typescript
+class DocumentCache {
+  private cache = new Map<string, OscalDocument>()
+
+  get(url: string): OscalDocument | undefined {
+    return this.cache.get(this.normalize(url))
+  }
+
+  set(url: string, doc: OscalDocument): void {
+    this.cache.set(this.normalize(url), doc)
+  }
+
+  has(url: string): boolean {
+    return this.cache.has(this.normalize(url))
+  }
+
+  private normalize(url: string): string {
+    return url.split('#')[0].toLowerCase()
+  }
+}
+```
+
+**Layer**: Domain (kein Preact!)
+**Session-basiert**: Kein TTL, Reload = frischer Cache
+
+---
+
+#### FE-R5: ResolutionService (`src/services/resolver.ts`) [HOCH]
+
+```typescript
+interface ResolvedReference {
+  document: OscalDocument
+  source: string      // Urspruengliche href
+  resolvedUrl: string // Aufgeloeste URL
+  fromCache: boolean
+}
+
+async function resolveHref(
+  href: string,
+  baseUrl: string,
+  cache: DocumentCache
+): Promise<ResolvedReference>
+
+async function resolveProfile(
+  profile: Profile,
+  baseUrl: string,
+  cache: DocumentCache
+): Promise<ResolvedCatalog>
+```
+
+**Profile Resolution Pipeline**:
+1. `imports[].href` → Cataloge laden (parallel mit `Promise.all`)
+2. `include-controls.with-ids` → Controls filtern
+3. `merge.combine.method` → Controls zusammenfuehren
+4. `modify.set-parameters` → Parameter-Werte anwenden
+5. `modify.alters` → Controls erweitern/aendern
+6. Ergebnis: Resolved Catalog
+
+**CORS-Handling**: GitHub URLs (`github.com`) → `raw.githubusercontent.com` Transformation. Bei CORS-Fehler → `TypeError` fangen, hilfreiche Fehlermeldung anzeigen.
+
+---
+
+#### FE-R6: useResolver Hook (`src/hooks/use-resolver.ts`) [MITTEL]
+
+```typescript
+interface UseResolverResult {
+  resolve: (href: string, baseUrl: string) => Promise<void>
+  resolvedDoc: OscalDocument | null
+  loading: boolean
+  error: string | null
+}
+
+function useResolver(): UseResolverResult
+```
+
+**Layer**: Application (Hook-Wrapper um ResolutionService)
+**Pattern**: Analog zu bestehenden Hooks (useSearch, useFilter)
+
+---
+
+#### FE-R7: Import-Visualisierung (`src/components/shared/import-panel.tsx`) [MITTEL]
+
+Fuer Profile-Dokumente anzeigen:
+
+```
+┌─────────────────────────────────────────┐
+│ Importierte Quellen:                     │
+│   📁 OPC Privacy Catalog (lokal)         │
+│      → 4 Controls ausgewaehlt            │
+│   🌐 BSI Grundschutz++ (extern)          │
+│      → 2 Controls ausgewaehlt            │
+├─────────────────────────────────────────┤
+│ Merge-Strategie: merge                   │
+│ Modifikationen: 3 Parameter, 1 Alter    │
+└─────────────────────────────────────────┘
+```
+
+**Integration**: In `profile-view.tsx` als Ersatz/Erweiterung der bestehenden Import-Sektion.
+
+---
+
+### Sub-Phase 4c: SSP + CompDef Resolution
+
+#### FE-R8: SSP Resolution [MITTEL]
+
+```
+SSP → import-profile.href → Profile aufloesen (FE-R5)
+    → control-implementation → Zeige welche Controls wie umgesetzt
+    → by-components → Zeige welche Komponente was implementiert
+```
+
+**Betroffene Datei**: `src/components/ssp/ssp-view.tsx`
+
+#### FE-R9: Component-Definition Resolution [MITTEL]
+
+```
+Component-Def → source → Catalog aufloesen
+              → control-id → Zuordnung Control ↔ Komponente
+              → "Welche Komponente implementiert welches Control?"
+```
+
+**Betroffene Datei**: `src/components/component-def/component-def-view.tsx`
+
+#### FE-R10: Unaufgeloeste Referenzen UI [NIEDRIG]
+
+Wenn eine Referenz nicht aufgeloest werden kann (CORS, Netzwerk, 404):
+
+```tsx
+<div class="unresolved-reference" role="alert">
+  <span class="unresolved-icon">⚠</span>
+  <div>
+    <strong>Externe Referenz nicht verfuegbar</strong>
+    <p>href: {href}</p>
+    <p>Grund: {error}</p>
+  </div>
+</div>
+```
+
+---
+
+### Umsetzungsreihenfolge
+
+| # | Aufgabe | Sub-Phase | Aufwand | Abhaengigkeit |
+|---|---------|-----------|---------|---------------|
+| 1 | FE-R1: HrefParser | 4a | Klein | Keine |
+| 2 | FE-R2: Fragment-ID Catalog | 4a | Klein | FE-R1 |
+| 3 | FE-R3: LinkBadge | 4a | Klein | Keine |
+| 4 | FE-R4: DocumentCache | 4b | Klein | Keine |
+| 5 | FE-R5: ResolutionService | 4b | Hoch | FE-R1, FE-R4 |
+| 6 | FE-R6: useResolver Hook | 4b | Mittel | FE-R5 |
+| 7 | FE-R7: Import-Panel | 4b | Mittel | FE-R6 |
+| 8 | FE-R8: SSP Resolution | 4c | Mittel | FE-R5 |
+| 9 | FE-R9: CompDef Resolution | 4c | Mittel | FE-R5 |
+| 10 | FE-R10: Unresolved UI | 4c | Klein | FE-R6 |
+
+### Build-Erwartung Phase 4
+
+- **Neue Dateien**: 3 Services + 1 Hook + 2 UI-Komponenten = 6 Dateien
+- **Bundle-Impact**: +1-2 KB gzipped (~400 LOC neuer Code)
+- **Tests**: Bestehende 485 + neue Service-Tests + Hook-Tests + Component-Tests
+- **Budget**: ~30 KB → ~32 KB gzipped (weiterhin weit unter 100 KB)
+- **Keine neuen Dependencies**: Alles mit nativem `fetch()` und TypeScript
