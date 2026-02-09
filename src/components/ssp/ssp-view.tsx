@@ -15,6 +15,8 @@ import { useDeepLink } from '@/hooks/use-deep-link'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
 import { StatusBadge } from '@/components/shared/status-badge'
+import { useSspResolver } from '@/hooks/use-ssp-resolver'
+import { ImportPanel } from '@/components/shared/import-panel'
 
 interface SspViewProps {
   ssp: SystemSecurityPlan
@@ -55,6 +57,21 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
     components: ssp['system-implementation'].components.length,
     requirements: ssp['control-implementation']['implemented-requirements'].length,
   }), [ssp])
+
+  const { profileMeta, catalogSources, loading: resolving, error: resolveError, resolve: resolveSspFn } = useSspResolver()
+
+  const baseUrl = useMemo(() => {
+    const urlParam = new URLSearchParams(window.location.search).get('url')
+    if (!urlParam) return undefined
+    const lastSlash = urlParam.lastIndexOf('/')
+    return lastSlash > 0 ? urlParam.slice(0, lastSlash + 1) : undefined
+  }, [])
+
+  useEffect(() => {
+    if (ssp['import-profile']?.href) {
+      resolveSspFn(ssp, baseUrl)
+    }
+  }, [ssp, baseUrl, resolveSspFn])
 
   /**
    * WAI-ARIA Tabs keyboard handler: ArrowRight/Left cycle tabs, Home/End jump to first/last.
@@ -110,7 +127,20 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
       <div class="ssp-import-profile">
         <span class="ssp-import-label">Import Profile:</span>
         <code>{ssp['import-profile'].href}</code>
+        {profileMeta && (
+          <div class="ssp-profile-resolved">
+            {profileMeta.title} (v{profileMeta.version}, {profileMeta.importCount} import{profileMeta.importCount !== 1 ? 's' : ''})
+          </div>
+        )}
       </div>
+
+      {(catalogSources.length > 0 || resolving) && (
+        <ImportPanel
+          sources={catalogSources}
+          loading={resolving}
+          error={resolveError}
+        />
+      )}
 
       <nav class="ssp-tabs" role="tablist" aria-label="SSP Sections">
         {tabDefs.map((tab) => (

@@ -6,11 +6,13 @@
  * and control implementations. Deep-linked via useDeepLink('compdef').
  * Capabilities section shown below when present.
  */
-import { useState, useMemo } from 'preact/hooks'
+import { useState, useMemo, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { ComponentDefinition, DefinedComponent, ControlImplementation, ImplementedRequirement } from '@/types/oscal'
+import type { ResolvedSource } from '@/services/resolver'
 import { useDeepLink } from '@/hooks/use-deep-link'
 import { useFilter } from '@/hooks/use-filter'
+import { useSourceResolver } from '@/hooks/use-source-resolver'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
 import { Accordion } from '@/components/shared/accordion'
@@ -64,6 +66,34 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
       return true
     })
   }, [componentDef, filter.keyword, filter.chips, filter.hasActiveFilters])
+
+  // Collect unique source hrefs from all control-implementations for resolution
+  const uniqueSourceHrefs = useMemo(() => {
+    const hrefs = new Set<string>()
+    for (const comp of componentDef.components ?? []) {
+      for (const ci of comp['control-implementations'] ?? []) {
+        hrefs.add(ci.source)
+      }
+    }
+    return [...hrefs]
+  }, [componentDef])
+
+  const { sources: resolvedSources, resolve: resolveSources } = useSourceResolver()
+
+  // Extract base URL from ?url= query parameter for resolving relative sources
+  const baseUrl = useMemo(() => {
+    const urlParam = new URLSearchParams(window.location.search).get('url')
+    if (!urlParam) return undefined
+    const lastSlash = urlParam.lastIndexOf('/')
+    return lastSlash > 0 ? urlParam.slice(0, lastSlash + 1) : undefined
+  }, [])
+
+  // Auto-resolve source hrefs when component definition is loaded
+  useEffect(() => {
+    if (uniqueSourceHrefs.length > 0) {
+      resolveSources(uniqueSourceHrefs, baseUrl)
+    }
+  }, [uniqueSourceHrefs, baseUrl, resolveSources])
 
   const selectedComponent = useMemo(() => {
     if (!selectedComponentId) return null
@@ -141,7 +171,7 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
 
           <main class="compdef-content">
             {selectedComponent ? (
-              <ComponentDetail component={selectedComponent} />
+              <ComponentDetail component={selectedComponent} resolvedSources={resolvedSources} />
             ) : (
               <div class="compdef-placeholder">
                 <p>Select a component from the sidebar to view its details.</p>
@@ -193,10 +223,11 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
 
 interface ComponentDetailProps {
   component: DefinedComponent
+  resolvedSources: Map<string, ResolvedSource>
 }
 
 /** Detail view for a single component: description, purpose, properties, roles, and control implementations. */
-const ComponentDetail: FunctionComponent<ComponentDetailProps> = ({ component }) => {
+const ComponentDetail: FunctionComponent<ComponentDetailProps> = ({ component, resolvedSources }) => {
   return (
     <article class="compdef-detail" aria-labelledby={`comp-${component.uuid}-title`}>
       <header class="compdef-detail-header">
@@ -240,18 +271,24 @@ const ComponentDetail: FunctionComponent<ComponentDetailProps> = ({ component })
       {/* Each component can reference multiple control frameworks via control-implementations */}
       {component['control-implementations'] && component['control-implementations'].length > 0 && (
         <div class="compdef-subsection">
-          {component['control-implementations'].map(ci => (
-            <Accordion
-              key={ci.uuid}
-              id={`ci-${ci.uuid}`}
-              title={`Control Implementation: ${ci.source}`}
-              count={ci['implemented-requirements'].length}
-              defaultOpen={component['control-implementations']!.length === 1}
-              headingLevel={3}
-            >
-              <ControlImplementationView implementation={ci} />
-            </Accordion>
-          ))}
+          {component['control-implementations'].map(ci => {
+            const resolved = resolvedSources.get(ci.source)
+            const ciTitle = resolved?.title
+              ? `Control Implementation: ${resolved.title}`
+              : `Control Implementation: ${ci.source}`
+            return (
+              <Accordion
+                key={ci.uuid}
+                id={`ci-${ci.uuid}`}
+                title={ciTitle}
+                count={ci['implemented-requirements'].length}
+                defaultOpen={component['control-implementations']!.length === 1}
+                headingLevel={3}
+              >
+                <ControlImplementationView implementation={ci} resolvedSource={resolved} />
+              </Accordion>
+            )
+          })}
         </div>
       )}
     </article>
@@ -260,14 +297,19 @@ const ComponentDetail: FunctionComponent<ComponentDetailProps> = ({ component })
 
 interface ControlImplementationViewProps {
   implementation: ControlImplementation
+  resolvedSource?: ResolvedSource
 }
 
 /** Renders a control implementation with source reference, description, and requirement cards. */
-const ControlImplementationView: FunctionComponent<ControlImplementationViewProps> = ({ implementation }) => {
+const ControlImplementationView: FunctionComponent<ControlImplementationViewProps> = ({ implementation, resolvedSource }) => {
   return (
     <div class="compdef-ci">
       <div class="compdef-ci-header">
-        <span class="compdef-ci-source">Source: <code>{implementation.source}</code></span>
+        <span class="compdef-ci-source">
+          Source: {resolvedSource?.title && resolvedSource.status !== 'error'
+            ? <><strong>{resolvedSource.title}</strong> <code class="compdef-ci-source-href">{implementation.source}</code></>
+            : <code>{implementation.source}</code>}
+        </span>
         <span class="compdef-ci-count">
           {implementation['implemented-requirements'].length} requirement{implementation['implemented-requirements'].length !== 1 ? 's' : ''}
         </span>

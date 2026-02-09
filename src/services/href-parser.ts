@@ -60,15 +60,15 @@ export function parseHref(href: string): ParsedHref {
     return { type: 'fragment', path: '', fragment: href.slice(1), isResolvable: true }
   }
 
-  // Relative path: not resolvable in Phase 4a (no base URL context)
+  // Relative path: resolvable when a base URL is available (caller decides)
   const hashIndex = href.indexOf('#')
   if (hashIndex === -1) {
-    return { type: 'relative', path: href, isResolvable: false }
+    return { type: 'relative', path: href, isResolvable: true }
   }
   return {
     type: 'relative',
     path: href.slice(0, hashIndex),
     fragment: href.slice(hashIndex + 1),
-    isResolvable: false,
+    isResolvable: true,
   }
 }

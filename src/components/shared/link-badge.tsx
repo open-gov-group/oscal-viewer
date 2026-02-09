@@ -38,7 +38,7 @@ export const LinkBadge: FunctionComponent<LinkBadgeProps> = ({ rel }) => {
   const modifier = relModifiers[rel] ?? 'default'
 
   return (
-    <span class={`link-badge link-badge--${modifier}`}>
+    <span class={`link-badge link-badge--${modifier}`} aria-label={label}>
       {label}
     </span>
   )

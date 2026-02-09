@@ -5,12 +5,14 @@
  * merge strategy (combine method, flat, as-is), and modifications
  * (parameter settings + control alterations with add/remove badges).
  */
-import { useMemo } from 'preact/hooks'
+import { useMemo, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { Profile, ProfileImport, Modify, Alter, SetParameter } from '@/types/oscal'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
 import { Accordion } from '@/components/shared/accordion'
+import { useResolver } from '@/hooks/use-resolver'
+import { ImportPanel } from '@/components/shared/import-panel'
 
 interface ProfileViewProps {
   profile: Profile
@@ -25,9 +27,37 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) =>
     alters: profile.modify?.alters?.length ?? 0,
   }), [profile])
 
+  const { sources, loading: resolving, error: resolveError, resolve } = useResolver()
+
+  // Extract base URL from ?url= query parameter for resolving relative imports
+  const baseUrl = useMemo(() => {
+    const urlParam = new URLSearchParams(window.location.search).get('url')
+    if (!urlParam) return undefined
+    // Base URL is the directory containing the profile document
+    const lastSlash = urlParam.lastIndexOf('/')
+    return lastSlash > 0 ? urlParam.slice(0, lastSlash + 1) : undefined
+  }, [])
+
+  // Auto-resolve when profile is loaded and base URL is available
+  useEffect(() => {
+    if (profile.imports.length > 0) {
+      resolve(profile, baseUrl)
+    }
+  }, [profile, baseUrl, resolve])
+
   return (
     <div class="profile-view">
       <MetadataPanel metadata={profile.metadata} />
+
+      {(sources.length > 0 || resolving) && (
+        <ImportPanel
+          sources={sources}
+          loading={resolving}
+          error={resolveError}
+          merge={profile.merge}
+          modify={profile.modify}
+        />
+      )}
 
       <div class="profile-stats">
         <span class="stat">

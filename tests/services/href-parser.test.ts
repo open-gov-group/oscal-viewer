@@ -97,9 +97,9 @@ describe('parseHref', () => {
       expect(result.type).toBe('relative')
     })
 
-    it('is not resolvable', () => {
+    it('is resolvable', () => {
       const result = parseHref('../catalog/file.json')
-      expect(result.isResolvable).toBe(false)
+      expect(result.isResolvable).toBe(true)
     })
 
     it('splits path and fragment', () => {
@@ -119,7 +119,7 @@ describe('parseHref', () => {
       const result = parseHref('')
       expect(result.type).toBe('relative')
       expect(result.path).toBe('')
-      expect(result.isResolvable).toBe(false)
+      expect(result.isResolvable).toBe(true)
     })
 
     it('handles plain filename', () => {

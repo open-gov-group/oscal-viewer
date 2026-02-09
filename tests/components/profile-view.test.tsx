@@ -159,8 +159,8 @@ describe('ProfileView - Imports', () => {
 
   it('has proper section heading for imports', () => {
     render(<ProfileView profile={fullProfile} />)
-    const heading = screen.getByRole('heading', { name: /Imports/ })
-    expect(heading).toBeInTheDocument()
+    const headings = screen.getAllByRole('heading', { name: /Imports/ })
+    expect(headings.length).toBeGreaterThanOrEqual(1)
   })
 })
 
