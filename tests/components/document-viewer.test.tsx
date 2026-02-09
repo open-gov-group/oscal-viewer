@@ -127,3 +127,30 @@ describe('DocumentViewer', () => {
     }
   })
 })
+
+// ============================================================
+// Phase 5c — onNavigate Prop Tests
+// ============================================================
+
+describe('DocumentViewer — onNavigate prop', () => {
+  it('renders catalog view without errors when onNavigate is provided', () => {
+    const handleNavigate = vi.fn()
+    render(<DocumentViewer data={catalogData} onNavigate={handleNavigate} />)
+    expect(screen.getByText('Access Control')).toBeInTheDocument()
+    expect(screen.getByText('ac-1')).toBeInTheDocument()
+  })
+
+  it('renders profile view without errors when onNavigate is provided', () => {
+    const handleNavigate = vi.fn()
+    render(<DocumentViewer data={profileData} onNavigate={handleNavigate} />)
+    expect(screen.getByText('#catalog')).toBeInTheDocument()
+    expect(screen.getByText('Test Profile')).toBeInTheDocument()
+  })
+
+  it('renders ssp view without errors when onNavigate is provided', () => {
+    const handleNavigate = vi.fn()
+    render(<DocumentViewer data={sspData} onNavigate={handleNavigate} />)
+    expect(screen.getByText('Test System')).toBeInTheDocument()
+    expect(screen.getByText('Test SSP')).toBeInTheDocument()
+  })
+})

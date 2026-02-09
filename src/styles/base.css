@@ -3193,3 +3193,33 @@ body {
   font-style: italic;
   margin: 0.375rem 0 0;
 }
+
+/* Phase 5c: Cross-Document Navigation */
+.import-source-navigate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  transition: color 0.15s ease;
+}
+
+.import-source-navigate:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+.import-source-navigate:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.import-source-navigate::after {
+  content: ' \2192';
+}

@@ -21,6 +21,8 @@ import { ResourcePanel } from '@/components/shared/resource-panel'
 
 interface SspViewProps {
   ssp: SystemSecurityPlan
+  /** Cross-document navigation callback, passed to ImportPanel for clickable sources. */
+  onNavigate?: (url: string) => void
 }
 
 type SspTab = 'characteristics' | 'implementation' | 'controls'
@@ -36,7 +38,7 @@ const tabDefs: Array<{ id: SspTab; label: string }> = [
 const validTabs: SspTab[] = ['characteristics', 'implementation', 'controls']
 
 /** Renders an OSCAL System Security Plan with three tabbed sections and deep-link support. */
-export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
+export const SspView: FunctionComponent<SspViewProps> = ({ ssp, onNavigate }) => {
   const { selectedId: hashTab, setSelectedId: setHashTab } = useDeepLink('ssp')
   const initialTab = hashTab && validTabs.includes(hashTab as SspTab) ? hashTab as SspTab : 'characteristics'
   const [activeTab, setActiveTabState] = useState<SspTab>(initialTab)
@@ -140,6 +142,7 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
           sources={catalogSources}
           loading={resolving}
           error={resolveError}
+          onSourceClick={onNavigate}
         />
       )}
 

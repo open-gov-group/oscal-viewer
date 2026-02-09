@@ -99,8 +99,9 @@ export const App: FunctionComponent = () => {
     }
   }
 
-  /** Fetch an OSCAL document from a remote URL, parse it, and update the ?url= query parameter. */
-  const handleUrl = async (url: string) => {
+  /** Fetch an OSCAL document from a remote URL, parse it, and update the ?url= query parameter.
+   *  When pushHistory is true, a new browser history entry is created (for cross-document navigation). */
+  const handleUrl = async (url: string, pushHistory = false) => {
     setLoading(true)
     setError(null)
     try {
@@ -123,7 +124,12 @@ export const App: FunctionComponent = () => {
       const newUrl = new URL(window.location.href)
       newUrl.searchParams.set('url', url)
       newUrl.hash = ''
-      history.replaceState(null, '', newUrl.toString())
+      // Push a new history entry for cross-document navigation (Back/Forward support)
+      if (pushHistory) {
+        history.pushState({ url }, '', newUrl.toString())
+      } else {
+        history.replaceState(null, '', newUrl.toString())
+      }
     } catch (e) {
       if (e instanceof TypeError) {
         setError('Could not fetch URL. The server may not allow cross-origin requests. Download the file and load it locally.')
@@ -142,6 +148,31 @@ export const App: FunctionComponent = () => {
     if (urlParam) {
       handleUrl(urlParam)
     }
+  }, [])
+
+  /** Cross-document navigation: load a new OSCAL document and push browser history. */
+  const handleNavigate = useCallback((url: string) => {
+    handleUrl(url, true)
+  }, [])
+
+  // Browser Back/Forward support: listen for popstate events to restore previous documents
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const state = e.state as { url?: string } | null
+      if (state?.url) {
+        handleUrl(state.url)
+      } else {
+        // No state = check for ?url= param, otherwise return to dropzone
+        const urlParam = new URLSearchParams(window.location.search).get('url')
+        if (urlParam) {
+          handleUrl(urlParam)
+        } else {
+          setDocument(null)
+        }
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   const handleDrop = (e: DragEvent) => {
@@ -299,7 +330,7 @@ export const App: FunctionComponent = () => {
         ) : (
           <div class="document-view">
             <div class="document-content">
-              <DocumentViewer data={document.data} />
+              <DocumentViewer data={document.data} onNavigate={handleNavigate} />
             </div>
           </div>
         )}

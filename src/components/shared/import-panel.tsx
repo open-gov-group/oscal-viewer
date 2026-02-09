@@ -22,6 +22,8 @@ interface ImportPanelProps {
   merge?: Merge
   /** Profile modifications, if defined. */
   modify?: Modify
+  /** Cross-document navigation callback. When provided, successfully loaded sources become clickable. */
+  onSourceClick?: (url: string) => void
 }
 
 /** Status indicator icon mapping. */
@@ -45,6 +47,7 @@ export const ImportPanel: FunctionComponent<ImportPanelProps> = ({
   error,
   merge,
   modify,
+  onSourceClick,
 }) => {
   const loadedCount = sources.filter(s => s.status !== 'error').length
   const totalControls = sources.reduce((sum, s) => sum + s.controlCount, 0)
@@ -80,7 +83,19 @@ export const ImportPanel: FunctionComponent<ImportPanelProps> = ({
                 <span class={`import-source-status import-status--${source.status}`} aria-label={statusLabels[source.status]}>
                   {statusIcons[source.status]}
                 </span>
-                <code class="import-source-href">{source.href}</code>
+                {/* Cross-document navigation: clickable button when source is loaded and callback provided */}
+                {onSourceClick && source.status !== 'error' && source.resolvedUrl ? (
+                  <button
+                    class="import-source-navigate"
+                    onClick={() => onSourceClick(source.resolvedUrl!)}
+                    title={`Navigate to ${source.resolvedUrl}`}
+                    aria-label={`Open source document: ${source.href}`}
+                  >
+                    <code class="import-source-href">{source.href}</code>
+                  </button>
+                ) : (
+                  <code class="import-source-href">{source.href}</code>
+                )}
               </div>
               {source.resolvedUrl && source.resolvedUrl !== source.href && (
                 <div class="import-source-resolved">

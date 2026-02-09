@@ -19,10 +19,12 @@ import { buildParamMap } from '@/services/param-substitutor'
 
 interface ProfileViewProps {
   profile: Profile
+  /** Cross-document navigation callback, passed to ImportPanel for clickable sources. */
+  onNavigate?: (url: string) => void
 }
 
 /** Renders a complete OSCAL Profile with import sources, merge strategy, and modifications. */
-export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) => {
+export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile, onNavigate }) => {
   // Aggregate stats for the profile summary bar (imports, parameter overrides, alterations)
   const stats = useMemo(() => ({
     imports: profile.imports.length,
@@ -71,6 +73,7 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) =>
           error={resolveError}
           merge={profile.merge}
           modify={profile.modify}
+          onSourceClick={onNavigate}
         />
       )}
 

@@ -11,17 +11,19 @@ import { SspView } from '@/components/ssp/ssp-view'
 
 interface DocumentViewerProps {
   data: OscalDocumentData
+  /** Cross-document navigation callback, passed to views with import resolution (Profile, SSP). */
+  onNavigate?: (url: string) => void
 }
 
-export const DocumentViewer: FunctionComponent<DocumentViewerProps> = ({ data }) => {
+export const DocumentViewer: FunctionComponent<DocumentViewerProps> = ({ data, onNavigate }) => {
   switch (data.type) {
     case 'catalog':
       return <CatalogView catalog={data.document} />
     case 'profile':
-      return <ProfileView profile={data.document} />
+      return <ProfileView profile={data.document} onNavigate={onNavigate} />
     case 'component-definition':
       return <ComponentDefView componentDef={data.document} />
     case 'system-security-plan':
-      return <SspView ssp={data.document} />
+      return <SspView ssp={data.document} onNavigate={onNavigate} />
   }
 }
