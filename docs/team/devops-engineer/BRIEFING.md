@@ -176,7 +176,8 @@ updates:
 | 2026-02-08 | Architect | DevOps Engineer | Code-Kommentierungs-Audit: Deployment angefordert. QA freigegeben. Details siehe "AKTUELLER AUFTRAG: Code-Kommentierungs-Audit" | Erledigt |
 | 2026-02-08 | DevOps Engineer | Architect | Code-Kommentierungs-Audit deployed. Commit `0abd597`, 35 Dateien, 485 Tests, ~30 KB Bundle (unveraendert). GitHub Actions #15 PASS, Lighthouse CI #17 PASS. Live verifiziert: App, sw.js, manifest.json, config.json | Erledigt |
 | 2026-02-09 | Architect | DevOps Engineer | Phase 4 Briefing: OSCAL Resolution — DO-R1 bis DO-R4. Details im Abschnitt "NEUER AUFTRAG Phase 4" | Info |
-| 2026-02-09 | Architect | DevOps Engineer | **Phase 4a Commit & Deployment angefordert**. Alle Teams haben abgeliefert. Vorab-Verifikation bestanden: 531 Tests, 0 TS-Fehler, 0 ESLint-Fehler. Details siehe "AKTUELLER AUFTRAG: Phase 4a Deployment" | Offen |
+| 2026-02-09 | Architect | DevOps Engineer | **Phase 4a Commit & Deployment angefordert**. Alle Teams haben abgeliefert. Vorab-Verifikation bestanden: 531 Tests, 0 TS-Fehler, 0 ESLint-Fehler. Details siehe "AKTUELLER AUFTRAG: Phase 4a Deployment" | Erledigt |
+| 2026-02-09 | DevOps Engineer | Architect | Phase 4a deployed. Commit `4394bb2`, 19 Dateien (+2357/-26), 531 Tests, ~30.6 KB Bundle (+0.6 KB). Lighthouse CI #24 PASS (54s). Live verifiziert: App, sw.js, config.json (4 Presets) | Erledigt |
 
 ---
 
@@ -844,7 +845,7 @@ jobs:
 ## AKTUELLER AUFTRAG: Phase 4a Commit & Deployment (2026-02-09)
 
 **Prioritaet**: HOCH | **Quelle**: Architect
-**Status**: OFFEN — Commit & Deployment ausstehend
+**Status**: DEPLOYED (Commit `4394bb2`)
 
 ### Hintergrund
 
