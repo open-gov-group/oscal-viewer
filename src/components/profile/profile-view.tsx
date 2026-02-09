@@ -10,9 +10,11 @@ import type { FunctionComponent } from 'preact'
 import type { Profile, ProfileImport, Modify, Alter, SetParameter } from '@/types/oscal'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
-import { Accordion } from '@/components/shared/accordion'
+import { Accordion, AccordionGroup } from '@/components/shared/accordion'
 import { useResolver } from '@/hooks/use-resolver'
 import { ImportPanel } from '@/components/shared/import-panel'
+import { ControlDetail } from '@/components/catalog/control-detail'
+import { buildParamMap } from '@/services/param-substitutor'
 
 interface ProfileViewProps {
   profile: Profile
@@ -27,7 +29,19 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) =>
     alters: profile.modify?.alters?.length ?? 0,
   }), [profile])
 
-  const { sources, loading: resolving, error: resolveError, resolve } = useResolver()
+  const { controls, sources, loading: resolving, error: resolveError, resolve } = useResolver()
+
+  // Build parameter map from profile set-parameters for prose substitution in resolved controls
+  const profileParamMap = useMemo(() => {
+    const setParams = profile.modify?.['set-parameters']
+    if (!setParams || setParams.length === 0) return new Map<string, string>()
+    return buildParamMap(setParams.map(sp => ({
+      id: sp['param-id'],
+      label: sp.label,
+      values: sp.values,
+      select: sp.select,
+    })))
+  }, [profile.modify])
 
   // Extract base URL from ?url= query parameter for resolving relative imports
   const baseUrl = useMemo(() => {
@@ -59,6 +73,32 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) =>
         />
       )}
 
+      {controls.length > 0 && (
+        <Accordion
+          id="profile-resolved"
+          title="Resolved Catalog"
+          count={controls.length}
+          defaultOpen={false}
+          headingLevel={3}
+        >
+          <p class="resolved-controls-summary">
+            {controls.length} control{controls.length !== 1 ? 's' : ''} resolved from {sources.filter(s => s.status !== 'error').length} source{sources.filter(s => s.status !== 'error').length !== 1 ? 's' : ''}
+          </p>
+          <AccordionGroup>
+            {controls.map(control => (
+              <Accordion
+                key={control.id}
+                id={`resolved-${control.id}`}
+                title={`${control.id} — ${control.title}`}
+                headingLevel={4}
+              >
+                <ControlDetail control={control} paramMap={profileParamMap} />
+              </Accordion>
+            ))}
+          </AccordionGroup>
+        </Accordion>
+      )}
+
       <div class="profile-stats">
         <span class="stat">
           <strong>{stats.imports}</strong> Import{stats.imports !== 1 ? 's' : ''}
@@ -71,6 +111,11 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) =>
         {stats.alters > 0 && (
           <span class="stat">
             <strong>{stats.alters}</strong> Alterations
+          </span>
+        )}
+        {controls.length > 0 && (
+          <span class="stat">
+            <strong>{controls.length}</strong> Resolved Control{controls.length !== 1 ? 's' : ''}
           </span>
         )}
       </div>

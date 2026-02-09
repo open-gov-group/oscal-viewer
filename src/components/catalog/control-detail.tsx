@@ -7,20 +7,41 @@
  * Parts are rendered recursively via PartView with depth-based heading levels (h4→h5→h6).
  */
 import type { FunctionComponent } from 'preact'
+import { useMemo } from 'preact/hooks'
 import type { Control, Part, Link } from '@/types/oscal'
 import type { ParsedHref } from '@/services/href-parser'
 import { parseHref } from '@/services/href-parser'
+import { buildParamMap } from '@/services/param-substitutor'
 import { PropertyList } from '@/components/shared/property-badge'
 import { Accordion } from '@/components/shared/accordion'
 import { CopyLinkButton } from '@/components/shared/copy-link-button'
 import { ParameterItem } from '@/components/shared/parameter-item'
 import { LinkBadge } from '@/components/shared/link-badge'
+import { ProseView } from '@/components/shared/prose-view'
 
 interface ControlDetailProps {
   control: Control
+  /** Optional parameter map for inline prose substitution (from profile set-parameters). */
+  paramMap?: Map<string, string>
 }
 
-export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control }) => {
+/** Renders a complete OSCAL control with metadata, parts, parameters, links, and sub-controls. */
+export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control, paramMap }) => {
+  /**
+   * Effective parameter map: merge profile-level overrides (paramMap) with
+   * control-local params. Profile overrides take priority (already in paramMap).
+   */
+  const effectiveParamMap = useMemo(() => {
+    const map = new Map(paramMap ?? [])
+    if (control.params) {
+      const localMap = buildParamMap(control.params)
+      for (const [key, value] of localMap) {
+        if (!map.has(key)) map.set(key, value)
+      }
+    }
+    return map
+  }, [control.params, paramMap])
+
   return (
     <article class="control-detail" aria-labelledby={`control-${control.id}-title`}>
       <header class="control-detail-header">
@@ -43,7 +64,7 @@ export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control }
           headingLevel={3}
         >
           {control.parts.map((part, i) => (
-            <PartView key={part.id ?? `${part.name}-${i}`} part={part} />
+            <PartView key={part.id ?? `${part.name}-${i}`} part={part} paramMap={effectiveParamMap} />
           ))}
         </Accordion>
       )}
@@ -90,7 +111,7 @@ export const ControlDetail: FunctionComponent<ControlDetailProps> = ({ control }
         >
           <div class="sub-controls">
             {control.controls.map(sub => (
-              <ControlDetail key={sub.id} control={sub} />
+              <ControlDetail key={sub.id} control={sub} paramMap={effectiveParamMap} />
             ))}
           </div>
         </Accordion>
@@ -132,6 +153,8 @@ function renderLink(parsed: ParsedHref, link: Link) {
 interface PartViewProps {
   part: Part
   depth?: number
+  /** Optional parameter map for prose substitution, passed from ControlDetail. */
+  paramMap?: Map<string, string>
 }
 
 /**
@@ -139,7 +162,7 @@ interface PartViewProps {
  * Parts with a title or children render inside a nested Accordion.
  * Heading level increases with depth: h4 (depth 0) → h5 (depth 1) → h6 (depth 2+).
  */
-const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
+const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0, paramMap }) => {
   const partLabel = formatPartName(part.name)
   const title = part.title ?? partLabel
   const hasChildren = part.parts && part.parts.length > 0
@@ -149,7 +172,7 @@ const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
   if (!title && !hasChildren) {
     return (
       <div class={`part-view part-${part.name}`}>
-        {part.prose && <div class="part-prose">{part.prose}</div>}
+        {part.prose && <ProseView prose={part.prose} paramMap={paramMap} />}
         {part.props && part.props.length > 0 && <PropertyList props={part.props} />}
       </div>
     )
@@ -166,12 +189,12 @@ const PartView: FunctionComponent<PartViewProps> = ({ part, depth = 0 }) => {
         defaultOpen={depth === 0}
         headingLevel={headingLevel}
       >
-        {part.prose && <div class="part-prose">{part.prose}</div>}
+        {part.prose && <ProseView prose={part.prose} paramMap={paramMap} />}
         {part.props && part.props.length > 0 && <PropertyList props={part.props} />}
         {hasChildren && (
           <div class="part-children">
             {part.parts!.map((child, i) => (
-              <PartView key={child.id ?? `${child.name}-${i}`} part={child} depth={depth + 1} />
+              <PartView key={child.id ?? `${child.name}-${i}`} part={child} depth={depth + 1} paramMap={paramMap} />
             ))}
           </div>
         )}

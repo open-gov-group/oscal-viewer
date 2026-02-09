@@ -6,7 +6,7 @@
  * Application Layer: bridges Domain (services/) with Presentation (components/).
  */
 import { useState, useCallback, useRef } from 'preact/hooks'
-import type { SystemSecurityPlan } from '@/types/oscal'
+import type { SystemSecurityPlan, Control } from '@/types/oscal'
 import type { ImportSource, ResolvedSsp } from '@/services/resolver'
 import { resolveSsp } from '@/services/resolver'
 import { DocumentCache } from '@/services/document-cache'
@@ -19,6 +19,8 @@ export interface UseSspResolverReturn {
   catalogSources: ImportSource[]
   /** Whether resolution is currently in progress. */
   loading: boolean
+  /** Controls gathered from the full SSP → Profile → Catalog chain. */
+  controls: Control[]
   /** Error message if resolution failed. */
   error: string | null
   /** Trigger resolution for an SSP document. */
@@ -29,6 +31,7 @@ export interface UseSspResolverReturn {
 export function useSspResolver(): UseSspResolverReturn {
   const [profileMeta, setProfileMeta] = useState<UseSspResolverReturn['profileMeta']>(null)
   const [catalogSources, setCatalogSources] = useState<ImportSource[]>([])
+  const [controls, setControls] = useState<Control[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const cacheRef = useRef(new DocumentCache())
@@ -41,6 +44,7 @@ export function useSspResolver(): UseSspResolverReturn {
       const result: ResolvedSsp = await resolveSsp(ssp, baseUrl, cacheRef.current)
       setProfileMeta(result.profileMeta)
       setCatalogSources(result.catalogSources)
+      setControls(result.controls)
 
       if (result.errors.length > 0) {
         setError(result.errors.join('; '))
@@ -49,10 +53,11 @@ export function useSspResolver(): UseSspResolverReturn {
       setError(e instanceof Error ? e.message : 'SSP resolution failed')
       setProfileMeta(null)
       setCatalogSources([])
+      setControls([])
     } finally {
       setLoading(false)
     }
   }, [])
 
-  return { profileMeta, catalogSources, loading, error, resolve }
+  return { profileMeta, catalogSources, controls, loading, error, resolve }
 }

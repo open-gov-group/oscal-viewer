@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/preact'
+import { render, screen, waitFor } from '@testing-library/preact'
 import { ProfileView } from '@/components/profile/profile-view'
-import type { Profile } from '@/types/oscal'
+import type { Profile, Catalog } from '@/types/oscal'
 
 // ============================================================
 // Test Fixtures
@@ -230,5 +230,96 @@ describe('ProfileView - Modifications', () => {
     render(<ProfileView profile={minimalProfile} />)
     expect(screen.queryByText('Parameter Settings')).not.toBeInTheDocument()
     expect(screen.queryByText('Alterations')).not.toBeInTheDocument()
+  })
+})
+
+// ============================================================
+// ProfileView - Resolved Catalog Tests (Phase 5a)
+// ============================================================
+
+const mockResolvedCatalog: Catalog = {
+  uuid: 'cat-resolved',
+  metadata: {
+    title: 'Resolved Catalog',
+    'last-modified': '2026-01-01T00:00:00Z',
+    version: '1.0',
+    'oscal-version': '1.1.2',
+  },
+  controls: [
+    { id: 'ac-1', title: 'Access Control Policy' },
+    { id: 'ac-2', title: 'Account Management' },
+    { id: 'au-1', title: 'Audit Policy' },
+  ],
+}
+
+const resolvableProfile: Profile = {
+  uuid: 'prof-resolvable',
+  metadata: minimalMetadata,
+  imports: [
+    {
+      href: 'https://example.com/catalog.json',
+      'include-all': {},
+    },
+  ],
+}
+
+describe('ProfileView - Resolved Catalog', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('shows Resolved Catalog section when controls are resolved', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(JSON.stringify({ catalog: mockResolvedCatalog })),
+    })
+
+    render(<ProfileView profile={resolvableProfile} />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Resolved Catalog/)).toBeInTheDocument()
+    })
+  })
+
+  it('shows resolved control count in stats bar', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(JSON.stringify({ catalog: mockResolvedCatalog })),
+    })
+
+    const { container } = render(<ProfileView profile={resolvableProfile} />)
+
+    await waitFor(() => {
+      const stats = container.querySelector('.profile-stats')
+      expect(stats?.textContent).toContain('Resolved Control')
+    })
+  })
+
+  it('does not show Resolved Catalog when no controls resolved', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
+
+    render(<ProfileView profile={resolvableProfile} />)
+
+    // Give time for the resolution to fail
+    await waitFor(() => {
+      expect(screen.queryByText(/Resolved Catalog/)).not.toBeInTheDocument()
+    })
+  })
+
+  it('Resolved Catalog accordion contains control details', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(JSON.stringify({ catalog: mockResolvedCatalog })),
+    })
+
+    render(<ProfileView profile={resolvableProfile} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('ac-1')).toBeInTheDocument()
+    })
+
+    // Verify multiple control IDs are present in the resolved section
+    expect(screen.getByText('ac-2')).toBeInTheDocument()
+    expect(screen.getByText('au-1')).toBeInTheDocument()
   })
 })

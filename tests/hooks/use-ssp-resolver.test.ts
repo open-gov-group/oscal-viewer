@@ -77,4 +77,30 @@ describe('useSspResolver', () => {
     expect(result.current.profileMeta).toBeNull()
     expect(result.current.error).toBeTruthy()
   })
+
+  it('exposes controls in return type', () => {
+    const { result } = renderHook(() => useSspResolver())
+    expect(result.current.controls).toEqual([])
+  })
+
+  it('returns resolved controls after successful resolution', async () => {
+    let callCount = 0
+    globalThis.fetch = vi.fn().mockImplementation(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify({ profile: mockProfile })) })
+      }
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify({ catalog: mockCatalog })) })
+    })
+
+    const { result } = renderHook(() => useSspResolver())
+
+    await act(async () => {
+      await result.current.resolve(mockSsp)
+    })
+
+    expect(result.current.controls).toHaveLength(1)
+    expect(result.current.controls[0].id).toBe('ac-1')
+    expect(result.current.controls[0].title).toBe('Access Control')
+  })
 })

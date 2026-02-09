@@ -3066,3 +3066,35 @@ body {
     padding: 0;
   }
 }
+
+/* ====================================================================
+   Phase 5a: Parameter Substitution + Resolved Controls
+   ==================================================================== */
+
+/* Highlighted parameter substitution in prose text */
+.param-substitution {
+  background-color: var(--color-accent-amber-bg);
+  color: var(--color-accent-amber-text);
+  padding: 0.0625rem 0.25rem;
+  border-radius: 3px;
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-accent-amber);
+  cursor: help;
+}
+
+/* Summary text above resolved controls list */
+.resolved-controls-summary {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 0.75rem;
+}
+
+/* SSP resolved controls container */
+.ssp-resolved-controls {
+  padding: 0.5rem 0;
+}
+
+.ssp-resolved-controls p {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
