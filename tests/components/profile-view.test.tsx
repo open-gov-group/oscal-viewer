@@ -117,6 +117,17 @@ describe('ProfileView', () => {
     expect(screen.queryByText('Parameter Settings')).not.toBeInTheDocument()
     expect(screen.queryByText('Alterations')).not.toBeInTheDocument()
   })
+
+  it('renders ResourcePanel when back-matter has resources', () => {
+    const profileWithBackMatter = {
+      ...minimalProfile,
+      'back-matter': {
+        resources: [{ uuid: 'res-1', title: 'Test Resource' }]
+      }
+    }
+    const { container } = render(<ProfileView profile={profileWithBackMatter} />)
+    expect(container.querySelector('#resource-res-1')).toBeTruthy()
+  })
 })
 
 describe('ProfileView - Imports', () => {

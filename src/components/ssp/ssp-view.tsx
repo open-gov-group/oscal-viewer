@@ -17,6 +17,7 @@ import { PropertyList } from '@/components/shared/property-badge'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { useSspResolver } from '@/hooks/use-ssp-resolver'
 import { ImportPanel } from '@/components/shared/import-panel'
+import { ResourcePanel } from '@/components/shared/resource-panel'
 
 interface SspViewProps {
   ssp: SystemSecurityPlan
@@ -176,6 +177,10 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp }) => {
           <ControlImplementationPanel controlImpl={ssp['control-implementation']} />
         )}
       </div>
+
+      {ssp['back-matter']?.resources && ssp['back-matter'].resources.length > 0 && (
+        <ResourcePanel backMatter={ssp['back-matter']} />
+      )}
     </div>
   )
 }

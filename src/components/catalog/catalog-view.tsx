@@ -17,6 +17,7 @@ import type { FilterCategory } from '@/components/shared/filter-bar'
 import { Accordion } from '@/components/shared/accordion'
 import { ParameterItem } from '@/components/shared/parameter-item'
 import { GroupTree } from './group-tree'
+import { ResourcePanel } from '@/components/shared/resource-panel'
 import { ControlDetail } from './control-detail'
 
 interface CatalogViewProps {
@@ -124,6 +125,10 @@ export const CatalogView: FunctionComponent<CatalogViewProps> = ({ catalog }) =>
           )}
         </main>
       </div>
+
+      {catalog['back-matter']?.resources && catalog['back-matter'].resources.length > 0 && (
+        <ResourcePanel backMatter={catalog['back-matter']} />
+      )}
 
       <button
         class="sidebar-toggle"

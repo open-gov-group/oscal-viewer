@@ -166,6 +166,17 @@ describe('SspView - Header and Stats', () => {
     render(<SspView ssp={fullSsp} />)
     expect(screen.getByText('#profile-uuid')).toBeInTheDocument()
   })
+
+  it('renders ResourcePanel when back-matter has resources', () => {
+    const sspWithBackMatter = {
+      ...fullSsp,
+      'back-matter': {
+        resources: [{ uuid: 'res-1', title: 'Test Resource' }]
+      }
+    }
+    const { container } = render(<SspView ssp={sspWithBackMatter} />)
+    expect(container.querySelector('#resource-res-1')).toBeTruthy()
+  })
 })
 
 // ============================================================

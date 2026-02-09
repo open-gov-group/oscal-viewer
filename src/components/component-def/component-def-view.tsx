@@ -18,6 +18,7 @@ import { PropertyList } from '@/components/shared/property-badge'
 import { Accordion } from '@/components/shared/accordion'
 import { FilterBar } from '@/components/shared/filter-bar'
 import type { FilterCategory } from '@/components/shared/filter-bar'
+import { ResourcePanel } from '@/components/shared/resource-panel'
 
 interface ComponentDefViewProps {
   componentDef: ComponentDefinition
@@ -201,6 +202,10 @@ export const ComponentDefView: FunctionComponent<ComponentDefViewProps> = ({ com
             ))}
           </div>
         </section>
+      )}
+
+      {componentDef['back-matter']?.resources && componentDef['back-matter'].resources.length > 0 && (
+        <ResourcePanel backMatter={componentDef['back-matter']} />
       )}
 
       <button

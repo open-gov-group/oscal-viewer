@@ -193,6 +193,17 @@ describe('ComponentDefView', () => {
     expect(listbox).toBeTruthy()
   })
 
+  it('renders ResourcePanel when back-matter has resources', () => {
+    const compDefWithBackMatter = {
+      ...fullComponentDef,
+      'back-matter': {
+        resources: [{ uuid: 'res-1', title: 'Test Resource', description: 'A test' }]
+      }
+    }
+    const { container } = render(<ComponentDefView componentDef={compDefWithBackMatter} />)
+    expect(container.querySelector('#resource-res-1')).toBeTruthy()
+  })
+
   it('marks selected component with aria-selected', () => {
     const { container } = render(<ComponentDefView componentDef={fullComponentDef} />)
     const webAppOption = screen.getByText('Web Application').closest('[role="option"]')

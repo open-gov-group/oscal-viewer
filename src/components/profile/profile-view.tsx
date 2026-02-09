@@ -13,6 +13,7 @@ import { PropertyList } from '@/components/shared/property-badge'
 import { Accordion, AccordionGroup } from '@/components/shared/accordion'
 import { useResolver } from '@/hooks/use-resolver'
 import { ImportPanel } from '@/components/shared/import-panel'
+import { ResourcePanel } from '@/components/shared/resource-panel'
 import { ControlDetail } from '@/components/catalog/control-detail'
 import { buildParamMap } from '@/services/param-substitutor'
 
@@ -145,6 +146,10 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile }) =>
 
       {profile.modify && (
         <ModifySection modify={profile.modify} />
+      )}
+
+      {profile['back-matter']?.resources && profile['back-matter'].resources.length > 0 && (
+        <ResourcePanel backMatter={profile['back-matter']} />
       )}
     </div>
   )

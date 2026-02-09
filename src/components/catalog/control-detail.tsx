@@ -125,6 +125,24 @@ function renderLink(parsed: ParsedHref, link: Link) {
   const label = link.text ?? link.href
 
   if (parsed.type === 'fragment') {
+    // UUID fragments reference back-matter resources
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(parsed.fragment ?? '')
+    if (isUuid) {
+      return (
+        <a
+          href={`#resource-${parsed.fragment}`}
+          onClick={(e: MouseEvent) => {
+            e.preventDefault()
+            const el = document.getElementById(`resource-${parsed.fragment}`)
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
+        >
+          {label}
+        </a>
+      )
+    }
+
+    // Non-UUID fragments are control IDs
     return (
       <a
         href={`#/catalog/${parsed.fragment}`}

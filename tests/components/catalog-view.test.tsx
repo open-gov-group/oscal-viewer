@@ -135,6 +135,17 @@ describe('CatalogView', () => {
     expect(stats?.textContent).toContain('0')
   })
 
+  it('renders ResourcePanel when back-matter has resources', () => {
+    const catalogWithBackMatter = {
+      ...testCatalog,
+      'back-matter': {
+        resources: [{ uuid: 'res-1', title: 'Test Resource', description: 'A test' }]
+      }
+    }
+    const { container } = render(<CatalogView catalog={catalogWithBackMatter} />)
+    expect(container.querySelector('#resource-res-1')).toBeTruthy()
+  })
+
   it('shows control detail when a control is selected', async () => {
     const { container } = render(<CatalogView catalog={testCatalog} />)
     // Click the control button in the tree (tree-control-btn)
