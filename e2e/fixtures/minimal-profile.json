@@ -1,0 +1,31 @@
+{
+  "profile": {
+    "uuid": "e2e-profile-uuid",
+    "metadata": {
+      "title": "E2E Test Profile",
+      "last-modified": "2026-01-01T00:00:00Z",
+      "version": "1.0",
+      "oscal-version": "1.1.2"
+    },
+    "imports": [
+      {
+        "href": "#e2e-resource-uuid",
+        "include-all": {}
+      }
+    ],
+    "back-matter": {
+      "resources": [
+        {
+          "uuid": "e2e-resource-uuid",
+          "title": "Source Catalog",
+          "rlinks": [
+            {
+              "href": "minimal-catalog.json",
+              "media-type": "application/oscal.catalog+json"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

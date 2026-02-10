@@ -4,12 +4,16 @@ import { parseCatalog } from './catalog'
 import { parseProfile } from './profile'
 import { parseComponentDefinition } from './component-definition'
 import { parseSSP } from './ssp'
+import { parseAssessmentResults } from './assessment-results'
+import { parsePoam } from './poam'
 
 export { detectDocumentType, detectVersion } from './detect'
 export { parseCatalog, countControls } from './catalog'
 export { parseProfile } from './profile'
 export { parseComponentDefinition } from './component-definition'
 export { parseSSP } from './ssp'
+export { parseAssessmentResults } from './assessment-results'
+export { parsePoam } from './poam'
 
 /**
  * Parse a raw OSCAL JSON object into a typed OscalDocument.
@@ -24,7 +28,7 @@ export function parseOscalDocument(json: unknown): ParseResult<OscalDocument> {
   if (type === 'unknown') {
     return {
       success: false,
-      error: 'Unrecognized OSCAL document type. Expected top-level key: catalog, profile, component-definition, or system-security-plan',
+      error: 'Unrecognized OSCAL document type. Expected top-level key: catalog, profile, component-definition, system-security-plan, assessment-results, or plan-of-action-and-milestones',
     }
   }
 
@@ -45,6 +49,12 @@ export function parseOscalDocument(json: unknown): ParseResult<OscalDocument> {
       break
     case 'system-security-plan':
       dataResult = parseSSP(raw)
+      break
+    case 'assessment-results':
+      dataResult = parseAssessmentResults(raw)
+      break
+    case 'plan-of-action-and-milestones':
+      dataResult = parsePoam(raw)
       break
   }
 

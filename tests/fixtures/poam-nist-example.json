@@ -1,0 +1,77 @@
+{
+  "plan-of-action-and-milestones": {
+    "uuid": "poam-example-uuid-001",
+    "metadata": {
+      "title": "Example POA&M",
+      "last-modified": "2026-02-01T00:00:00Z",
+      "version": "1.0",
+      "oscal-version": "1.1.2"
+    },
+    "import-ssp": {
+      "href": "ssp.json"
+    },
+    "findings": [
+      {
+        "uuid": "poam-finding-001",
+        "title": "Audit Logging Gap",
+        "description": "Audit logging does not capture all required events.",
+        "target": {
+          "type": "objective-id",
+          "target-id": "au-2",
+          "status": { "state": "not-satisfied" }
+        }
+      }
+    ],
+    "risks": [
+      {
+        "uuid": "poam-risk-001",
+        "title": "Incomplete Audit Trail",
+        "description": "Without complete audit logging, security incidents may go undetected.",
+        "status": "open"
+      }
+    ],
+    "poam-items": [
+      {
+        "uuid": "poam-item-001",
+        "title": "Remediate Audit Logging",
+        "description": "Configure audit logging to capture all required events per AU-2.",
+        "related-findings": [
+          { "finding-uuid": "poam-finding-001" }
+        ],
+        "related-risks": [
+          { "risk-uuid": "poam-risk-001" }
+        ],
+        "milestones": [
+          {
+            "uuid": "ms-001",
+            "title": "Audit Configuration Update",
+            "description": "Update audit log configuration to include all required events.",
+            "schedule": {
+              "tasks": [
+                {
+                  "uuid": "task-001",
+                  "title": "Configure audit events",
+                  "start": "2026-02-15",
+                  "end": "2026-03-01"
+                }
+              ]
+            }
+          },
+          {
+            "uuid": "ms-002",
+            "title": "Verification",
+            "description": "Verify audit logging captures all required events."
+          }
+        ],
+        "props": [
+          { "name": "priority", "value": "high" }
+        ]
+      },
+      {
+        "uuid": "poam-item-002",
+        "title": "Security Training Update",
+        "description": "Update security awareness training materials."
+      }
+    ]
+  }
+}

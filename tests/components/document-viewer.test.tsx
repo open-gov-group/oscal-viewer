@@ -53,6 +53,45 @@ const componentDefData: OscalDocumentData = {
   },
 }
 
+const assessmentResultsData: OscalDocumentData = {
+  type: 'assessment-results',
+  document: {
+    uuid: 'ar-001',
+    metadata: { ...minimalMetadata, title: 'Test Assessment Results' },
+    results: [
+      {
+        uuid: 'result-001',
+        title: 'Test Result',
+        description: 'A test assessment result',
+        start: '2026-01-01T00:00:00Z',
+        findings: [
+          {
+            uuid: 'f-001',
+            title: 'Test Finding',
+            description: 'A finding',
+            target: { type: 'objective-id', 'target-id': 'ac-1', status: { state: 'satisfied' } },
+          },
+        ],
+      },
+    ],
+  },
+}
+
+const poamData: OscalDocumentData = {
+  type: 'plan-of-action-and-milestones',
+  document: {
+    uuid: 'poam-001',
+    metadata: { ...minimalMetadata, title: 'Test POA&M' },
+    'poam-items': [
+      {
+        uuid: 'pi-001',
+        title: 'Remediate Finding',
+        description: 'Fix the issue',
+      },
+    ],
+  },
+}
+
 const sspData: OscalDocumentData = {
   type: 'system-security-plan',
   document: {
@@ -118,8 +157,20 @@ describe('DocumentViewer', () => {
     expect(screen.getByText('Test System')).toBeInTheDocument()
   })
 
+  it('renders AssessmentResultsView for assessment-results type', () => {
+    render(<DocumentViewer data={assessmentResultsData} />)
+    expect(screen.getByText('Test Assessment Results')).toBeInTheDocument()
+    expect(screen.getByText('Test Result')).toBeInTheDocument()
+  })
+
+  it('renders PoamView for plan-of-action-and-milestones type', () => {
+    render(<DocumentViewer data={poamData} />)
+    expect(screen.getByText('Test POA&M')).toBeInTheDocument()
+    expect(screen.getByText('Remediate Finding')).toBeInTheDocument()
+  })
+
   it('renders metadata panel for all types', () => {
-    const types = [catalogData, profileData, componentDefData, sspData]
+    const types = [catalogData, profileData, componentDefData, sspData, assessmentResultsData, poamData]
     for (const data of types) {
       const { unmount } = render(<DocumentViewer data={data} />)
       expect(screen.getByText('Metadata')).toBeInTheDocument()
@@ -152,5 +203,19 @@ describe('DocumentViewer — onNavigate prop', () => {
     render(<DocumentViewer data={sspData} onNavigate={handleNavigate} />)
     expect(screen.getByText('Test System')).toBeInTheDocument()
     expect(screen.getByText('Test SSP')).toBeInTheDocument()
+  })
+
+  it('renders assessment-results view without errors when onNavigate is provided', () => {
+    const handleNavigate = vi.fn()
+    render(<DocumentViewer data={assessmentResultsData} onNavigate={handleNavigate} />)
+    expect(screen.getByText('Test Assessment Results')).toBeInTheDocument()
+    expect(screen.getByText('Test Result')).toBeInTheDocument()
+  })
+
+  it('renders poam view without errors when onNavigate is provided', () => {
+    const handleNavigate = vi.fn()
+    render(<DocumentViewer data={poamData} onNavigate={handleNavigate} />)
+    expect(screen.getByText('Test POA&M')).toBeInTheDocument()
+    expect(screen.getByText('Remediate Finding')).toBeInTheDocument()
   })
 })

@@ -10,7 +10,7 @@ import jsdoc from 'eslint-plugin-jsdoc'
 export default tseslint.config(
   // Global ignores (replaces ignorePatterns)
   {
-    ignores: ['dist/', 'node_modules/', '*.config.*'],
+    ignores: ['dist/', 'node_modules/', '*.config.*', 'e2e/'],
   },
 
   // Base configs

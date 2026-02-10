@@ -1,7 +1,7 @@
 # OSCAL Viewer - Coding Standards
 
-**Version**: 5.0.0
-**Gueltig ab**: Phase 4 (OSCAL Resolution, Services Layer, Link-Badges)
+**Version**: 5.1.0
+**Gueltig ab**: Phase 5 (Resolved Catalog, Parameter Substitution, Cross-Document Navigation)
 
 ---
 
@@ -857,3 +857,143 @@ OSCAL `links[].rel`-Werte werden als farbcodierte Badges dargestellt:
 2. Unbekannte `rel`-Werte werden mit dem Originalwert als Label und Default-Styling angezeigt
 3. Farben ueber CSS-Variablen definieren (keine hardcoded Werte, s. Sektion 4)
 4. Badges muessen `aria-label` fuer Screenreader haben (z.B. `aria-label="Beziehung: Implementiert"`)
+
+### 12.5 ProseView — Shared Prose Rendering (Pattern 23)
+
+Alle OSCAL-Prose-Texte SOLLEN ueber die `ProseView`-Komponente gerendert werden:
+
+```tsx
+import { ProseView } from '@/components/shared/prose-view'
+
+// Ohne paramMap: Raw-Prose (unveraendert)
+<ProseView prose={part.prose} />
+
+// Mit paramMap: Parameter-Substitution mit Amber-Highlighting
+<ProseView prose={part.prose} paramMap={effectiveParamMap} />
+```
+
+**Datei**: `src/components/shared/prose-view.tsx`
+
+**Props**:
+- `prose: string` — OSCAL-Prose-Text (kann `{{ insert: param, <id> }}` Platzhalter enthalten)
+- `paramMap?: Map<string, string>` — Optionale Parameter-Wert-Zuordnung
+
+**Verhalten**:
+- Ohne `paramMap`: Rendert den Prose-Text direkt als `<span>` Element
+- Mit `paramMap`: Ruft `substituteProse()` auf, rendert Text-Segmente normal und Parameter-Segmente als `<span class="param-substitution">` mit Amber-Hintergrund
+
+**Regeln**:
+1. ProseView ist eine reine Presentation-Layer-Komponente (importiert aus services/ fuer Substitution)
+2. CSS-Klasse `.param-substitution` nutzt bestehende Amber-Token (`--color-status-amber-bg/text`)
+3. Ohne paramMap darf KEIN Substitutionsversuch stattfinden (Performance)
+
+### 12.6 ParamSubstitutor — Domain Service (Pattern 24)
+
+OSCAL-Parameter-Substitution MUSS ueber den `ParamSubstitutor` Service erfolgen:
+
+```typescript
+import { buildParamMap, substituteProse } from '@/services/param-substitutor'
+
+// Parameter-Map aus OSCAL-Parametern erstellen
+const paramMap = buildParamMap(catalog.params ?? [])
+
+// Prose mit Parameter-Werten substituieren
+const segments = substituteProse(control.parts[0].prose, paramMap)
+// segments: [{ type: 'text', value: 'The organization shall ' }, { type: 'param', value: 'annually', paramId: 'ac-1_prm_1' }]
+```
+
+**Datei**: `src/services/param-substitutor.ts`
+
+**Funktionen**:
+- `buildParamMap(params: Parameter[])`: Erstellt `Map<string, string>` aus OSCAL-Parametern. Prioritaet: `values[0]` > `select.choice[0]` > `label` > `param.id`
+- `substituteProse(prose: string, paramMap: Map<string, string>)`: Gibt `ProseSegment[]` zurueck — zerlegt Prose an `{{ insert: param, <id> }}`-Markern
+
+**Regeln**:
+1. Reine Funktion, keine Preact-Abhaengigkeit (Domain Layer)
+2. Regex: `/\{\{\s*insert:\s*param,\s*([^}\s]+)\s*\}\}/g`
+3. Unbekannte Parameter-IDs werden als `[param.id]` Fallback angezeigt
+4. Leerer Prose-String gibt leeres Array zurueck
+
+### 12.7 ResourcePanel — Back-Matter Display (Pattern 25)
+
+Back-Matter Ressourcen MUESSEN ueber die `ResourcePanel`-Komponente angezeigt werden:
+
+```tsx
+import { ResourcePanel } from '@/components/shared/resource-panel'
+
+{data.document['back-matter'] && (
+  <ResourcePanel backMatter={data.document['back-matter']} />
+)}
+```
+
+**Datei**: `src/components/shared/resource-panel.tsx`
+
+**Props**:
+- `backMatter: BackMatter` — OSCAL Back-Matter Objekt mit `resources[]`
+
+**Darstellung**:
+- Rendert Ressourcen in einem Accordion mit Count-Badge
+- Jede Ressource als Card: uuid, title, description, rlinks, citations, document-ids
+- rlinks sind klickbare externe Links (`target="_blank"`)
+- Fragment-Navigationsziel: `id="resource-{uuid}"` auf jedem Resource-Container
+
+**Regeln**:
+1. Jede Ressource MUSS `id="resource-{uuid}"` als HTML-Attribut haben (Fragment-Navigation)
+2. rlinks MUESSEN als externe Links (`target="_blank"`, `rel="noopener"`) gerendert werden
+3. Base64-Daten in Ressourcen werden als Marker angezeigt, nicht inline gerendert
+4. ResourcePanel wird in allen 4 View-Komponenten nach dem Hauptinhalt eingebunden
+
+### 12.8 Cross-Document Navigation (Pattern 26)
+
+Dokumentuebergreifende Navigation MUSS ueber das App-Level `handleUrl`/`handleNavigate`-Pattern erfolgen:
+
+```typescript
+// App-Level: handleUrl mit optionalem pushHistory
+handleUrl(url: string, pushHistory = false): void
+
+// Bei pushHistory=true: Browser-History-Eintrag erstellen
+if (pushHistory) {
+  window.history.pushState({ url }, '', `?url=${encodeURIComponent(url)}`)
+}
+
+// handleNavigate Callback wird durch DocumentViewer an Views weitergereicht
+<DocumentViewer data={data} onNavigate={handleNavigate} />
+
+// In ProfileView/SspView: ImportPanel erhaelt onSourceClick
+<ImportPanel sources={sources} onSourceClick={handleNavigate} />
+```
+
+**Regeln**:
+1. `handleNavigate` Callback wird von App ueber DocumentViewer an Views/ImportPanel durchgereicht
+2. ImportPanel `onSourceClick` Prop: Geladene Quellen werden als klickbare Buttons dargestellt
+3. Browser Back/Forward: `popstate` Event Listener in App stellt vorherige Dokumente wieder her
+4. URL-State: `?url=<docUrl>` Query-Parameter bildet das aktuell geladene Dokument ab
+5. Kein Router-Library noetig — native `pushState`/`popState` genuegen (ADR-002, ADR-009)
+
+### 12.9 Fragment Resolution — Back-Matter Lookup (Pattern 27)
+
+OSCAL Fragment-Referenzen (`href="#uuid"`) in Import-HREFs MUESSEN ueber `resolveFragmentToUrl()` aufgeloest werden:
+
+```typescript
+import { resolveFragmentToUrl } from '@/services/resolver'
+
+// Loest einen Fragment-HREF gegen Back-Matter auf
+const url = resolveFragmentToUrl(fragment, backMatter, baseUrl)
+// Sucht Resource mit passendem UUID, gibt rlink-URL zurueck
+```
+
+**Datei**: `src/services/resolver.ts` (Erweiterung)
+
+**Funktion**: `resolveFragmentToUrl(fragment: string, backMatter: BackMatter, baseUrl: string): string | undefined`
+
+**Verhalten**:
+1. Sucht in `backMatter.resources[]` nach einer Ressource mit `uuid === fragment`
+2. Bevorzugt JSON-rlink (media-type enthaelt `'json'`)
+3. Fallback auf den ersten rlink wenn kein JSON-rlink existiert
+4. Gibt `undefined` zurueck wenn keine passende Ressource gefunden wird
+5. Relative rlink-HREFs werden mit `new URL(href, baseUrl)` aufgeloest
+
+**Regeln**:
+1. Fragment-Aufloesung ist Teil des Resolution Service (Domain Layer)
+2. Wird in `resolveProfile()` und `resolveSsp()` fuer Fragment-Imports genutzt
+3. Wenn keine Back-Matter vorhanden ist, gibt die Funktion `undefined` zurueck (kein Fehler)

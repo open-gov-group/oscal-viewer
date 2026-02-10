@@ -70,6 +70,13 @@ export const App: FunctionComponent = () => {
         else if (result.type === 'requirement') hash = '/ssp/controls'
         else hash = '/ssp/implementation'
         break
+      case 'assessment-results':
+        if (result.type === 'finding') hash = '/ar/findings'
+        else hash = '/ar/results'
+        break
+      case 'plan-of-action-and-milestones':
+        hash = `/poam/${result.id}`
+        break
     }
     if (hash) location.hash = hash
   }, [document])
@@ -322,7 +329,7 @@ export const App: FunctionComponent = () => {
                 </div>
 
                 <p class="supported-types">
-                  Supports: Catalog, Profile, Component-Definition, SSP
+                  Supports: Catalog, Profile, Component-Definition, SSP, Assessment Results, POA&M
                 </p>
               </div>
             )}

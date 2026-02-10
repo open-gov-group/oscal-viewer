@@ -203,6 +203,121 @@ describe('NIST OSCAL SSP Fixture', () => {
 })
 
 // ============================================================
+// NIST Assessment Results Fixture Tests
+// ============================================================
+
+describe('NIST OSCAL Assessment Results Fixture', () => {
+  const json = loadFixture('assessment-results-nist-example.json')
+
+  it('should detect document type as assessment-results', () => {
+    expect(detectDocumentType(json)).toBe('assessment-results')
+  })
+
+  it('should detect OSCAL version', () => {
+    const version = detectVersion(json)
+    expect(version).toMatch(/^1\.\d+\.\d+$/)
+  })
+
+  it('should parse successfully', () => {
+    const result = parseOscalDocument(json)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.type).toBe('assessment-results')
+      expect(result.data.version).toBeDefined()
+    }
+  })
+
+  it('should have results with findings', () => {
+    const result = parseOscalDocument(json)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      const doc = result.data.data.document as unknown as Record<string, unknown>
+      const results = doc.results as Array<Record<string, unknown>>
+      expect(results).toBeDefined()
+      expect(results.length).toBeGreaterThan(0)
+      const findings = results[0].findings as Array<Record<string, unknown>>
+      expect(findings).toBeDefined()
+      expect(findings.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('should have valid metadata', () => {
+    const result = parseOscalDocument(json)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      const doc = result.data.data.document as unknown as Record<string, unknown>
+      const metadata = doc.metadata as Record<string, unknown>
+      expect(metadata.title).toBeDefined()
+      expect(typeof metadata.title).toBe('string')
+      expect(metadata['oscal-version']).toBeDefined()
+    }
+  })
+})
+
+// ============================================================
+// NIST POA&M Fixture Tests
+// ============================================================
+
+describe('NIST OSCAL POA&M Fixture', () => {
+  const json = loadFixture('poam-nist-example.json')
+
+  it('should detect document type as plan-of-action-and-milestones', () => {
+    expect(detectDocumentType(json)).toBe('plan-of-action-and-milestones')
+  })
+
+  it('should detect OSCAL version', () => {
+    const version = detectVersion(json)
+    expect(version).toMatch(/^1\.\d+\.\d+$/)
+  })
+
+  it('should parse successfully', () => {
+    const result = parseOscalDocument(json)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.type).toBe('plan-of-action-and-milestones')
+      expect(result.data.version).toBeDefined()
+    }
+  })
+
+  it('should have poam-items', () => {
+    const result = parseOscalDocument(json)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      const doc = result.data.data.document as unknown as Record<string, unknown>
+      const items = doc['poam-items'] as Array<Record<string, unknown>>
+      expect(items).toBeDefined()
+      expect(items.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('should have findings and risks', () => {
+    const result = parseOscalDocument(json)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      const doc = result.data.data.document as unknown as Record<string, unknown>
+      const findings = doc.findings as Array<Record<string, unknown>>
+      const risks = doc.risks as Array<Record<string, unknown>>
+      expect(findings).toBeDefined()
+      expect(findings.length).toBeGreaterThan(0)
+      expect(risks).toBeDefined()
+      expect(risks.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('should have valid metadata', () => {
+    const result = parseOscalDocument(json)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      const doc = result.data.data.document as unknown as Record<string, unknown>
+      const metadata = doc.metadata as Record<string, unknown>
+      expect(metadata.title).toBeDefined()
+      expect(typeof metadata.title).toBe('string')
+      expect(metadata['oscal-version']).toBeDefined()
+    }
+  })
+})
+
+// ============================================================
 // Cross-version compatibility tests
 // ============================================================
 
@@ -213,6 +328,8 @@ describe('OSCAL Version Compatibility', () => {
       'profile-nist-example.json',
       'component-def-nist-example.json',
       'ssp-nist-example.json',
+      'assessment-results-nist-example.json',
+      'poam-nist-example.json',
     ]
 
     for (const fixture of fixtures) {
@@ -228,6 +345,8 @@ describe('OSCAL Version Compatibility', () => {
       'profile-nist-example.json',
       'component-def-nist-example.json',
       'ssp-nist-example.json',
+      'assessment-results-nist-example.json',
+      'poam-nist-example.json',
     ]
 
     for (const fixture of fixtures) {

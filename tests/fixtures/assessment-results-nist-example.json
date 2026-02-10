@@ -1,0 +1,93 @@
+{
+  "assessment-results": {
+    "uuid": "ar-example-uuid-001",
+    "metadata": {
+      "title": "Example Assessment Results",
+      "last-modified": "2026-01-15T00:00:00Z",
+      "version": "1.0",
+      "oscal-version": "1.1.2",
+      "roles": [
+        { "id": "assessor", "title": "Security Assessor" }
+      ],
+      "parties": [
+        { "uuid": "party-001", "type": "organization", "name": "Assessment Team" }
+      ],
+      "responsible-parties": [
+        { "role-id": "assessor", "party-uuids": ["party-001"] }
+      ]
+    },
+    "import-ap": {
+      "href": "assessment-plan.json"
+    },
+    "results": [
+      {
+        "uuid": "result-001",
+        "title": "Initial Assessment",
+        "description": "Annual security assessment of the enterprise portal system.",
+        "start": "2026-01-01T00:00:00Z",
+        "end": "2026-01-15T00:00:00Z",
+        "reviewed-controls": {
+          "control-selections": [
+            { "include-all": {} }
+          ]
+        },
+        "findings": [
+          {
+            "uuid": "finding-001",
+            "title": "Access Control Policy Implemented",
+            "description": "The organization has implemented access control policy and procedures.",
+            "target": {
+              "type": "objective-id",
+              "target-id": "ac-1",
+              "status": { "state": "satisfied" }
+            }
+          },
+          {
+            "uuid": "finding-002",
+            "title": "Audit Logging Incomplete",
+            "description": "Audit logging does not capture all required events.",
+            "target": {
+              "type": "objective-id",
+              "target-id": "au-2",
+              "status": { "state": "not-satisfied" }
+            },
+            "related-observations": [
+              { "observation-uuid": "obs-001" }
+            ],
+            "related-risks": [
+              { "risk-uuid": "risk-001" }
+            ]
+          }
+        ],
+        "observations": [
+          {
+            "uuid": "obs-001",
+            "description": "Reviewed audit log configuration and found gaps in event coverage.",
+            "methods": ["EXAMINE", "INTERVIEW"],
+            "collected": "2026-01-10T00:00:00Z"
+          }
+        ],
+        "risks": [
+          {
+            "uuid": "risk-001",
+            "title": "Incomplete Audit Trail",
+            "description": "Without complete audit logging, security incidents may go undetected.",
+            "status": "open"
+          }
+        ]
+      }
+    ],
+    "back-matter": {
+      "resources": [
+        {
+          "uuid": "resource-001",
+          "title": "Assessment Evidence",
+          "description": "Collected assessment evidence",
+          "rlinks": [
+            { "href": "evidence/audit-config.pdf", "media-type": "application/pdf" }
+          ]
+        }
+      ]
+    }
+  }
+}

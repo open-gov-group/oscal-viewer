@@ -6,7 +6,7 @@
  * Minimum query length: 2 characters.
  */
 import { useState, useMemo, useCallback, useEffect, useRef } from 'preact/hooks'
-import type { OscalDocumentData, Catalog, Profile, ComponentDefinition, SystemSecurityPlan } from '@/types/oscal'
+import type { OscalDocumentData, Catalog, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones } from '@/types/oscal'
 
 /** A single search result shown in the SearchBar dropdown. */
 export interface SearchResult {
@@ -95,6 +95,10 @@ export function buildIndex(data: OscalDocumentData): IndexEntry[] {
       return indexComponentDef(data.document)
     case 'system-security-plan':
       return indexSSP(data.document)
+    case 'assessment-results':
+      return indexAssessmentResults(data.document)
+    case 'plan-of-action-and-milestones':
+      return indexPoam(data.document)
   }
 }
 
@@ -255,5 +259,47 @@ function indexSSP(ssp: SystemSecurityPlan): IndexEntry[] {
     })
   }
 
+  return entries
+}
+
+/** Index assessment results findings, observations, and risks. */
+function indexAssessmentResults(ar: AssessmentResults): IndexEntry[] {
+  const entries: IndexEntry[] = []
+  for (const result of ar.results) {
+    entries.push({
+      id: result.uuid,
+      title: result.title,
+      type: 'result',
+      context: result.description,
+      searchText: `${result.title} ${result.description}`.toLowerCase(),
+    })
+    if (result.findings) {
+      for (const finding of result.findings) {
+        entries.push({
+          id: finding.uuid,
+          title: `Finding: ${finding.target['target-id']}`,
+          type: 'finding',
+          context: `${finding.target.status.state} — ${finding.title}`,
+          searchText: `${finding.target['target-id']} ${finding.title} ${finding.description} ${finding.target.status.state}`.toLowerCase(),
+        })
+      }
+    }
+  }
+  return entries
+}
+
+/** Index POA&M items and milestones. */
+function indexPoam(poam: PlanOfActionAndMilestones): IndexEntry[] {
+  const entries: IndexEntry[] = []
+  for (const item of poam['poam-items']) {
+    const milestoneText = item.milestones?.map(m => m.title).join(' ') ?? ''
+    entries.push({
+      id: item.uuid,
+      title: item.title,
+      type: 'poam-item',
+      context: item.description,
+      searchText: `${item.title} ${item.description} ${milestoneText}`.toLowerCase(),
+    })
+  }
   return entries
 }

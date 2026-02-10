@@ -6,6 +6,8 @@ const DOCUMENT_TYPE_KEYS: readonly DocumentType[] = [
   'profile',
   'component-definition',
   'system-security-plan',
+  'assessment-results',
+  'plan-of-action-and-milestones',
 ] as const
 
 /**

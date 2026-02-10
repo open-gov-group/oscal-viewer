@@ -51,6 +51,18 @@ export type {
   SystemImplementation,
   SspControlImplementation,
   SystemSecurityPlan,
+  AssessmentSubject,
+  RelevantEvidence,
+  Observation,
+  FindingTarget,
+  Finding,
+  RiskCharacterization,
+  Risk,
+  AssessmentResult,
+  AssessmentResults,
+  PoamMilestone,
+  PoamItem,
+  PlanOfActionAndMilestones,
   ParseResult,
   OscalDocumentData,
   OscalDocument,
@@ -62,4 +74,6 @@ export { parseCatalog, countControls } from '@/parser/catalog'
 export { parseProfile } from '@/parser/profile'
 export { parseComponentDefinition } from '@/parser/component-definition'
 export { parseSSP } from '@/parser/ssp'
+export { parseAssessmentResults } from '@/parser/assessment-results'
+export { parsePoam } from '@/parser/poam'
 export { detectDocumentType, detectVersion } from '@/parser/detect'

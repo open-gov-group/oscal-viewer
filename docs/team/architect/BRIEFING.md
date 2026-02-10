@@ -2,7 +2,8 @@
 
 **Rolle**: Architect (Orchestrierung)
 **Projekt**: OSCAL Viewer
-**Stand**: 2026-02-06
+**Stand**: 2026-02-10
+**Phase**: Phase 6+ (Assessment Results, POA&M, E2E Tests)
 
 ---
 
@@ -10,43 +11,49 @@
 
 Der OSCAL Viewer ist ein clientseitiger Viewer fuer OSCAL-Dokumente (Open Security Controls Assessment Language). Das Projekt nutzt Preact + TypeScript + Vite und wird auf GitHub Pages deployed.
 
-## Aktuelle Prioritaeten
+## Projekt-Historie
 
-### Phase 1: Foundation (KW 6-9) - AKTIV
-| Issue | Titel | Status | Zustaendig |
-|-------|-------|--------|------------|
-| #1 | Architektur-Design (ADR) | Offen - CRITICAL | Tech Lead + Architect |
-| #2 | OSCAL Parser implementieren | Offen - CRITICAL | Frontend Developer |
-| #3 | Catalog Renderer implementieren | Offen - CRITICAL | Frontend Developer + UI/UX |
-
-### Phase 2: Erweiterung (KW 10-12)
-| Issue | Titel | Prioritaet |
-|-------|-------|------------|
-| #4 | Profile Renderer | High |
-| #5 | Component-Definition Renderer | High |
-| #6 | SSP Renderer | High |
-| #7 | Suchfunktion & Filter | Medium |
-
-### Phase 3: Deploy (KW 13-14)
-| Issue | Titel | Prioritaet |
-|-------|-------|------------|
-| #8 | PWA-Unterstuetzung (Offline) | Medium |
-| #9 | Dokumentation vervollstaendigen | High |
-| #10 | Shared Components als npm Package | Medium |
+| Phase | Ergebnis | Tests | Bundle | Commit |
+|-------|----------|-------|--------|--------|
+| Phase 1 | ADR-001 bis ADR-004, Parser, Catalog Renderer | 43 | 12.54 KB | `983c8ff` |
+| Phase 2 | 4 Renderer, ESLint, CODING_STANDARDS, Dashboard, Stakeholder-Feedback | 390 | 20.56 KB | `759b012` |
+| Phase 3 | PWA, CONTRIBUTING, CHANGELOG, npm Package, Dependency-Upgrade | 444 | 28.53 KB | `abcf25c` |
+| Feature-Paket | MetadataPanel++, URL-Loading, Config-Presets, Code-Audit | 485 | ~30 KB | `0abd597` |
+| Phase 4 | HrefParser, DocumentCache, ResolutionService, LinkBadge, ImportPanel, ADR-008, CODING_STANDARDS v5.0.0 | 583 | 33.58 KB | `4394bb2` |
+| Phase 5 | ParamSubstitutor, ProseView, ResourcePanel, Cross-Doc Navigation, Resolved Catalog, ADR-009, CODING_STANDARDS v5.1.0 | 650 | 36.10 KB | — |
 
 ## Architektur-Entscheidungen
 
-- **Zero-Backend**: Alles laeuft clientseitig, keine Daten verlassen den Browser
-- **Preact statt React**: 3KB vs 40KB+ Bundle Size
-- **Vite**: Schnelles HMR, optimierte Builds
-- **TypeScript strict**: Typsicherheit fuer OSCAL-Strukturen
+| ADR | Inhalt | Datum |
+|-----|--------|-------|
+| ADR-001 | Preact statt React (3KB vs 40KB) | 2026-02-06 |
+| ADR-002 | Zero-Backend, alles clientseitig | 2026-02-06 |
+| ADR-003 | Dreischichtige Architektur (Domain -> Application -> Presentation) | 2026-02-06 |
+| ADR-004 | Vite Build-Konfiguration | 2026-02-06 |
+| ADR-005 | Performance-Strategie (Memoization, Code Splitting) | 2026-02-06 |
+| ADR-006 | PWA mit vite-plugin-pwa | 2026-02-07 |
+| ADR-007 | npm Package (@open-gov-group/oscal-parser) | 2026-02-07 |
+| ADR-008 | Resolution Service Architecture (HrefParser, DocumentCache, Resolver) | 2026-02-09 |
+| ADR-009 | Resolved Catalog, Parameter Substitution & Cross-Document Navigation | 2026-02-10 |
 
-## Naechste Schritte (Architect)
+## Phase 6 Ausblick
 
-1. Issue #1 abschliessen - ADR finalisieren mit Tech Lead
-2. Komponentenarchitektur fuer Parser definieren
-3. Schnittstellen zwischen Parser und Renderer spezifizieren
-4. Aufgabenverteilung an Teammitglieder koordinieren
+### Naechste Ziele
+
+1. **Assessment Results (AR) Architektur**: Neue OSCAL-Dokumenttypen (Assessment Results, Assessment Plan) erfordern Parser, Views und Typen. Architektur-Entscheidungen fuer AR-spezifische Patterns (Findings, Observations, Risks) treffen.
+2. **POA&M Architektur**: Plan of Action & Milestones Dokumenttyp mit Milestone-Timeline, Status-Tracking und Beziehungen zu Findings aus AR.
+3. **Playwright E2E Strategie**: End-to-End-Tests mit Playwright planen — Test-Szenarien fuer Cross-Document Navigation, PWA Offline-Modus, Fragment-Navigation, URL-Loading.
+4. **XML Parser Planung**: OSCAL unterstuetzt neben JSON auch XML-Format. Evaluierung ob ein XML-Parser ins npm Package aufgenommen werden soll (ADR-010 Kandidat).
+
+### Aufgabenverteilung Phase 6
+
+| Rolle | Schwerpunkt |
+|-------|-------------|
+| Tech Lead | ADR-010 (AR/POA&M Types), CODING_STANDARDS v5.2, Parser/View Reviews |
+| Frontend Dev | AR/POA&M Parser + Views, DocumentViewer Integration, Search Indexing |
+| QA | AR/POA&M Tests, View Tests, axe-core, Playwright E2E Specs |
+| DevOps | Playwright CI Workflow (e2e.yml), Bundle Monitoring, E2E on PRs |
+| UI/UX | AR Findings Dashboard Design, POA&M Milestone Timeline, Status-Farben |
 
 ---
 
@@ -54,9 +61,11 @@ Der OSCAL Viewer ist ein clientseitiger Viewer fuer OSCAL-Dokumente (Open Securi
 
 | Datum | Von | An | Thema | Status |
 |-------|-----|-----|-------|--------|
-| 2026-02-06 | Architect | Alle | Projektstart & Briefing | Erstellt |
-| 2026-02-07 | QA Engineer | Architect | Code-Kommentierungs-Audit abgeschlossen: Note C- (2.6% Quote). Parser A, Types B, Hooks D, Components D. 4 Empfehlungen: E1 CODING_STANDARDS Sektion 11 (Tech Lead), E2 Code nachkommentieren (Frontend Dev), E3 PR-Template Checkbox (Tech Lead), E4 ESLint-Plugin evaluieren (Tech Lead). Geschaetzter Gesamtaufwand ~11h. Details: `docs/team/qa-engineer/BRIEFING.md` Abschnitt "Code-Kommentierungs-Audit" | Abgeschlossen |
-| 2026-02-08 | QA Engineer | Architect | Re-Audit: Note C+ (5.9%, vorher C- 2.6%). E1+E3 (Tech Lead) ERLEDIGT, E2 Prio 1+3 (Frontend Dev) ERLEDIGT. **Verbleibend**: profile-view.tsx + component-def-view.tsx (je 0%, 599 LOC) — letzter Blocker fuer >= 8% Ziel | Abgeschlossen |
-| 2026-02-08 | QA Engineer | Architect | **CODE-KOMMENTIERUNGS-AUDIT ABGESCHLOSSEN**: Alle 4 Empfehlungen (E1-E4) umgesetzt. Finalnote: **A-** (7.1%, von C- 2.6%). E1: CODING_STANDARDS v4.2.0 Sektion 11. E2: Hooks 9.8%, Shared 9.2%, Catalog 6.9%, App 5.6%, Profile 5.2%, CompDef 5.0%. E3: PR-Template Checkbox. E4: eslint-plugin-jsdoc (warn). 485 Tests, 18 Testdateien. Verbleibende Luecken (SHOULD): ssp-view 3.6%, 5 Parser File-Level, Gesamtquote 7.1% (knapp unter 8%-Ziel — eslint-plugin-jsdoc wird schrittweise schliessen) | Abgeschlossen |
-| 2026-02-09 | QA Engineer | Architect | **PHASE 4a QA-REPORT**: Sub-Phase 4a Verifikation abgeschlossen. **531 Tests** (19 Dateien, +2 axe-core), 0 ESLint-Fehler, 0 TS-Fehler, Bundle 16.35 KB JS + 7.26 KB CSS. CODING_STANDARDS v5.0.0 Konformitaet: **8/9 PASS**. 1 Finding: **F1 (HOCH)** LinkBadge fehlt `aria-label` (Sektion 12.4 Regel 4) — Aktion bei Frontend Dev. F2 (NIEDRIG): Relative Pfade nicht aufloesbar (Design-Entscheidung Phase 4a). QA-R1 + QA-R4 verifiziert. Details: `docs/team/qa-engineer/BRIEFING.md` | Aktiv |
-
+| 2026-02-06 | Architect | Alle | Projektstart & Briefing | Abgeschlossen |
+| 2026-02-07 | QA Engineer | Architect | Code-Kommentierungs-Audit: Note C- (2.6%) | Abgeschlossen |
+| 2026-02-08 | QA Engineer | Architect | Re-Audit: Note C+ (5.9%), dann A- (7.1%) | Abgeschlossen |
+| 2026-02-09 | QA Engineer | Architect | Phase 4a QA-Report: 531 Tests, 29 axe-core, Finding F1 (LinkBadge aria-label) | Abgeschlossen |
+| 2026-02-09 | Architect | Alle | Phase 4a+4b Briefing: OSCAL Resolution (HrefParser, DocumentCache, ResolutionService, ImportPanel) | Abgeschlossen |
+| 2026-02-09 | DevOps | Architect | Phase 4a deployed: Commit `4394bb2`, 531 Tests, ~30.6 KB Bundle | Abgeschlossen |
+| 2026-02-10 | Architect | Alle | **Phase 4+5 abgeschlossen**: Resolution Infrastructure + Resolved Catalog + ParamSubstitutor + Cross-Doc Navigation. 650 Tests, 36.10 KB Bundle. ADR-009 erstellt, CODING_STANDARDS v5.1.0 (Patterns 23-27), CHANGELOG 0.3.0 + 0.4.0 | Abgeschlossen |
+| 2026-02-10 | Architect | Alle | **Phase 6 Planung**: Assessment Results + POA&M Parser/Views + Playwright E2E. Briefings an alle Rollen verteilt | Aktiv |

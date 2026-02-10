@@ -3,6 +3,8 @@ import { parseCatalog, countControls } from '@/parser/catalog'
 import { parseProfile } from '@/parser/profile'
 import { parseComponentDefinition } from '@/parser/component-definition'
 import { parseSSP } from '@/parser/ssp'
+import { parseAssessmentResults } from '@/parser/assessment-results'
+import { parsePoam } from '@/parser/poam'
 import { parseOscalDocument } from '@/parser'
 
 // ============================================================
@@ -516,6 +518,218 @@ describe('parseOscalDocument', () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error).toContain('uuid')
+    }
+  })
+})
+
+// ============================================================
+// Assessment Results Parser
+// ============================================================
+
+describe('parseAssessmentResults', () => {
+  const validAR = {
+    uuid: 'ar-uuid-001',
+    metadata: minimalMetadata,
+    results: [
+      {
+        uuid: 'result-001',
+        title: 'Test Result',
+        description: 'Test assessment result',
+        start: '2026-01-01T00:00:00Z',
+        findings: [
+          {
+            uuid: 'finding-001',
+            title: 'Test Finding',
+            description: 'A test finding',
+            target: { type: 'objective-id', 'target-id': 'ac-1', status: { state: 'satisfied' } },
+          },
+        ],
+      },
+    ],
+  }
+
+  it('parses valid assessment results', () => {
+    const result = parseAssessmentResults(validAR)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.uuid).toBe('ar-uuid-001')
+      expect(result.data.results).toHaveLength(1)
+      expect(result.data.results[0].findings).toHaveLength(1)
+    }
+  })
+
+  it('rejects non-object input', () => {
+    const result = parseAssessmentResults('not-an-object')
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects missing uuid', () => {
+    const result = parseAssessmentResults({ metadata: minimalMetadata, results: [{ uuid: 'r1', title: 't', description: 'd', start: 's' }] })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toContain('uuid')
+  })
+
+  it('rejects missing metadata', () => {
+    const result = parseAssessmentResults({ uuid: 'test', results: [{ uuid: 'r1', title: 't', description: 'd', start: 's' }] })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toContain('metadata')
+  })
+
+  it('rejects missing results', () => {
+    const result = parseAssessmentResults({ uuid: 'test', metadata: minimalMetadata })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toContain('results')
+  })
+
+  it('rejects empty results array', () => {
+    const result = parseAssessmentResults({ uuid: 'test', metadata: minimalMetadata, results: [] })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toContain('results')
+  })
+
+  it('parses with optional import-ap', () => {
+    const result = parseAssessmentResults({ ...validAR, 'import-ap': { href: 'ap.json' } })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data['import-ap']?.href).toBe('ap.json')
+  })
+
+  it('parses with optional back-matter', () => {
+    const result = parseAssessmentResults({
+      ...validAR,
+      'back-matter': { resources: [{ uuid: 'r1', title: 'Evidence' }] },
+    })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data['back-matter']?.resources).toHaveLength(1)
+  })
+})
+
+// ============================================================
+// POA&M Parser
+// ============================================================
+
+describe('parsePoam', () => {
+  const validPoam = {
+    uuid: 'poam-uuid-001',
+    metadata: minimalMetadata,
+    'poam-items': [
+      {
+        uuid: 'item-001',
+        title: 'Remediate Finding',
+        description: 'Fix the audit logging issue',
+        milestones: [
+          { uuid: 'ms-001', title: 'Phase 1' },
+        ],
+      },
+    ],
+  }
+
+  it('parses valid POA&M', () => {
+    const result = parsePoam(validPoam)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.uuid).toBe('poam-uuid-001')
+      expect(result.data['poam-items']).toHaveLength(1)
+      expect(result.data['poam-items'][0].milestones).toHaveLength(1)
+    }
+  })
+
+  it('rejects non-object input', () => {
+    const result = parsePoam(null)
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects missing uuid', () => {
+    const result = parsePoam({ metadata: minimalMetadata, 'poam-items': [{ uuid: 'i', title: 't', description: 'd' }] })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toContain('uuid')
+  })
+
+  it('rejects missing metadata', () => {
+    const result = parsePoam({ uuid: 'test', 'poam-items': [{ uuid: 'i', title: 't', description: 'd' }] })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toContain('metadata')
+  })
+
+  it('rejects missing poam-items', () => {
+    const result = parsePoam({ uuid: 'test', metadata: minimalMetadata })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toContain('poam-items')
+  })
+
+  it('rejects empty poam-items array', () => {
+    const result = parsePoam({ uuid: 'test', metadata: minimalMetadata, 'poam-items': [] })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toContain('poam-items')
+  })
+
+  it('parses with optional import-ssp', () => {
+    const result = parsePoam({ ...validPoam, 'import-ssp': { href: 'ssp.json' } })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data['import-ssp']?.href).toBe('ssp.json')
+  })
+
+  it('parses with optional findings and risks', () => {
+    const result = parsePoam({
+      ...validPoam,
+      findings: [{ uuid: 'f1', title: 'F', description: 'D', target: { type: 'objective-id', 'target-id': 'ac-1', status: { state: 'not-satisfied' } } }],
+      risks: [{ uuid: 'r1', title: 'R', description: 'D', status: 'open' }],
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.findings).toHaveLength(1)
+      expect(result.data.risks).toHaveLength(1)
+    }
+  })
+})
+
+// ============================================================
+// Detection — Assessment Results & POA&M
+// ============================================================
+
+describe('detectDocumentType — AR & POA&M', () => {
+  it('detects assessment-results', () => {
+    expect(detectDocumentType({ 'assessment-results': { uuid: 'test' } })).toBe('assessment-results')
+  })
+
+  it('detects plan-of-action-and-milestones', () => {
+    expect(detectDocumentType({ 'plan-of-action-and-milestones': { uuid: 'test' } })).toBe('plan-of-action-and-milestones')
+  })
+})
+
+// ============================================================
+// End-to-End — parseOscalDocument with AR & POA&M
+// ============================================================
+
+describe('parseOscalDocument — AR & POA&M', () => {
+  it('parses complete assessment-results document', () => {
+    const arDoc = {
+      'assessment-results': {
+        uuid: 'ar-uuid',
+        metadata: { ...minimalMetadata, title: 'Test AR' },
+        results: [{ uuid: 'r1', title: 'Result', description: 'Desc', start: '2026-01-01' }],
+      },
+    }
+    const result = parseOscalDocument(arDoc)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.type).toBe('assessment-results')
+      expect(result.data.data.type).toBe('assessment-results')
+    }
+  })
+
+  it('parses complete plan-of-action-and-milestones document', () => {
+    const poamDoc = {
+      'plan-of-action-and-milestones': {
+        uuid: 'poam-uuid',
+        metadata: { ...minimalMetadata, title: 'Test POA&M' },
+        'poam-items': [{ uuid: 'i1', title: 'Item', description: 'Desc' }],
+      },
+    }
+    const result = parseOscalDocument(poamDoc)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.type).toBe('plan-of-action-and-milestones')
+      expect(result.data.data.type).toBe('plan-of-action-and-milestones')
     }
   })
 })

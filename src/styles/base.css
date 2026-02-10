@@ -2958,7 +2958,9 @@ body {
   }
 
   .profile-view,
-  .ssp-view {
+  .ssp-view,
+  .ar-view,
+  .poam-view {
     padding: 0.5rem 0;
   }
 
@@ -2972,6 +2974,7 @@ body {
   .tree-group-header,
   .tree-control-btn,
   .ssp-tab,
+  .ar-tab,
   .compdef-component-item,
   .file-input-label {
     min-height: 44px;
@@ -2979,17 +2982,20 @@ body {
     align-items: flex-start;
   }
 
-  .ssp-tab {
+  .ssp-tab,
+  .ar-tab {
     padding: 0.75rem 0.75rem;
   }
 
-  /* SSP Tabs: scrollable on mobile */
-  .ssp-tabs {
+  /* SSP/AR Tabs: scrollable on mobile */
+  .ssp-tabs,
+  .ar-tabs {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  .ssp-tab {
+  .ssp-tab,
+  .ar-tab {
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -2998,7 +3004,9 @@ body {
   .catalog-stats,
   .compdef-stats,
   .profile-stats,
-  .ssp-stats {
+  .ssp-stats,
+  .ar-stats,
+  .poam-stats {
     flex-wrap: wrap;
     gap: 0.75rem;
   }
@@ -3047,6 +3055,7 @@ body {
   .catalog-sidebar,
   .compdef-sidebar,
   .ssp-tabs,
+  .ar-tabs,
   .search-bar,
   .skip-link,
   .sidebar-toggle,
@@ -3222,4 +3231,377 @@ body {
 
 .import-source-navigate::after {
   content: ' \2192';
+}
+
+/* ============================================================
+   Assessment Results View
+   ============================================================ */
+
+.ar-view {
+  padding: 1rem;
+}
+
+.ar-import-ap {
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+
+.ar-import-ap code {
+  margin-left: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: var(--color-bg-secondary);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+}
+
+.ar-import-label,
+.poam-import-label {
+  font-weight: 600;
+}
+
+.ar-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+
+.ar-satisfaction-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ar-satisfied {
+  color: var(--color-status-success-text);
+  background: var(--color-status-success-bg);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.ar-not-satisfied {
+  color: var(--color-status-error-text);
+  background: var(--color-status-error-bg);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* AR Tabs — mirrors SSP tab pattern */
+.ar-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 1rem;
+}
+
+.ar-tab {
+  padding: 0.625rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: inherit;
+  transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ar-tab:hover {
+  color: var(--color-text);
+}
+
+.ar-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.ar-tab-content {
+  min-height: 200px;
+}
+
+/* Result cards */
+.ar-result-card {
+  padding: 0.5rem 0;
+}
+
+.ar-result-description {
+  margin: 0 0 0.5rem;
+}
+
+.ar-result-dates {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.ar-result-counts {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.ar-remarks {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* Finding cards */
+.ar-finding-card,
+.poam-finding-card {
+  padding: 0.75rem;
+  border-left: 3px solid var(--color-border);
+  margin-bottom: 0.5rem;
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius);
+}
+
+.ar-finding-header,
+.poam-finding-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.ar-control-id {
+  font-family: var(--font-mono);
+  background: var(--color-status-info-bg);
+  color: var(--color-status-info-text);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-size: 0.8125rem;
+}
+
+.ar-finding-status {
+  font-size: 0.8125rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.ar-status--satisfied {
+  color: var(--color-status-success-text);
+  background: var(--color-status-success-bg);
+}
+
+.ar-status--not-satisfied {
+  color: var(--color-status-error-text);
+  background: var(--color-status-error-bg);
+}
+
+.ar-finding-title {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.ar-finding-description {
+  font-size: 0.875rem;
+  margin: 0 0 0.25rem;
+}
+
+.ar-related-count {
+  display: inline-block;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin-right: 0.75rem;
+}
+
+/* Observation cards */
+.ar-observation-card {
+  padding: 0.75rem;
+  border-left: 3px solid var(--color-accent-purple-border);
+  margin-bottom: 0.5rem;
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius);
+}
+
+.ar-observation-card p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.ar-methods {
+  margin: 0.375rem 0;
+}
+
+.ar-method-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  background: var(--color-accent-purple-bg);
+  color: var(--color-accent-purple-text);
+  margin-right: 0.25rem;
+}
+
+.ar-collected {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+/* Risk cards */
+.ar-risk-card,
+.poam-risk-card {
+  padding: 0.75rem;
+  border-left: 3px solid var(--color-status-error-border);
+  margin-bottom: 0.5rem;
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius);
+}
+
+.ar-risk-card p,
+.poam-risk-card p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.ar-risk-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.ar-risk-status {
+  font-size: 0.8125rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 600;
+  background: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+}
+
+/* Empty state */
+.ar-empty,
+.poam-empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* Observations & Risks panel headings */
+.ar-obs-risks h4 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ar-obs-risks h4:first-child {
+  margin-top: 0;
+}
+
+/* ============================================================
+   POA&M View
+   ============================================================ */
+
+.poam-view {
+  padding: 1rem;
+}
+
+.poam-import-ssp {
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+
+.poam-import-ssp code {
+  margin-left: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: var(--color-bg-secondary);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+}
+
+.poam-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+
+.poam-item-detail {
+  padding: 0.5rem 0;
+}
+
+.poam-item-description {
+  margin: 0 0 0.75rem;
+}
+
+.poam-related {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.poam-related-label {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.poam-related-uuid {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: var(--color-bg-secondary);
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  margin-right: 0.25rem;
+}
+
+.poam-milestones {
+  margin-top: 0.75rem;
+}
+
+.poam-milestones h5 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.poam-milestone-card {
+  padding: 0.5rem;
+  border-left: 3px solid var(--color-accent-amber);
+  margin-bottom: 0.5rem;
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius);
+}
+
+.poam-milestone-card p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.poam-milestone-tasks {
+  margin-top: 0.25rem;
+}
+
+.poam-task {
+  font-size: 0.875rem;
+  display: block;
+}
+
+.poam-task-date {
+  color: var(--color-text-secondary);
+}
+
+.poam-finding-card {
+  padding: 0.75rem;
+  border-left: 3px solid var(--color-border);
+  margin-bottom: 0.5rem;
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius);
+}
+
+.poam-finding-card p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
 }

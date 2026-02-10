@@ -13,7 +13,9 @@ import { GroupTree } from '@/components/catalog/group-tree'
 import { ProfileView } from '@/components/profile/profile-view'
 import { ComponentDefView } from '@/components/component-def/component-def-view'
 import { SspView } from '@/components/ssp/ssp-view'
-import type { Metadata, Property, Catalog, Control, Profile, ComponentDefinition, SystemSecurityPlan } from '@/types/oscal'
+import { AssessmentResultsView } from '@/components/assessment-results/assessment-results-view'
+import { PoamView } from '@/components/poam/poam-view'
+import type { Metadata, Property, Catalog, Control, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones } from '@/types/oscal'
 
 expect.extend(matchers)
 
@@ -459,6 +461,110 @@ describe('Accessibility - Full Audit with Nested Parts (QS19)', () => {
       }],
     }
     const { container } = render(<CatalogView catalog={nestedCatalog} />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+// ============================================================
+// Accessibility Tests - Assessment Results
+// ============================================================
+
+describe('Accessibility - Assessment Results', () => {
+  const testAR: AssessmentResults = {
+    uuid: 'ar-a11y',
+    metadata,
+    'import-ap': { href: 'assessment-plan.json' },
+    results: [
+      {
+        uuid: 'result-a11y',
+        title: 'A11y Assessment',
+        description: 'Accessibility test assessment.',
+        start: '2026-01-01T00:00:00Z',
+        end: '2026-01-15T00:00:00Z',
+        findings: [
+          {
+            uuid: 'f-a11y-1',
+            title: 'AC-1 Satisfied',
+            description: 'Access control implemented.',
+            target: { type: 'objective-id', 'target-id': 'ac-1', status: { state: 'satisfied' } },
+          },
+          {
+            uuid: 'f-a11y-2',
+            title: 'AU-2 Not Satisfied',
+            description: 'Audit logging incomplete.',
+            target: { type: 'objective-id', 'target-id': 'au-2', status: { state: 'not-satisfied' } },
+            'related-observations': [{ 'observation-uuid': 'obs-a11y' }],
+            'related-risks': [{ 'risk-uuid': 'risk-a11y' }],
+          },
+        ],
+        observations: [
+          {
+            uuid: 'obs-a11y',
+            description: 'Audit log gaps found.',
+            methods: ['EXAMINE'],
+            collected: '2026-01-10T00:00:00Z',
+          },
+        ],
+        risks: [
+          {
+            uuid: 'risk-a11y',
+            title: 'Incomplete Audit',
+            description: 'Audit logging gaps.',
+            status: 'open',
+          },
+        ],
+      },
+    ],
+  }
+
+  it('AssessmentResultsView has no a11y violations', async () => {
+    const { container } = render(<AssessmentResultsView assessmentResults={testAR} />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+// ============================================================
+// Accessibility Tests - POA&M
+// ============================================================
+
+describe('Accessibility - POA&M', () => {
+  const testPoam: PlanOfActionAndMilestones = {
+    uuid: 'poam-a11y',
+    metadata,
+    'import-ssp': { href: 'ssp.json' },
+    findings: [
+      {
+        uuid: 'pf-a11y',
+        title: 'Audit Gap',
+        description: 'Audit logging incomplete.',
+        target: { type: 'objective-id', 'target-id': 'au-2', status: { state: 'not-satisfied' } },
+      },
+    ],
+    risks: [
+      {
+        uuid: 'pr-a11y',
+        title: 'Audit Risk',
+        description: 'Security incidents may go undetected.',
+        status: 'open',
+      },
+    ],
+    'poam-items': [
+      {
+        uuid: 'pi-a11y',
+        title: 'Fix Audit Logging',
+        description: 'Configure complete audit event capture.',
+        milestones: [
+          { uuid: 'ms-a11y', title: 'Config Update', description: 'Update audit config.' },
+        ],
+        props: [{ name: 'priority', value: 'high' }],
+      },
+    ],
+  }
+
+  it('PoamView has no a11y violations', async () => {
+    const { container } = render(<PoamView poam={testPoam} />)
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   })

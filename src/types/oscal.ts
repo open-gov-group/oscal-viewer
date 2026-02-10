@@ -1,5 +1,5 @@
 /**
- * OSCAL Type Definitions — TypeScript interfaces for all four OSCAL model types.
+ * OSCAL Type Definitions — TypeScript interfaces for all six OSCAL model types.
  *
  * Based on NIST OSCAL v1.0.x – v1.1.2+ JSON Schema.
  * All property names use kebab-case matching the official OSCAL JSON format.
@@ -10,7 +10,7 @@
 // Common / Shared Types
 // ============================================================
 
-export type DocumentType = 'catalog' | 'profile' | 'component-definition' | 'system-security-plan'
+export type DocumentType = 'catalog' | 'profile' | 'component-definition' | 'system-security-plan' | 'assessment-results' | 'plan-of-action-and-milestones'
 
 export interface Property {
   name: string
@@ -541,6 +541,175 @@ export interface SystemSecurityPlan {
 }
 
 // ============================================================
+// Assessment Results Types
+// ============================================================
+
+/** Subject of an assessment activity (component, inventory-item, party, etc.). */
+export interface AssessmentSubject {
+  type: 'component' | 'inventory-item' | 'location' | 'party' | 'user'
+  description?: string
+  props?: Property[]
+  links?: Link[]
+  'include-all'?: Record<string, never>
+  'include-subjects'?: Array<{ 'subject-uuid': string; type: string }>
+  'exclude-subjects'?: Array<{ 'subject-uuid': string; type: string }>
+}
+
+/** Evidence supporting an observation. */
+export interface RelevantEvidence {
+  href?: string
+  description: string
+  props?: Property[]
+  links?: Link[]
+  remarks?: string
+}
+
+/** An observation made during an assessment. */
+export interface Observation {
+  uuid: string
+  title?: string
+  description: string
+  methods: string[]
+  types?: string[]
+  subjects?: AssessmentSubject[]
+  'relevant-evidence'?: RelevantEvidence[]
+  collected: string
+  expires?: string
+  props?: Property[]
+  links?: Link[]
+  remarks?: string
+}
+
+/** Target of a finding — identifies the assessed control and its satisfaction status. */
+export interface FindingTarget {
+  type: 'statement-id' | 'objective-id'
+  'target-id': string
+  title?: string
+  description?: string
+  status: { state: 'satisfied' | 'not-satisfied' }
+  props?: Property[]
+  links?: Link[]
+  remarks?: string
+}
+
+/** A finding from an assessment — links a control to its satisfaction status. */
+export interface Finding {
+  uuid: string
+  title: string
+  description: string
+  target: FindingTarget
+  'related-observations'?: Array<{ 'observation-uuid': string }>
+  'related-risks'?: Array<{ 'risk-uuid': string }>
+  'implementation-statement-uuid'?: string
+  props?: Property[]
+  links?: Link[]
+  remarks?: string
+}
+
+/** Characterization facet for risk analysis. */
+export interface RiskCharacterization {
+  props: Property[]
+  links?: Link[]
+  facets?: Array<{ name: string; system: string; value: string; props?: Property[] }>
+}
+
+/** A risk identified during assessment. */
+export interface Risk {
+  uuid: string
+  title: string
+  description: string
+  statement?: string
+  status: string
+  characterizations?: RiskCharacterization[]
+  'mitigating-factors'?: Array<{ uuid: string; description: string }>
+  props?: Property[]
+  links?: Link[]
+  remarks?: string
+}
+
+/** A single assessment result entry with findings, observations, and risks. */
+export interface AssessmentResult {
+  uuid: string
+  title: string
+  description: string
+  start: string
+  end?: string
+  props?: Property[]
+  links?: Link[]
+  'reviewed-controls'?: {
+    'control-selections': Array<{
+      'include-all'?: Record<string, never>
+      'include-controls'?: SelectControlById[]
+    }>
+  }
+  findings?: Finding[]
+  observations?: Observation[]
+  risks?: Risk[]
+  remarks?: string
+}
+
+/** OSCAL Assessment Results document. */
+export interface AssessmentResults {
+  uuid: string
+  metadata: Metadata
+  'import-ap'?: { href: string }
+  'local-definitions'?: Record<string, unknown>
+  results: AssessmentResult[]
+  'back-matter'?: BackMatter
+}
+
+// ============================================================
+// Plan of Action and Milestones (POA&M) Types
+// ============================================================
+
+/** A milestone in a POA&M remediation plan. */
+export interface PoamMilestone {
+  uuid: string
+  title: string
+  description?: string
+  schedule?: {
+    tasks?: Array<{
+      uuid: string
+      title: string
+      description?: string
+      start?: string
+      end?: string
+    }>
+  }
+  props?: Property[]
+  links?: Link[]
+  remarks?: string
+}
+
+/** A POA&M item representing a remediation action. */
+export interface PoamItem {
+  uuid: string
+  title: string
+  description: string
+  'related-findings'?: Array<{ 'finding-uuid': string }>
+  'related-observations'?: Array<{ 'observation-uuid': string }>
+  'related-risks'?: Array<{ 'risk-uuid': string }>
+  origins?: Array<{ actors: Array<{ type: string; 'actor-uuid': string }> }>
+  milestones?: PoamMilestone[]
+  props?: Property[]
+  links?: Link[]
+  remarks?: string
+}
+
+/** OSCAL Plan of Action and Milestones document. */
+export interface PlanOfActionAndMilestones {
+  uuid: string
+  metadata: Metadata
+  'import-ssp'?: { href: string; remarks?: string }
+  'local-definitions'?: Record<string, unknown>
+  findings?: Finding[]
+  observations?: Observation[]
+  risks?: Risk[]
+  'poam-items': PoamItem[]
+  'back-matter'?: BackMatter
+}
+
+// ============================================================
 // Parse Result & Document Wrapper
 // ============================================================
 
@@ -553,6 +722,8 @@ export type OscalDocumentData =
   | { type: 'profile'; document: Profile }
   | { type: 'component-definition'; document: ComponentDefinition }
   | { type: 'system-security-plan'; document: SystemSecurityPlan }
+  | { type: 'assessment-results'; document: AssessmentResults }
+  | { type: 'plan-of-action-and-milestones'; document: PlanOfActionAndMilestones }
 
 export interface OscalDocument {
   type: DocumentType
