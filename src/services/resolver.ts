@@ -5,7 +5,7 @@
  * Handles CORS via GitHub raw URL transformation.
  * Domain Layer: no Preact imports, no side effects beyond fetch.
  */
-import type { OscalDocument, Profile, Control, Catalog, Group, SetParameter, Alter, SystemSecurityPlan, DocumentType } from '@/types/oscal'
+import type { OscalDocument, Profile, Control, Catalog, Group, SetParameter, Alter, SystemSecurityPlan, DocumentType, BackMatter } from '@/types/oscal'
 import { parseHref } from '@/services/href-parser'
 import type { DocumentCache } from '@/services/document-cache'
 import { parseOscalDocument } from '@/parser'
@@ -74,6 +74,31 @@ export function resolveUrl(href: string, baseUrl?: string): string {
   }
 
   return href
+}
+
+/**
+ * Resolve a fragment reference (e.g. "#uuid") to a fetchable URL by looking up
+ * the resource in the document's back-matter and selecting a JSON rlink.
+ * OSCAL profiles commonly use fragment references to back-matter resources
+ * instead of direct URLs (e.g. NIST SP 800-53 baselines).
+ */
+export function resolveFragmentToUrl(
+  fragment: string | undefined,
+  backMatter: BackMatter | undefined,
+  baseUrl: string | undefined
+): string | undefined {
+  if (!fragment || !backMatter?.resources) return undefined
+
+  const resource = backMatter.resources.find(r => r.uuid === fragment)
+  if (!resource?.rlinks || resource.rlinks.length === 0) return undefined
+
+  // Prefer JSON rlink for our JSON-only parser, fall back to first available
+  const jsonRlink = resource.rlinks.find(r =>
+    r['media-type']?.includes('json')
+  )
+  const rlink = jsonRlink ?? resource.rlinks[0]
+
+  return resolveUrl(rlink.href, baseUrl)
 }
 
 /**
@@ -239,7 +264,21 @@ export async function resolveProfile(
         }
       }
 
-      const resolvedUrl = resolveUrl(imp.href, baseUrl)
+      // Fragment references (#uuid) resolve via back-matter resources
+      let resolvedUrl: string
+      if (parsed.type === 'fragment') {
+        const fragmentUrl = resolveFragmentToUrl(parsed.fragment, profile['back-matter'], baseUrl)
+        if (!fragmentUrl) {
+          return {
+            source: { href: imp.href, status: 'error' as ImportStatus, controlCount: 0, error: 'Back-matter resource not found or has no JSON rlink' },
+            controls: [] as Control[],
+          }
+        }
+        resolvedUrl = fragmentUrl
+      } else {
+        resolvedUrl = resolveUrl(imp.href, baseUrl)
+      }
+
       const fromCache = cache.has(resolvedUrl)
 
       try {
@@ -378,7 +417,22 @@ export async function resolveSsp(
     }
   }
 
-  const resolvedUrl = resolveUrl(href, baseUrl)
+  // Fragment references (#uuid) resolve via SSP back-matter resources
+  let resolvedUrl: string
+  if (parsed.type === 'fragment') {
+    const fragmentUrl = resolveFragmentToUrl(parsed.fragment, ssp['back-matter'], baseUrl)
+    if (!fragmentUrl) {
+      return {
+        profileMeta: null,
+        catalogSources: [],
+        controls: [],
+        errors: ['Back-matter resource not found or has no JSON rlink: ' + href],
+      }
+    }
+    resolvedUrl = fragmentUrl
+  } else {
+    resolvedUrl = resolveUrl(href, baseUrl)
+  }
 
   try {
     const doc = await fetchDocument(resolvedUrl, cache)

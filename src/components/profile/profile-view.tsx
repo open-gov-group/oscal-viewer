@@ -82,7 +82,7 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile, onNa
           id="profile-resolved"
           title="Resolved Catalog"
           count={controls.length}
-          defaultOpen={false}
+          defaultOpen={true}
           headingLevel={3}
         >
           <p class="resolved-controls-summary">

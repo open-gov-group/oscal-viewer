@@ -1,4 +1,4 @@
-import { toRawGithubUrl, resolveUrl, fetchDocument, resolveProfile, resolveSsp, resolveSource } from '@/services/resolver'
+import { toRawGithubUrl, resolveUrl, resolveFragmentToUrl, fetchDocument, resolveProfile, resolveSsp, resolveSource } from '@/services/resolver'
 import { DocumentCache } from '@/services/document-cache'
 import type { OscalDocument, Profile, Catalog, SystemSecurityPlan } from '@/types/oscal'
 
@@ -68,6 +68,58 @@ describe('resolveUrl', () => {
 
   it('returns relative URL as-is without base', () => {
     expect(resolveUrl('./catalog.json')).toBe('./catalog.json')
+  })
+})
+
+describe('resolveFragmentToUrl', () => {
+  const backMatter = {
+    resources: [
+      {
+        uuid: '84cbf061-eb87-4ec1-8112-1f529232e907',
+        description: 'NIST SP 800-53',
+        rlinks: [
+          { href: '../../../../catalog.xml', 'media-type': 'application/oscal.catalog+xml' },
+          { href: '../../../../catalog.json', 'media-type': 'application/oscal.catalog+json' },
+        ],
+      },
+    ],
+  }
+
+  it('resolves fragment to JSON rlink URL', () => {
+    const result = resolveFragmentToUrl('84cbf061-eb87-4ec1-8112-1f529232e907', backMatter, 'https://example.com/profiles/')
+    expect(result).toBe('https://example.com/catalog.json')
+  })
+
+  it('returns undefined for unknown fragment', () => {
+    const result = resolveFragmentToUrl('unknown-uuid', backMatter, undefined)
+    expect(result).toBeUndefined()
+  })
+
+  it('returns undefined for undefined fragment', () => {
+    const result = resolveFragmentToUrl(undefined, backMatter, undefined)
+    expect(result).toBeUndefined()
+  })
+
+  it('returns undefined for undefined back-matter', () => {
+    const result = resolveFragmentToUrl('84cbf061-eb87-4ec1-8112-1f529232e907', undefined, undefined)
+    expect(result).toBeUndefined()
+  })
+
+  it('returns undefined for resource with no rlinks', () => {
+    const bmNoRlinks = { resources: [{ uuid: 'test-uuid', description: 'No rlinks' }] }
+    const result = resolveFragmentToUrl('test-uuid', bmNoRlinks, undefined)
+    expect(result).toBeUndefined()
+  })
+
+  it('falls back to first rlink when no JSON rlink exists', () => {
+    const bmXmlOnly = {
+      resources: [{
+        uuid: 'xml-only',
+        rlinks: [{ href: 'catalog.xml', 'media-type': 'application/xml' }],
+      }],
+    }
+    const result = resolveFragmentToUrl('xml-only', bmXmlOnly, 'https://example.com/')
+    expect(result).toBe('https://example.com/catalog.xml')
   })
 })
 
@@ -165,6 +217,48 @@ describe('resolveProfile', () => {
     const result = await resolveProfile(profileUrn, undefined, cache)
     expect(result.sources[0].status).toBe('error')
     expect(result.sources[0].error).toContain('URN')
+  })
+
+  it('resolves fragment import via back-matter resource', async () => {
+    const profileWithFragment: Profile = {
+      ...mockProfile,
+      imports: [
+        { href: '#84cbf061-eb87-4ec1-8112-1f529232e907', 'include-all': {} },
+      ],
+      'back-matter': {
+        resources: [{
+          uuid: '84cbf061-eb87-4ec1-8112-1f529232e907',
+          description: 'Source catalog',
+          rlinks: [
+            { href: 'catalog.json', 'media-type': 'application/oscal.catalog+json' },
+          ],
+        }],
+      },
+    }
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(JSON.stringify({ catalog: mockCatalog })),
+    })
+
+    const result = await resolveProfile(profileWithFragment, 'https://example.com/profiles/', cache)
+    expect(result.controls).toHaveLength(3)
+    expect(result.sources[0].status).toBe('loaded')
+    expect(result.sources[0].resolvedUrl).toBe('https://example.com/profiles/catalog.json')
+  })
+
+  it('returns error for fragment with missing back-matter resource', async () => {
+    const profileBadFragment: Profile = {
+      ...mockProfile,
+      imports: [
+        { href: '#nonexistent-uuid', 'include-all': {} },
+      ],
+    }
+
+    const result = await resolveProfile(profileBadFragment, undefined, cache)
+    expect(result.sources[0].status).toBe('error')
+    expect(result.sources[0].error).toContain('Back-matter')
+    expect(result.controls).toHaveLength(0)
   })
 
   it('applies set-parameters modifications', async () => {
