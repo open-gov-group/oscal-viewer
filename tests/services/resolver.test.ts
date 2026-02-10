@@ -409,6 +409,69 @@ describe('resolveSsp', () => {
     expect(result.profileMeta).toBeNull()
     expect(result.errors[0]).toContain('Expected profile')
   })
+
+  it('returns merge and modify from resolved profile', async () => {
+    const profileWithMergeModify: Profile = {
+      ...mockProfile,
+      merge: { combine: { method: 'merge' } },
+      modify: {
+        'set-parameters': [{ 'param-id': 'ac-1_prm_1', values: ['org-value'] }],
+      },
+    }
+
+    let callCount = 0
+    globalThis.fetch = vi.fn().mockImplementation(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify({ profile: profileWithMergeModify })),
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify({ catalog: mockCatalog })),
+      })
+    })
+
+    const result = await resolveSsp(mockSsp, undefined, cache)
+    expect(result.merge).toEqual({ combine: { method: 'merge' } })
+    expect(result.modify).toEqual({
+      'set-parameters': [{ 'param-id': 'ac-1_prm_1', values: ['org-value'] }],
+    })
+  })
+
+  it('returns undefined merge/modify when profile has none', async () => {
+    let callCount = 0
+    globalThis.fetch = vi.fn().mockImplementation(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify({ profile: mockProfile })),
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify({ catalog: mockCatalog })),
+      })
+    })
+
+    const result = await resolveSsp(mockSsp, undefined, cache)
+    expect(result.merge).toBeUndefined()
+    expect(result.modify).toBeUndefined()
+  })
+
+  it('returns undefined merge/modify on error paths', async () => {
+    const sspWithUrn = {
+      ...mockSsp,
+      'import-profile': { href: 'urn:example:profile' },
+    }
+
+    const result = await resolveSsp(sspWithUrn, undefined, cache)
+    expect(result.merge).toBeUndefined()
+    expect(result.modify).toBeUndefined()
+  })
 })
 
 describe('resolveSource', () => {

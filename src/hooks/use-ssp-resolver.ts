@@ -6,7 +6,7 @@
  * Application Layer: bridges Domain (services/) with Presentation (components/).
  */
 import { useState, useCallback, useRef } from 'preact/hooks'
-import type { SystemSecurityPlan, Control } from '@/types/oscal'
+import type { SystemSecurityPlan, Control, Merge, Modify } from '@/types/oscal'
 import type { ImportSource, ResolvedSsp } from '@/services/resolver'
 import { resolveSsp } from '@/services/resolver'
 import { DocumentCache } from '@/services/document-cache'
@@ -21,6 +21,10 @@ export interface UseSspResolverReturn {
   loading: boolean
   /** Controls gathered from the full SSP → Profile → Catalog chain. */
   controls: Control[]
+  /** Profile merge strategy. Undefined until resolved. */
+  merge: Merge | undefined
+  /** Profile modifications (set-parameters, alters). Undefined until resolved. */
+  modify: Modify | undefined
   /** Error message if resolution failed. */
   error: string | null
   /** Trigger resolution for an SSP document. */
@@ -32,6 +36,8 @@ export function useSspResolver(): UseSspResolverReturn {
   const [profileMeta, setProfileMeta] = useState<UseSspResolverReturn['profileMeta']>(null)
   const [catalogSources, setCatalogSources] = useState<ImportSource[]>([])
   const [controls, setControls] = useState<Control[]>([])
+  const [merge, setMerge] = useState<Merge | undefined>(undefined)
+  const [modify, setModify] = useState<Modify | undefined>(undefined)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const cacheRef = useRef(new DocumentCache())
@@ -45,6 +51,8 @@ export function useSspResolver(): UseSspResolverReturn {
       setProfileMeta(result.profileMeta)
       setCatalogSources(result.catalogSources)
       setControls(result.controls)
+      setMerge(result.merge)
+      setModify(result.modify)
 
       if (result.errors.length > 0) {
         setError(result.errors.join('; '))
@@ -54,10 +62,12 @@ export function useSspResolver(): UseSspResolverReturn {
       setProfileMeta(null)
       setCatalogSources([])
       setControls([])
+      setMerge(undefined)
+      setModify(undefined)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  return { profileMeta, catalogSources, controls, loading, error, resolve }
+  return { profileMeta, catalogSources, controls, merge, modify, loading, error, resolve }
 }

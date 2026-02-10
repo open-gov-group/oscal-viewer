@@ -422,3 +422,54 @@ describe('SspView - Tab Keyboard Navigation', () => {
     expect(tabpanel?.getAttribute('aria-labelledby')).toBe('ssp-tab-implementation')
   })
 })
+
+// ============================================================
+// SspView - Control Title Map Tests
+// ============================================================
+
+describe('SspView - Control Title Enrichment', () => {
+  it('renders control-id codes in Control Implementation tab', () => {
+    render(<SspView ssp={fullSsp} />)
+    fireEvent.click(screen.getByText('Control Implementation'))
+    const controlIds = document.querySelectorAll('.ssp-control-id')
+    expect(controlIds.length).toBe(2)
+    expect(controlIds[0].textContent).toBe('ac-1')
+    expect(controlIds[1].textContent).toBe('au-1')
+  })
+
+  it('does not render control titles when no controls are resolved', () => {
+    render(<SspView ssp={fullSsp} />)
+    fireEvent.click(screen.getByText('Control Implementation'))
+    const titles = document.querySelectorAll('.ssp-control-title')
+    // No resolved controls by default (hook returns empty until resolution completes)
+    expect(titles.length).toBe(0)
+  })
+
+  it('does not show Resolved Controls stat when no controls resolved', () => {
+    render(<SspView ssp={fullSsp} />)
+    expect(screen.queryByText(/Resolved Control/)).toBeNull()
+  })
+
+  it('does not render Resolved Catalog accordion when no controls resolved', () => {
+    const { container } = render(<SspView ssp={fullSsp} />)
+    expect(container.querySelector('#ssp-resolved-catalog')).toBeNull()
+  })
+})
+
+// ============================================================
+// SspView - ImportPanel Integration Tests
+// ============================================================
+
+describe('SspView - ImportPanel Integration', () => {
+  it('does not render ImportPanel when no sources and not resolving', () => {
+    // SSP with no import-profile href triggers no resolution
+    const sspNoImport = {
+      ...fullSsp,
+      'import-profile': { href: '' },
+    }
+    const { container } = render(<SspView ssp={sspNoImport} />)
+    // ImportPanel renders when catalogSources > 0 or resolving
+    // With empty href, resolveSsp is not called, so no ImportPanel
+    expect(container.querySelector('.import-panel')).toBeNull()
+  })
+})

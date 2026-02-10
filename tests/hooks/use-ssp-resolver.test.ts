@@ -103,4 +103,54 @@ describe('useSspResolver', () => {
     expect(result.current.controls[0].id).toBe('ac-1')
     expect(result.current.controls[0].title).toBe('Access Control')
   })
+
+  it('starts with undefined merge and modify', () => {
+    const { result } = renderHook(() => useSspResolver())
+    expect(result.current.merge).toBeUndefined()
+    expect(result.current.modify).toBeUndefined()
+  })
+
+  it('exposes merge and modify after successful resolution', async () => {
+    const profileWithMergeModify = {
+      ...mockProfile,
+      merge: { combine: { method: 'merge' } },
+      modify: {
+        'set-parameters': [{ 'param-id': 'ac-1_prm_1', values: ['org-value'] }],
+      },
+    }
+
+    let callCount = 0
+    globalThis.fetch = vi.fn().mockImplementation(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify({ profile: profileWithMergeModify })) })
+      }
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify({ catalog: mockCatalog })) })
+    })
+
+    const { result } = renderHook(() => useSspResolver())
+
+    await act(async () => {
+      await result.current.resolve(mockSsp)
+    })
+
+    expect(result.current.merge).toEqual({ combine: { method: 'merge' } })
+    expect(result.current.modify).toEqual({
+      'set-parameters': [{ 'param-id': 'ac-1_prm_1', values: ['org-value'] }],
+    })
+  })
+
+  it('resets merge and modify on error', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed'))
+
+    const { result } = renderHook(() => useSspResolver())
+
+    await act(async () => {
+      await result.current.resolve(mockSsp)
+    })
+
+    expect(result.current.merge).toBeUndefined()
+    expect(result.current.modify).toBeUndefined()
+    expect(result.current.error).toBeTruthy()
+  })
 })

@@ -386,6 +386,10 @@ export interface ResolvedSsp {
   catalogSources: ImportSource[]
   /** Controls gathered from the full SSP -> Profile -> Catalog chain. */
   controls: Control[]
+  /** Profile merge strategy. Undefined when profile is not resolved. */
+  merge: Profile['merge']
+  /** Profile modifications (set-parameters, alters). Undefined when profile is not resolved. */
+  modify: Profile['modify']
   /** Non-fatal errors encountered during resolution. */
   errors: string[]
 }
@@ -413,6 +417,8 @@ export async function resolveSsp(
       profileMeta: null,
       catalogSources: [],
       controls: [],
+      merge: undefined,
+      modify: undefined,
       errors: ['URN references cannot be resolved: ' + href],
     }
   }
@@ -426,6 +432,8 @@ export async function resolveSsp(
         profileMeta: null,
         catalogSources: [],
         controls: [],
+        merge: undefined,
+        modify: undefined,
         errors: ['Back-matter resource not found or has no JSON rlink: ' + href],
       }
     }
@@ -442,6 +450,8 @@ export async function resolveSsp(
         profileMeta: null,
         catalogSources: [],
         controls: [],
+        merge: undefined,
+        modify: undefined,
         errors: [`Expected profile, got ${doc.data.type}`],
       }
     }
@@ -465,6 +475,8 @@ export async function resolveSsp(
       profileMeta,
       catalogSources: resolved.sources,
       controls: resolved.controls,
+      merge: profile.merge,
+      modify: profile.modify,
       errors: resolved.errors,
     }
   } catch (e) {
@@ -476,6 +488,8 @@ export async function resolveSsp(
       profileMeta: null,
       catalogSources: [],
       controls: [],
+      merge: undefined,
+      modify: undefined,
       errors: [errorMsg],
     }
   }

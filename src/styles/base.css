@@ -2362,6 +2362,13 @@ body {
   font-weight: 600;
 }
 
+.ssp-control-title {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin-left: 0.5rem;
+  font-style: italic;
+}
+
 .ssp-statements {
   margin-top: 0.375rem;
   padding-left: 0.75rem;

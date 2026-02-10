@@ -36,14 +36,16 @@ Der OSCAL Viewer ist ein clientseitiger Viewer fuer OSCAL-Dokumente (Open Securi
 | ADR-008 | Resolution Service Architecture (HrefParser, DocumentCache, Resolver) | 2026-02-09 |
 | ADR-009 | Resolved Catalog, Parameter Substitution & Cross-Document Navigation | 2026-02-10 |
 
-## Phase 6 Ausblick
+## Ausblick (nach Phase 6)
 
-### Naechste Ziele
+### Naechste Schritte (Phase 7-10)
 
-1. **Assessment Results (AR) Architektur**: Neue OSCAL-Dokumenttypen (Assessment Results, Assessment Plan) erfordern Parser, Views und Typen. Architektur-Entscheidungen fuer AR-spezifische Patterns (Findings, Observations, Risks) treffen.
-2. **POA&M Architektur**: Plan of Action & Milestones Dokumenttyp mit Milestone-Timeline, Status-Tracking und Beziehungen zu Findings aus AR.
-3. **Playwright E2E Strategie**: End-to-End-Tests mit Playwright planen — Test-Szenarien fuer Cross-Document Navigation, PWA Offline-Modus, Fragment-Navigation, URL-Loading.
-4. **XML Parser Planung**: OSCAL unterstuetzt neben JSON auch XML-Format. Evaluierung ob ein XML-Parser ins npm Package aufgenommen werden soll (ADR-010 Kandidat).
+1. **Phase 7 — XML Parser (2-3 Sprints)**: OSCAL XML nativ im Browser parsen. DOMParser-basierter Adapter, detect.ts Erweiterung, ADR-010.
+2. **Phase 8 — npm Package Publish (1 Sprint)**: @open-gov-group/oscal-parser auf npm veroeffentlichen. NPM_TOKEN, Integration Tests, Versionsstrategie.
+3. **Phase 9 — Performance / Lazy Loading (2 Sprints)**: Virtual Scrolling, dynamic import(), Bundle-Optimierung.
+4. **Phase 10 — Accessibility Re-Audit BITV 2.0 (1-2 Sprints)**: Vollstaendiger WCAG 2.1 AA Audit fuer alle seit Phase 2 hinzugekommenen Komponenten.
+
+> Detaillierte Phase 7-10 Plaene: siehe **ORCHESTRATION.md v3.0**
 
 ### Aufgabenverteilung Phase 6
 

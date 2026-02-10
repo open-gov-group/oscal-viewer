@@ -18,6 +18,9 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { useSspResolver } from '@/hooks/use-ssp-resolver'
 import { ImportPanel } from '@/components/shared/import-panel'
 import { ResourcePanel } from '@/components/shared/resource-panel'
+import { Accordion, AccordionGroup } from '@/components/shared/accordion'
+import { ControlDetail } from '@/components/catalog/control-detail'
+import { buildParamMap } from '@/services/param-substitutor'
 
 interface SspViewProps {
   ssp: SystemSecurityPlan
@@ -61,7 +64,28 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp, onNavigate }) =>
     requirements: ssp['control-implementation']['implemented-requirements'].length,
   }), [ssp])
 
-  const { profileMeta, catalogSources, loading: resolving, error: resolveError, resolve: resolveSspFn } = useSspResolver()
+  const { profileMeta, catalogSources, controls: resolvedControls, merge, modify, loading: resolving, error: resolveError, resolve: resolveSspFn } = useSspResolver()
+
+  /** Map of control-id to control title for enriching the Control Implementation tab. */
+  const controlTitleMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const c of resolvedControls) {
+      map.set(c.id, c.title)
+    }
+    return map
+  }, [resolvedControls])
+
+  /** Profile-level parameter map for prose substitution in resolved controls. */
+  const profileParamMap = useMemo(() => {
+    const setParams = modify?.['set-parameters']
+    if (!setParams || setParams.length === 0) return new Map<string, string>()
+    return buildParamMap(setParams.map(sp => ({
+      id: sp['param-id'],
+      label: sp.label,
+      values: sp.values,
+      select: sp.select,
+    })))
+  }, [modify])
 
   const baseUrl = useMemo(() => {
     const urlParam = new URLSearchParams(window.location.search).get('url')
@@ -125,6 +149,9 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp, onNavigate }) =>
         <span class="stat"><strong>{stats.users}</strong> User{stats.users !== 1 ? 's' : ''}</span>
         <span class="stat"><strong>{stats.components}</strong> Component{stats.components !== 1 ? 's' : ''}</span>
         <span class="stat"><strong>{stats.requirements}</strong> Implemented Requirement{stats.requirements !== 1 ? 's' : ''}</span>
+        {resolvedControls.length > 0 && (
+          <span class="stat"><strong>{resolvedControls.length}</strong> Resolved Control{resolvedControls.length !== 1 ? 's' : ''}</span>
+        )}
       </div>
 
       <div class="ssp-import-profile">
@@ -142,8 +169,36 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp, onNavigate }) =>
           sources={catalogSources}
           loading={resolving}
           error={resolveError}
+          merge={merge}
+          modify={modify}
           onSourceClick={onNavigate}
         />
+      )}
+
+      {resolvedControls.length > 0 && (
+        <Accordion
+          id="ssp-resolved-catalog"
+          title="Resolved Catalog"
+          count={resolvedControls.length}
+          defaultOpen={false}
+          headingLevel={3}
+        >
+          <p class="resolved-controls-summary">
+            {resolvedControls.length} control{resolvedControls.length !== 1 ? 's' : ''} resolved from {catalogSources.filter(s => s.status !== 'error').length} source{catalogSources.filter(s => s.status !== 'error').length !== 1 ? 's' : ''}
+          </p>
+          <AccordionGroup>
+            {resolvedControls.map(control => (
+              <Accordion
+                key={control.id}
+                id={`ssp-resolved-${control.id}`}
+                title={`${control.id} — ${control.title}`}
+                headingLevel={4}
+              >
+                <ControlDetail control={control} paramMap={profileParamMap} />
+              </Accordion>
+            ))}
+          </AccordionGroup>
+        </Accordion>
       )}
 
       <nav class="ssp-tabs" role="tablist" aria-label="SSP Sections">
@@ -177,7 +232,7 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp, onNavigate }) =>
           <ImplementationPanel implementation={ssp['system-implementation']} />
         )}
         {activeTab === 'controls' && (
-          <ControlImplementationPanel controlImpl={ssp['control-implementation']} />
+          <ControlImplementationPanel controlImpl={ssp['control-implementation']} controlTitleMap={controlTitleMap} />
         )}
       </div>
 
@@ -341,10 +396,12 @@ const ImplementationPanel: FunctionComponent<ImplementationPanelProps> = ({ impl
 
 interface ControlImplementationPanelProps {
   controlImpl: SspControlImplementation
+  /** Map of control-id to resolved control title for enriching requirement headers. */
+  controlTitleMap: Map<string, string>
 }
 
 /** Renders implemented requirements with statements and by-component implementation narratives. */
-const ControlImplementationPanel: FunctionComponent<ControlImplementationPanelProps> = ({ controlImpl }) => {
+const ControlImplementationPanel: FunctionComponent<ControlImplementationPanelProps> = ({ controlImpl, controlTitleMap }) => {
   return (
     <div class="ssp-control-impl">
       {controlImpl.description && (
@@ -356,6 +413,9 @@ const ControlImplementationPanel: FunctionComponent<ControlImplementationPanelPr
           <div key={req.uuid} class="ssp-requirement-card">
             <div class="ssp-requirement-header">
               <code class="ssp-control-id">{req['control-id']}</code>
+              {controlTitleMap.get(req['control-id']) && (
+                <span class="ssp-control-title">{controlTitleMap.get(req['control-id'])}</span>
+              )}
               {req.props && req.props.length > 0 && (
                 <PropertyList props={req.props} />
               )}
