@@ -1,11 +1,11 @@
-import { detectDocumentType, detectVersion } from '@/parser/detect'
+import { detectDocumentType, detectVersion, detectFormat } from '@/parser/detect'
 import { parseCatalog, countControls } from '@/parser/catalog'
 import { parseProfile } from '@/parser/profile'
 import { parseComponentDefinition } from '@/parser/component-definition'
 import { parseSSP } from '@/parser/ssp'
 import { parseAssessmentResults } from '@/parser/assessment-results'
 import { parsePoam } from '@/parser/poam'
-import { parseOscalDocument } from '@/parser'
+import { parseOscalDocument, parseOscalText } from '@/parser'
 
 // ============================================================
 // Test Fixtures
@@ -730,6 +730,111 @@ describe('parseOscalDocument — AR & POA&M', () => {
     if (result.success) {
       expect(result.data.type).toBe('plan-of-action-and-milestones')
       expect(result.data.data.type).toBe('plan-of-action-and-milestones')
+    }
+  })
+})
+
+// ============================================================
+// Format Detection
+// ============================================================
+
+describe('detectFormat', () => {
+  it('detects JSON from opening brace', () => {
+    expect(detectFormat('{"catalog":{}}')).toBe('json')
+  })
+
+  it('detects JSON from opening bracket', () => {
+    expect(detectFormat('[1,2,3]')).toBe('json')
+  })
+
+  it('detects JSON with leading whitespace', () => {
+    expect(detectFormat('  \n  {"catalog":{}}')).toBe('json')
+  })
+
+  it('detects XML from opening angle bracket', () => {
+    expect(detectFormat('<catalog xmlns="http://csrc.nist.gov/ns/oscal/1.0"/>')).toBe('xml')
+  })
+
+  it('detects XML with processing instruction', () => {
+    expect(detectFormat('<?xml version="1.0"?><catalog/>')).toBe('xml')
+  })
+
+  it('detects XML with leading whitespace', () => {
+    expect(detectFormat('  \n  <catalog/>')).toBe('xml')
+  })
+
+  it('returns unknown for empty string', () => {
+    expect(detectFormat('')).toBe('unknown')
+  })
+
+  it('returns unknown for whitespace-only string', () => {
+    expect(detectFormat('   \n\t  ')).toBe('unknown')
+  })
+
+  it('returns unknown for plain text', () => {
+    expect(detectFormat('Hello World')).toBe('unknown')
+  })
+})
+
+// ============================================================
+// parseOscalText (JSON + XML unified entry point)
+// ============================================================
+
+describe('parseOscalText', () => {
+  it('parses JSON catalog text', () => {
+    const json = JSON.stringify(catalogFixture)
+    const result = parseOscalText(json)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.type).toBe('catalog')
+    }
+  })
+
+  it('parses XML catalog text', () => {
+    const xml = `<catalog xmlns="http://csrc.nist.gov/ns/oscal/1.0" uuid="cat-xml-001">
+      <metadata>
+        <title>XML Catalog</title>
+        <last-modified>2026-01-01T00:00:00Z</last-modified>
+        <version>1.0</version>
+        <oscal-version>1.1.2</oscal-version>
+      </metadata>
+      <control id="ac-1"><title>Access Control</title></control>
+    </catalog>`
+    const result = parseOscalText(xml)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.type).toBe('catalog')
+      expect(result.data.version).toBe('1.1.2')
+    }
+  })
+
+  it('returns error for unknown format', () => {
+    const result = parseOscalText('Hello World')
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error).toContain('Unrecognized format')
+    }
+  })
+
+  it('returns error for malformed JSON', () => {
+    const result = parseOscalText('{invalid json}')
+    expect(result.success).toBe(false)
+  })
+
+  it('returns error for malformed XML', () => {
+    const result = parseOscalText('<catalog><unclosed>')
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error).toContain('XML parse error')
+    }
+  })
+
+  it('returns error for valid XML but unknown OSCAL type', () => {
+    const xml = '<unknown-doc xmlns="http://example.com"><data/></unknown-doc>'
+    const result = parseOscalText(xml)
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error).toContain('Unrecognized')
     }
   })
 })

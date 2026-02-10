@@ -69,11 +69,12 @@ export type {
 } from '@/types/oscal'
 
 // Parser functions
-export { parseOscalDocument } from '@/parser'
+export { parseOscalDocument, parseOscalText } from '@/parser'
 export { parseCatalog, countControls } from '@/parser/catalog'
 export { parseProfile } from '@/parser/profile'
 export { parseComponentDefinition } from '@/parser/component-definition'
 export { parseSSP } from '@/parser/ssp'
 export { parseAssessmentResults } from '@/parser/assessment-results'
 export { parsePoam } from '@/parser/poam'
-export { detectDocumentType, detectVersion } from '@/parser/detect'
+export { detectDocumentType, detectVersion, detectFormat } from '@/parser/detect'
+export { xmlToJson } from '@/parser/xml-adapter'

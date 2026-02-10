@@ -1,5 +1,20 @@
-/** Detection utilities: identify OSCAL document type, version, and extract metadata from raw JSON. */
+/** Detection utilities: identify OSCAL document type, version, format, and extract metadata from raw JSON. */
 import type { DocumentType, Metadata } from '@/types/oscal'
+
+/** Supported input formats for OSCAL documents. */
+export type OscalFormat = 'json' | 'xml' | 'unknown'
+
+/**
+ * Detect the format of an OSCAL text input by inspecting the first non-whitespace character.
+ * Returns 'json' for JSON (`{` or `[`), 'xml' for XML (`<`), or 'unknown' otherwise.
+ */
+export function detectFormat(text: string): OscalFormat {
+  const trimmed = text.trim()
+  if (trimmed.length === 0) return 'unknown'
+  if (trimmed[0] === '<') return 'xml'
+  if (trimmed[0] === '{' || trimmed[0] === '[') return 'json'
+  return 'unknown'
+}
 
 const DOCUMENT_TYPE_KEYS: readonly DocumentType[] = [
   'catalog',

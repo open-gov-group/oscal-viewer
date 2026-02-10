@@ -258,7 +258,7 @@ describe('App - URL Input', () => {
     })
   })
 
-  it('shows error on invalid JSON response', async () => {
+  it('shows error on unrecognized format response', async () => {
     setFetchResponse('example.com/bad', () =>
       Promise.resolve({ ok: true, text: () => Promise.resolve('not json') })
     )
@@ -269,7 +269,7 @@ describe('App - URL Input', () => {
     await waitFor(() => {
       const errorMsg = container.querySelector('.error-message')
       expect(errorMsg).toBeTruthy()
-      expect(errorMsg?.textContent).toContain('Failed to load from URL')
+      expect(errorMsg?.textContent).toContain('Unrecognized format')
     })
   })
 

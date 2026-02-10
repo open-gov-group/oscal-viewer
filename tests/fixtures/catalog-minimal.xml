@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog xmlns="http://csrc.nist.gov/ns/oscal/1.0" uuid="cat-xml-001">
+  <metadata>
+    <title>Minimal XML Catalog</title>
+    <last-modified>2026-01-15T00:00:00Z</last-modified>
+    <version>1.0</version>
+    <oscal-version>1.1.2</oscal-version>
+    <role id="author"><title>Author</title></role>
+    <party uuid="party-001" type="organization">
+      <name>Test Organization</name>
+    </party>
+  </metadata>
+  <group id="ac">
+    <title>Access Control</title>
+    <control id="ac-1">
+      <title>Policy and Procedures</title>
+      <param id="ac-1_prm_1">
+        <label>organization-defined frequency</label>
+        <select how-many="one-or-more">
+          <choice>monthly</choice>
+          <choice>quarterly</choice>
+        </select>
+      </param>
+      <prop name="label" value="AC-1"/>
+      <link href="#ac-2" rel="related"/>
+      <part name="statement" id="ac-1_smt">
+        <p>The organization:</p>
+        <part name="item" id="ac-1_smt.a">
+          <prop name="label" value="a."/>
+          <p>Develops, documents, and disseminates access control policy every <insert type="param" id-ref="ac-1_prm_1"/>.</p>
+        </part>
+      </part>
+      <part name="guidance" id="ac-1_gdn">
+        <p>Access control policy addresses the <strong>controls</strong> in the AC family.</p>
+      </part>
+    </control>
+    <control id="ac-2">
+      <title>Account Management</title>
+      <part name="statement" id="ac-2_smt">
+        <p>Manage system accounts.</p>
+      </part>
+    </control>
+  </group>
+  <back-matter>
+    <resource uuid="res-001">
+      <title>Reference Document</title>
+      <rlink href="https://example.com/reference.pdf" media-type="application/pdf"/>
+    </resource>
+  </back-matter>
+</catalog>

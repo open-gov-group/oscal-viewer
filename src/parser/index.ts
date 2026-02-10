@@ -1,19 +1,21 @@
 import type { OscalDocument, ParseResult, OscalDocumentData } from '@/types/oscal'
-import { detectDocumentType, detectVersion, extractDocument } from './detect'
+import { detectDocumentType, detectVersion, extractDocument, detectFormat } from './detect'
 import { parseCatalog } from './catalog'
 import { parseProfile } from './profile'
 import { parseComponentDefinition } from './component-definition'
 import { parseSSP } from './ssp'
 import { parseAssessmentResults } from './assessment-results'
 import { parsePoam } from './poam'
+import { xmlToJson } from './xml-adapter'
 
-export { detectDocumentType, detectVersion } from './detect'
+export { detectDocumentType, detectVersion, detectFormat } from './detect'
 export { parseCatalog, countControls } from './catalog'
 export { parseProfile } from './profile'
 export { parseComponentDefinition } from './component-definition'
 export { parseSSP } from './ssp'
 export { parseAssessmentResults } from './assessment-results'
 export { parsePoam } from './poam'
+export { xmlToJson } from './xml-adapter'
 
 /**
  * Parse a raw OSCAL JSON object into a typed OscalDocument.
@@ -69,5 +71,31 @@ export function parseOscalDocument(json: unknown): ParseResult<OscalDocument> {
       version,
       data: { type, document: dataResult.data } as OscalDocumentData,
     },
+  }
+}
+
+/**
+ * Parse an OSCAL document from raw text (JSON or XML).
+ * Auto-detects the format, converts XML to JSON if needed,
+ * then delegates to parseOscalDocument().
+ */
+export function parseOscalText(text: string): ParseResult<OscalDocument> {
+  const format = detectFormat(text)
+
+  if (format === 'unknown') {
+    return {
+      success: false,
+      error: 'Unrecognized format. Expected JSON (starting with { or [) or XML (starting with <).',
+    }
+  }
+
+  try {
+    const json = format === 'xml' ? xmlToJson(text) : JSON.parse(text)
+    return parseOscalDocument(json)
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to parse document',
+    }
   }
 }

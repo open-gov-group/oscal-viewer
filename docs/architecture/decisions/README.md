@@ -15,7 +15,7 @@ Dieses Verzeichnis enthält Architecture Decision Records (ADRs) für den OSCAL 
 | 007 | [npm Package Architecture](ADR_007_npm_package.md) | Accepted | 2026-02-07 |
 | 008 | [Resolution Service Architecture](ADR_008_resolution_service.md) | Accepted | 2026-02-09 |
 | 009 | [Resolved Catalog, Parameter Substitution & Cross-Document Navigation](ADR_009_resolved_catalog.md) | Accepted | 2026-02-10 |
-| 010 | XML Parser Strategy | Proposed | — |
+| 010 | [XML Parser Strategy](ADR_010_xml_parser.md) | Accepted | 2026-02-09 |
 
 ## Neues ADR erstellen
 

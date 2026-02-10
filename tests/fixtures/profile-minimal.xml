@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profile xmlns="http://csrc.nist.gov/ns/oscal/1.0" uuid="prof-xml-001">
+  <metadata>
+    <title>Minimal XML Profile</title>
+    <last-modified>2026-01-15T00:00:00Z</last-modified>
+    <version>2.0</version>
+    <oscal-version>1.1.2</oscal-version>
+  </metadata>
+  <import href="https://example.com/catalog.json">
+    <include-controls>
+      <with-id>ac-1</with-id>
+      <with-id>ac-2</with-id>
+    </include-controls>
+  </import>
+  <merge>
+    <as-is>true</as-is>
+  </merge>
+  <modify>
+    <set-parameter param-id="ac-1_prm_1">
+      <value>monthly</value>
+    </set-parameter>
+  </modify>
+</profile>

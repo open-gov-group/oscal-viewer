@@ -9,7 +9,7 @@ import { useState, useCallback, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
 import type { OscalDocument } from '@/types/oscal'
 import type { PresetEntry, AppConfig } from '@/types/config'
-import { parseOscalDocument } from '@/parser'
+import { parseOscalText } from '@/parser'
 import { useSearch } from '@/hooks/use-search'
 import type { SearchResult } from '@/hooks/use-search'
 import { DocumentViewer } from '@/components/document-viewer'
@@ -81,13 +81,11 @@ export const App: FunctionComponent = () => {
     if (hash) location.hash = hash
   }, [document])
 
-  /** Parse a local OSCAL JSON file (from drop or file input) and set it as the active document. */
+  /** Parse a local OSCAL file (JSON or XML, from drop or file input) and set it as the active document. */
   const handleFile = async (file: File) => {
     try {
       const text = await file.text()
-      const json = JSON.parse(text)
-
-      const result = parseOscalDocument(json)
+      const result = parseOscalText(text)
       if (!result.success) {
         setError(result.error)
         setDocument(null)
@@ -117,9 +115,7 @@ export const App: FunctionComponent = () => {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
       const text = await response.text()
-      const json = JSON.parse(text)
-
-      const result = parseOscalDocument(json)
+      const result = parseOscalText(text)
       if (!result.success) {
         setError(result.error)
         setDocument(null)
@@ -313,7 +309,7 @@ export const App: FunctionComponent = () => {
                     <input
                       type="url"
                       class="url-input"
-                      placeholder="https://example.com/oscal-catalog.json"
+                      placeholder="https://example.com/oscal-catalog.json or .xml"
                       value={urlInput}
                       onInput={(e) => setUrlInput((e.target as HTMLInputElement).value)}
                       aria-label="OSCAL document URL"
@@ -329,7 +325,7 @@ export const App: FunctionComponent = () => {
                 </div>
 
                 <p class="supported-types">
-                  Supports: Catalog, Profile, Component-Definition, SSP, Assessment Results, POA&M
+                  Supports: Catalog, Profile, Component-Definition, SSP, Assessment Results, POA&M (JSON & XML)
                 </p>
               </div>
             )}
