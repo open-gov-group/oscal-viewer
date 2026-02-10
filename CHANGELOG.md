@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-10
+
+### Added
+- Native XML parser via browser DOMParser — zero dependencies (Phase 7)
+- `parseOscalText()` unified entry point for JSON and XML input
+- `xmlToJson()` function for OSCAL XML-to-JSON conversion
+- `detectFormat()` function for automatic JSON/XML detection
+- XML fixtures (catalog-minimal.xml, profile-minimal.xml)
+- ADR-010: XML Parser Strategy
+- npm package `@open-gov-group/oscal-parser` now publishable (Phase 8)
+- `tsc-alias` resolves `@/` path aliases in build output (28 imports fixed)
+- Package fields: main, types, exports, files, publishConfig, sideEffects
+- npm package integration tests (26 tests)
+
+### Changed
+- App now accepts both JSON and XML file uploads
+- URL input placeholder updated to show `.json or .xml`
+- Package name: `oscal-viewer` → `@open-gov-group/oscal-parser`
+- Version: 0.1.0 → 0.5.0
+
 ## [0.4.0] - 2026-02-10
 
 ### Added

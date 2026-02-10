@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/preact'
+import { render, screen, waitFor } from '@testing-library/preact'
 import { DocumentViewer } from '@/components/document-viewer'
 import type { OscalDocumentData } from '@/types/oscal'
 
@@ -132,48 +132,62 @@ const sspData: OscalDocumentData = {
 }
 
 // ============================================================
-// DocumentViewer Routing Tests
+// DocumentViewer Routing Tests (lazy-loaded views)
 // ============================================================
 
 describe('DocumentViewer', () => {
-  it('renders CatalogView for catalog type', () => {
+  it('renders CatalogView for catalog type', async () => {
     render(<DocumentViewer data={catalogData} />)
-    expect(screen.getByText('Access Control')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Access Control')).toBeInTheDocument()
+    })
     expect(screen.getByText('ac-1')).toBeInTheDocument()
   })
 
-  it('renders ProfileView for profile type', () => {
+  it('renders ProfileView for profile type', async () => {
     render(<DocumentViewer data={profileData} />)
-    expect(screen.getByText('#catalog')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('#catalog')).toBeInTheDocument()
+    })
   })
 
-  it('renders ComponentDefView for component-definition type', () => {
+  it('renders ComponentDefView for component-definition type', async () => {
     render(<DocumentViewer data={componentDefData} />)
-    expect(screen.getByText('Test App')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Test App')).toBeInTheDocument()
+    })
   })
 
-  it('renders SspView for system-security-plan type', () => {
+  it('renders SspView for system-security-plan type', async () => {
     render(<DocumentViewer data={sspData} />)
-    expect(screen.getByText('Test System')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Test System')).toBeInTheDocument()
+    })
   })
 
-  it('renders AssessmentResultsView for assessment-results type', () => {
+  it('renders AssessmentResultsView for assessment-results type', async () => {
     render(<DocumentViewer data={assessmentResultsData} />)
-    expect(screen.getByText('Test Assessment Results')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Test Assessment Results')).toBeInTheDocument()
+    })
     expect(screen.getByText('Test Result')).toBeInTheDocument()
   })
 
-  it('renders PoamView for plan-of-action-and-milestones type', () => {
+  it('renders PoamView for plan-of-action-and-milestones type', async () => {
     render(<DocumentViewer data={poamData} />)
-    expect(screen.getByText('Test POA&M')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Test POA&M')).toBeInTheDocument()
+    })
     expect(screen.getByText('Remediate Finding')).toBeInTheDocument()
   })
 
-  it('renders metadata panel for all types', () => {
+  it('renders metadata panel for all types', async () => {
     const types = [catalogData, profileData, componentDefData, sspData, assessmentResultsData, poamData]
     for (const data of types) {
       const { unmount } = render(<DocumentViewer data={data} />)
-      expect(screen.getByText('Metadata')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('Metadata')).toBeInTheDocument()
+      })
       unmount()
     }
   })
@@ -184,38 +198,48 @@ describe('DocumentViewer', () => {
 // ============================================================
 
 describe('DocumentViewer — onNavigate prop', () => {
-  it('renders catalog view without errors when onNavigate is provided', () => {
+  it('renders catalog view without errors when onNavigate is provided', async () => {
     const handleNavigate = vi.fn()
     render(<DocumentViewer data={catalogData} onNavigate={handleNavigate} />)
-    expect(screen.getByText('Access Control')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Access Control')).toBeInTheDocument()
+    })
     expect(screen.getByText('ac-1')).toBeInTheDocument()
   })
 
-  it('renders profile view without errors when onNavigate is provided', () => {
+  it('renders profile view without errors when onNavigate is provided', async () => {
     const handleNavigate = vi.fn()
     render(<DocumentViewer data={profileData} onNavigate={handleNavigate} />)
-    expect(screen.getByText('#catalog')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('#catalog')).toBeInTheDocument()
+    })
     expect(screen.getByText('Test Profile')).toBeInTheDocument()
   })
 
-  it('renders ssp view without errors when onNavigate is provided', () => {
+  it('renders ssp view without errors when onNavigate is provided', async () => {
     const handleNavigate = vi.fn()
     render(<DocumentViewer data={sspData} onNavigate={handleNavigate} />)
-    expect(screen.getByText('Test System')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Test System')).toBeInTheDocument()
+    })
     expect(screen.getByText('Test SSP')).toBeInTheDocument()
   })
 
-  it('renders assessment-results view without errors when onNavigate is provided', () => {
+  it('renders assessment-results view without errors when onNavigate is provided', async () => {
     const handleNavigate = vi.fn()
     render(<DocumentViewer data={assessmentResultsData} onNavigate={handleNavigate} />)
-    expect(screen.getByText('Test Assessment Results')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Test Assessment Results')).toBeInTheDocument()
+    })
     expect(screen.getByText('Test Result')).toBeInTheDocument()
   })
 
-  it('renders poam view without errors when onNavigate is provided', () => {
+  it('renders poam view without errors when onNavigate is provided', async () => {
     const handleNavigate = vi.fn()
     render(<DocumentViewer data={poamData} onNavigate={handleNavigate} />)
-    expect(screen.getByText('Test POA&M')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Test POA&M')).toBeInTheDocument()
+    })
     expect(screen.getByText('Remediate Finding')).toBeInTheDocument()
   })
 })
