@@ -1,6 +1,6 @@
 {
   "name": "@open-gov-group/oscal-parser",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Universal OSCAL Viewer - Supports all OSCAL versions from 1.0.x to latest",
   "type": "module",
   "main": "./dist/lib/lib/index.js",
