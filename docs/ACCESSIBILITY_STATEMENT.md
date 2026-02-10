@@ -1,6 +1,6 @@
 # Erklaerung zur Barrierefreiheit
 
-**Stand**: 2026-02-09
+**Stand**: 2026-02-10
 **Geltungsbereich**: OSCAL Viewer — https://open-gov-group.github.io/oscal-viewer/
 **Rechtsgrundlage**: BITV 2.0 (Barrierefreie-Informationstechnik-Verordnung), EN 301 549, WCAG 2.1
 
@@ -14,7 +14,7 @@ Diese Web-Anwendung ist **weitgehend konform** mit WCAG 2.1 Level AA gemaess BIT
 
 Die Barrierefreiheit wurde durch folgende Massnahmen geprueft:
 
-- **Automatisiertes Audit**: axe-core Tests fuer alle 11 Kernkomponenten (15 Assertions, alle bestanden)
+- **Automatisiertes Audit**: axe-core Tests fuer 16 Komponenten (36 Assertions, alle bestanden)
 - **Kontrast-Audit**: 22 Farbkombinationen (Light + Dark Mode) systematisch geprueft — alle >= 4.5:1 (WCAG AA)
 - **Strukturelle Pruefung**: Heading-Hierarchie (h1-h6), ARIA-Landmarks, Skip-Link, Tastaturzugang
 - **Tastatur-Tests**: Accordion (Enter/Space), Tree-Navigation (Arrow-Keys, Home/End), Tab-Reihenfolge
@@ -32,7 +32,8 @@ Die Barrierefreiheit wurde durch folgende Massnahmen geprueft:
 | 2.4.6 Ueberschriften | Konsistente h1-h6 Hierarchie, keine Ebenen uebersprungen | Erfuellt |
 | 3.1.1 Sprache der Seite | `lang="en"` auf `<html>` Element | Erfuellt |
 | 4.1.2 Name, Rolle, Wert | ARIA-Attribute auf allen interaktiven Elementen | Erfuellt |
-| 4.1.3 Statusmeldungen | `aria-live="polite"` fuer Clipboard-Feedback, Offline-Banner | Erfuellt |
+| 2.3.3 Animationen durch Interaktionen | `prefers-reduced-motion: reduce` deaktiviert alle Animationen und Transitions | Erfuellt |
+| 4.1.3 Statusmeldungen | `aria-live="polite"` fuer Clipboard-Feedback, Offline-Banner, Loading-Spinner | Erfuellt |
 
 ---
 
@@ -43,7 +44,7 @@ Die Barrierefreiheit wurde durch folgende Massnahmen geprueft:
 | 1 | Kein manueller Dark/Light-Mode Toggle | 1.4.1 | Anwendung folgt der System-Einstellung (`prefers-color-scheme`). Ein manueller Toggle ist geplant (Backlog) |
 | 2 | Sidebar nicht per Drag resizable | 2.5.1 | Sidebar hat feste Breite. Fuer Nutzer mit eingeschraenktem Sichtfeld kann dies limitierend sein |
 | 3 | Dynamisch geladene Inhalte (URL-Import) | 4.1.3 | Beim Laden externer OSCAL-Dokumente via URL wird ein Loading-Indikator mit `role="status"` angezeigt. Bei CORS-Fehlern wird eine informative Fehlermeldung angezeigt |
-| 4 | Kein Volltext in XML-Dokumenten | 1.1.1 | Der Viewer unterstuetzt derzeit nur JSON-Format. XML-Dokumente werden nicht verarbeitet |
+| 4 | ~~XML nicht unterstuetzt~~ | — | Behoben in v0.5.0: JSON- und XML-Dokumente werden vollstaendig unterstuetzt |
 
 ---
 
@@ -79,7 +80,8 @@ beim Beauftragten der Bundesregierung fuer die Belange von Menschen mit Behinder
 | Technologie | Preact + TypeScript (Client-side SPA) |
 | Konformitaetsziel | WCAG 2.1 Level AA |
 | Pruefverfahren | Automatisiert (axe-core) + manuell (Kontrast-Audit, Keyboard-Test) |
-| Letzte Pruefung | 2026-02-09 |
+| Automatisierte Tests | 854 Unit-Tests, 36 axe-core Assertions, 7 Playwright E2E-Specs |
+| Letzte Pruefung | 2026-02-10 |
 | Naechste Pruefung | Geplant bei jedem Major-Release |
 
 ---
@@ -89,3 +91,4 @@ beim Beauftragten der Bundesregierung fuer die Belange von Menschen mit Behinder
 | Datum | Aenderung |
 |-------|-----------|
 | 2026-02-09 | Erstfassung |
+| 2026-02-10 | Phase 10 Re-Audit: 36 axe-core Tests (+21), semantische Listen-Rollen (ResourcePanel, PoamView), `prefers-reduced-motion` CSS, XML-Support dokumentiert |

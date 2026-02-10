@@ -20,12 +20,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tsc-alias` resolves `@/` path aliases in build output (28 imports fixed)
 - Package fields: main, types, exports, files, publishConfig, sideEffects
 - npm package integration tests (26 tests)
+- Lazy-loaded DocumentViewer with code splitting — 6 view chunks (Phase 9)
+- LoadingSpinner shared component for Suspense fallbacks
+- Accessibility Re-Audit BITV 2.0 (Phase 10)
+- `prefers-reduced-motion: reduce` disables all animations and transitions
+- Semantic list roles (`role="list"`, `role="listitem"`) on ResourcePanel, PoamView
+- 5 new axe-core tests (LoadingSpinner, CopyLinkButton, ParameterItem, FilterBar, DocumentViewer)
 
 ### Changed
 - App now accepts both JSON and XML file uploads
 - URL input placeholder updated to show `.json or .xml`
 - Package name: `oscal-viewer` → `@open-gov-group/oscal-parser`
 - Version: 0.1.0 → 0.5.0
+- Initial JS bundle reduced from ~24 KB to ~12 KB gzipped via code splitting
+- Tests: 854 across 32 files | axe-core: 36 assertions | Bundle: ~40 KB total
 
 ## [0.4.0] - 2026-02-10
 

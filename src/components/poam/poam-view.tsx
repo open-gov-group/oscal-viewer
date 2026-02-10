@@ -73,9 +73,9 @@ export const PoamView: FunctionComponent<PoamViewProps> = ({ poam }) => {
           count={poam.findings.length}
           headingLevel={3}
         >
-          <div class="poam-findings-list">
+          <div class="poam-findings-list" role="list">
             {poam.findings.map(f => (
-              <div key={f.uuid} class="poam-finding-card">
+              <div key={f.uuid} class="poam-finding-card" role="listitem">
                 <div class="poam-finding-header">
                   <code>{f.target['target-id']}</code>
                   <span class={`ar-finding-status ar-status--${f.target.status.state}`}>
@@ -97,9 +97,9 @@ export const PoamView: FunctionComponent<PoamViewProps> = ({ poam }) => {
           count={poam.risks.length}
           headingLevel={3}
         >
-          <div class="poam-risks-list">
+          <div class="poam-risks-list" role="list">
             {poam.risks.map(r => (
-              <div key={r.uuid} class="poam-risk-card">
+              <div key={r.uuid} class="poam-risk-card" role="listitem">
                 <strong>{r.title}</strong>
                 <span class="ar-risk-status">{r.status}</span>
                 <p>{r.description}</p>

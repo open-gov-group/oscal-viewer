@@ -1,4 +1,4 @@
-import { render } from '@testing-library/preact'
+import { render, waitFor } from '@testing-library/preact'
 import { axe } from 'vitest-axe'
 import * as matchers from 'vitest-axe/matchers'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
@@ -7,6 +7,11 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { LinkBadge } from '@/components/shared/link-badge'
 import { Accordion } from '@/components/shared/accordion'
 import { SearchBar } from '@/components/shared/search-bar'
+import { LoadingSpinner } from '@/components/shared/loading-spinner'
+import { CopyLinkButton } from '@/components/shared/copy-link-button'
+import { ParameterItem } from '@/components/shared/parameter-item'
+import { FilterBar } from '@/components/shared/filter-bar'
+import { DocumentViewer } from '@/components/document-viewer'
 import { CatalogView } from '@/components/catalog/catalog-view'
 import { ControlDetail } from '@/components/catalog/control-detail'
 import { GroupTree } from '@/components/catalog/group-tree'
@@ -15,7 +20,7 @@ import { ComponentDefView } from '@/components/component-def/component-def-view'
 import { SspView } from '@/components/ssp/ssp-view'
 import { AssessmentResultsView } from '@/components/assessment-results/assessment-results-view'
 import { PoamView } from '@/components/poam/poam-view'
-import type { Metadata, Property, Catalog, Control, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones } from '@/types/oscal'
+import type { Metadata, Property, Catalog, Control, Parameter, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones, OscalDocumentData } from '@/types/oscal'
 
 expect.extend(matchers)
 
@@ -565,6 +570,84 @@ describe('Accessibility - POA&M', () => {
 
   it('PoamView has no a11y violations', async () => {
     const { container } = render(<PoamView poam={testPoam} />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+// ============================================================
+// Accessibility Tests - Phase 10 Re-Audit
+// ============================================================
+
+describe('Accessibility - LoadingSpinner', () => {
+  it('LoadingSpinner has no a11y violations', async () => {
+    const { container } = render(<LoadingSpinner />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+describe('Accessibility - CopyLinkButton', () => {
+  it('CopyLinkButton has no a11y violations', async () => {
+    const { container } = render(<CopyLinkButton viewType="catalog" elementId="ac-1" />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+describe('Accessibility - ParameterItem', () => {
+  it('ParameterItem with selection has no a11y violations', async () => {
+    const param: Parameter = {
+      id: 'ac-1_prm_1',
+      label: 'frequency',
+      select: { 'how-many': 'one', choice: ['daily', 'weekly', 'monthly'] },
+      guidelines: [{ prose: 'Choose appropriate frequency.' }],
+    }
+    const { container } = render(<ParameterItem param={param} />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+describe('Accessibility - FilterBar', () => {
+  it('FilterBar with active filters has no a11y violations', async () => {
+    const { container } = render(
+      <FilterBar
+        keyword="test"
+        onKeywordChange={() => {}}
+        chips={[{ key: 'Family', value: 'ac', label: 'Access Control' }]}
+        onRemoveChip={() => {}}
+        onClearAll={() => {}}
+        hasActiveFilters={true}
+        categories={[
+          { key: 'Family', label: 'Family', options: [{ value: 'ac', label: 'Access Control' }] },
+        ]}
+        onAddChip={() => {}}
+      />
+    )
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+describe('Accessibility - DocumentViewer', () => {
+  it('DocumentViewer with catalog has no a11y violations', async () => {
+    const catalogDocData: OscalDocumentData = {
+      type: 'catalog',
+      document: {
+        uuid: 'cat-a11y',
+        metadata,
+        groups: [{
+          id: 'ac',
+          title: 'Access Control',
+          controls: [{ id: 'ac-1', title: 'Policy' }],
+        }],
+      },
+    }
+    const { container } = render(<DocumentViewer data={catalogDocData} />)
+    await waitFor(() => {
+      expect(container.querySelector('.catalog-view')).toBeTruthy()
+    })
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   })

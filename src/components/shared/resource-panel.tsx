@@ -27,7 +27,7 @@ export const ResourcePanel: FunctionComponent<ResourcePanelProps> = ({ backMatte
       headingLevel={3}
       defaultOpen={false}
     >
-      <div class="resource-list">
+      <div class="resource-list" role="list">
         {resources.map(resource => (
           <ResourceCard key={resource.uuid} resource={resource} />
         ))}
@@ -43,7 +43,7 @@ interface ResourceCardProps {
 /** Renders a single back-matter resource with all optional fields. */
 const ResourceCard: FunctionComponent<ResourceCardProps> = ({ resource }) => {
   return (
-    <div class="resource-card" id={`resource-${resource.uuid}`}>
+    <div class="resource-card" id={`resource-${resource.uuid}`} role="listitem">
       {resource.title && (
         <h4 class="resource-title">{resource.title}</h4>
       )}
