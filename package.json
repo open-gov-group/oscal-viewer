@@ -57,7 +57,7 @@
     "@preact/preset-vite": "^2.10.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/preact": "^3.2.4",
-    "@types/node": "^20.11.0",
+    "@types/node": "^25.2.2",
     "@vitest/coverage-v8": "^4.0.18",
     "axe-core": "^4.11.1",
     "eslint": "^9.39.2",
