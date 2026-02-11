@@ -3,7 +3,7 @@ import path from 'path'
 
 test.describe('Search', () => {
   test('search filters controls by keyword', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
 
     // Upload catalog
     const fileInput = page.locator('input[type="file"]')

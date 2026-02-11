@@ -3,7 +3,7 @@ import path from 'path'
 
 test.describe('File Upload', () => {
   test('uploads JSON catalog via file input and renders controls', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
 
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.join(__dirname, 'fixtures', 'minimal-catalog.json'))
@@ -15,7 +15,7 @@ test.describe('File Upload', () => {
   })
 
   test('shows error for invalid JSON file', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
 
     // Create a temporary invalid file by using the file chooser
     const fileInput = page.locator('input[type="file"]')

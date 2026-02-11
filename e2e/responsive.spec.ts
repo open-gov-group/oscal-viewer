@@ -11,7 +11,7 @@ test.describe('Responsive Layout', () => {
   for (const vp of viewports) {
     test(`renders correctly at ${vp.name} (${vp.width}px)`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height })
-      await page.goto('/')
+      await page.goto('./')
 
       // Upload catalog
       const fileInput = page.locator('input[type="file"]')
@@ -19,7 +19,7 @@ test.describe('Responsive Layout', () => {
       await expect(page.locator('.catalog-view')).toBeVisible()
 
       // App header should always be visible
-      await expect(page.locator('.app-header')).toBeVisible()
+      await expect(page.locator('.header')).toBeVisible()
 
       // At mobile width, sidebar may be hidden
       if (vp.width < 768) {
