@@ -10,7 +10,7 @@
  */
 import { useState, useMemo, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
-import type { SystemSecurityPlan, SystemCharacteristics, SystemImplementation, SspControlImplementation } from '@/types/oscal'
+import type { SystemSecurityPlan, SystemCharacteristics, SystemImplementation, SspControlImplementation, Control } from '@/types/oscal'
 import { useDeepLink } from '@/hooks/use-deep-link'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
@@ -26,6 +26,8 @@ interface SspViewProps {
   ssp: SystemSecurityPlan
   /** Cross-document navigation callback, passed to ImportPanel for clickable sources. */
   onNavigate?: (url: string) => void
+  /** Callback when resolved controls become available (for cross-document search). */
+  onControlsResolved?: (controls: Control[]) => void
 }
 
 type SspTab = 'characteristics' | 'implementation' | 'controls'
@@ -41,7 +43,7 @@ const tabDefs: Array<{ id: SspTab; label: string }> = [
 const validTabs: SspTab[] = ['characteristics', 'implementation', 'controls']
 
 /** Renders an OSCAL System Security Plan with three tabbed sections and deep-link support. */
-export const SspView: FunctionComponent<SspViewProps> = ({ ssp, onNavigate }) => {
+export const SspView: FunctionComponent<SspViewProps> = ({ ssp, onNavigate, onControlsResolved }) => {
   const { selectedId: hashTab, setSelectedId: setHashTab } = useDeepLink('ssp')
   const initialTab = hashTab && validTabs.includes(hashTab as SspTab) ? hashTab as SspTab : 'characteristics'
   const [activeTab, setActiveTabState] = useState<SspTab>(initialTab)
@@ -99,6 +101,11 @@ export const SspView: FunctionComponent<SspViewProps> = ({ ssp, onNavigate }) =>
       resolveSspFn(ssp, baseUrl)
     }
   }, [ssp, baseUrl, resolveSspFn])
+
+  // Notify parent when resolved controls become available (for cross-document search)
+  useEffect(() => {
+    if (resolvedControls.length > 0) onControlsResolved?.(resolvedControls)
+  }, [resolvedControls, onControlsResolved])
 
   /**
    * WAI-ARIA Tabs keyboard handler: ArrowRight/Left cycle tabs, Home/End jump to first/last.

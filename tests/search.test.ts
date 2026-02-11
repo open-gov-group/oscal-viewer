@@ -1,5 +1,5 @@
-import { buildIndex } from '@/hooks/use-search'
-import type { OscalDocumentData } from '@/types/oscal'
+import { buildIndex, indexResolvedControls } from '@/hooks/use-search'
+import type { OscalDocumentData, Control } from '@/types/oscal'
 
 // ============================================================
 // Test Fixtures
@@ -394,5 +394,100 @@ describe('search filtering logic', () => {
     const query = 'monthly'
     const results = index.filter(e => e.searchText.includes(query.toLowerCase()))
     expect(results.some(r => r.type === 'parameter')).toBe(true)
+  })
+})
+
+// ============================================================
+// Resolved Controls Indexing Tests
+// ============================================================
+
+describe('indexResolvedControls', () => {
+  const resolvedControls: Control[] = [
+    {
+      id: 'ac-1',
+      title: 'Access Control Policy and Procedures',
+      parts: [
+        { name: 'statement', prose: 'The organization develops and maintains access control policy.' },
+        { name: 'guidance', prose: 'Review annually.' },
+      ],
+    },
+    {
+      id: 'ac-2',
+      title: 'Account Management',
+    },
+    {
+      id: 'au-1',
+      title: 'Audit and Accountability Policy',
+      parts: [
+        { name: 'statement', prose: 'Establish audit logging procedures.' },
+      ],
+    },
+  ]
+
+  it('should return empty array for undefined input', () => {
+    expect(indexResolvedControls(undefined)).toEqual([])
+  })
+
+  it('should return empty array for empty array', () => {
+    expect(indexResolvedControls([])).toEqual([])
+  })
+
+  it('should index all resolved controls', () => {
+    const index = indexResolvedControls(resolvedControls)
+    expect(index).toHaveLength(3)
+  })
+
+  it('should set type to resolved-control', () => {
+    const index = indexResolvedControls(resolvedControls)
+    for (const entry of index) {
+      expect(entry.type).toBe('resolved-control')
+    }
+  })
+
+  it('should set context to resolved hint', () => {
+    const index = indexResolvedControls(resolvedControls)
+    for (const entry of index) {
+      expect(entry.context).toBe('Resolved from imported catalog')
+    }
+  })
+
+  it('should include control ID and title in searchText', () => {
+    const index = indexResolvedControls(resolvedControls)
+    const ac1 = index.find(e => e.id === 'ac-1')
+    expect(ac1?.searchText).toContain('ac-1')
+    expect(ac1?.searchText).toContain('access control policy and procedures')
+  })
+
+  it('should include prose from parts in searchText', () => {
+    const index = indexResolvedControls(resolvedControls)
+    const ac1 = index.find(e => e.id === 'ac-1')
+    expect(ac1?.searchText).toContain('develops and maintains')
+    expect(ac1?.searchText).toContain('review annually')
+  })
+
+  it('should handle controls without parts', () => {
+    const index = indexResolvedControls(resolvedControls)
+    const ac2 = index.find(e => e.id === 'ac-2')
+    expect(ac2).toBeDefined()
+    expect(ac2?.title).toBe('Account Management')
+    expect(ac2?.searchText).toContain('ac-2')
+  })
+
+  it('should produce lowercase searchText', () => {
+    const index = indexResolvedControls(resolvedControls)
+    for (const entry of index) {
+      expect(entry.searchText).toBe(entry.searchText.toLowerCase())
+    }
+  })
+
+  it('should be searchable alongside base index', () => {
+    const baseIndex = buildIndex(catalogData)
+    const resolvedIndex = indexResolvedControls(resolvedControls)
+    const combined = [...baseIndex, ...resolvedIndex]
+    const query = 'audit'
+    const results = combined.filter(e => e.searchText.includes(query.toLowerCase()))
+    // Should find from both base catalog and resolved controls
+    expect(results.some(r => r.type === 'group')).toBe(true)
+    expect(results.some(r => r.type === 'resolved-control')).toBe(true)
   })
 })

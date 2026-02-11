@@ -7,13 +7,15 @@
  */
 import { useState, useCallback, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
-import type { OscalDocument } from '@/types/oscal'
+import type { OscalDocument, Control } from '@/types/oscal'
 import type { PresetEntry, AppConfig } from '@/types/config'
 import { parseOscalText } from '@/parser'
 import { useSearch } from '@/hooks/use-search'
 import type { SearchResult } from '@/hooks/use-search'
 import { DocumentViewer } from '@/components/document-viewer'
 import { SearchBar } from '@/components/shared/search-bar'
+import { ExportMenu } from '@/components/shared/export-menu'
+import { useExport } from '@/hooks/use-export'
 
 /** Root component. Manages global state: loaded document, errors, offline status, presets. */
 export const App: FunctionComponent = () => {
@@ -24,6 +26,10 @@ export const App: FunctionComponent = () => {
   const [loading, setLoading] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [presets, setPresets] = useState<PresetEntry[]>([])
+  const [resolvedControls, setResolvedControls] = useState<Control[]>([])
+
+  // Reset resolved controls when the loaded document changes
+  useEffect(() => setResolvedControls([]), [document])
 
   useEffect(() => {
     const goOffline = () => setOffline(true)
@@ -52,7 +58,8 @@ export const App: FunctionComponent = () => {
       .catch(() => { /* Graceful: no config = no presets */ })
   }, [])
 
-  const { query, setQuery, results, isSearching } = useSearch(document?.data ?? null)
+  const { query, setQuery, results, isSearching } = useSearch(document?.data ?? null, resolvedControls)
+  const exportActions = useExport(document?.data ?? null)
 
   /** Navigate to a search result by setting the URL hash to the appropriate deep-link. */
   const handleSearchSelect = useCallback((result: SearchResult) => {
@@ -77,6 +84,11 @@ export const App: FunctionComponent = () => {
       case 'plan-of-action-and-milestones':
         hash = `/poam/${result.id}`
         break
+    }
+    // Resolved controls from Profile/SSP resolution navigate to the control's detail view
+    if (result.type === 'resolved-control') {
+      if (document.data.type === 'profile') hash = `/profile/resolved/${result.id}`
+      else if (document.data.type === 'system-security-plan') hash = `/ssp/controls`
     }
     if (hash) location.hash = hash
   }, [document])
@@ -241,6 +253,7 @@ export const App: FunctionComponent = () => {
               isSearching={isSearching}
               onSelect={handleSearchSelect}
             />
+            <ExportMenu exportActions={exportActions} />
             <button class="btn-clear" onClick={handleClear}>
               Load another file
             </button>
@@ -333,7 +346,7 @@ export const App: FunctionComponent = () => {
         ) : (
           <div class="document-view">
             <div class="document-content">
-              <DocumentViewer data={document.data} onNavigate={handleNavigate} />
+              <DocumentViewer data={document.data} onNavigate={handleNavigate} onControlsResolved={setResolvedControls} />
             </div>
           </div>
         )}

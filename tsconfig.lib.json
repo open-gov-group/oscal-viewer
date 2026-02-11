@@ -13,6 +13,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/lib/**/*.ts", "src/types/**/*.ts", "src/parser/**/*.ts"],
+  "include": ["src/lib/**/*.ts", "src/types/**/*.ts", "src/parser/**/*.ts", "src/services/**/*.ts"],
   "exclude": ["tests/**/*"]
 }

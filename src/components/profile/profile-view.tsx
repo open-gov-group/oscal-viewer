@@ -7,7 +7,7 @@
  */
 import { useMemo, useEffect } from 'preact/hooks'
 import type { FunctionComponent } from 'preact'
-import type { Profile, ProfileImport, Modify, Alter, SetParameter } from '@/types/oscal'
+import type { Profile, ProfileImport, Modify, Alter, SetParameter, Control } from '@/types/oscal'
 import { MetadataPanel } from '@/components/shared/metadata-panel'
 import { PropertyList } from '@/components/shared/property-badge'
 import { Accordion, AccordionGroup } from '@/components/shared/accordion'
@@ -21,10 +21,12 @@ interface ProfileViewProps {
   profile: Profile
   /** Cross-document navigation callback, passed to ImportPanel for clickable sources. */
   onNavigate?: (url: string) => void
+  /** Callback when resolved controls become available (for cross-document search). */
+  onControlsResolved?: (controls: Control[]) => void
 }
 
 /** Renders a complete OSCAL Profile with import sources, merge strategy, and modifications. */
-export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile, onNavigate }) => {
+export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile, onNavigate, onControlsResolved }) => {
   // Aggregate stats for the profile summary bar (imports, parameter overrides, alterations)
   const stats = useMemo(() => ({
     imports: profile.imports.length,
@@ -61,6 +63,11 @@ export const ProfileView: FunctionComponent<ProfileViewProps> = ({ profile, onNa
       resolve(profile, baseUrl)
     }
   }, [profile, baseUrl, resolve])
+
+  // Notify parent when resolved controls become available (for cross-document search)
+  useEffect(() => {
+    if (controls.length > 0) onControlsResolved?.(controls)
+  }, [controls, onControlsResolved])
 
   return (
     <div class="profile-view">
