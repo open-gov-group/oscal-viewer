@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('PWA', () => {
   test('service worker registers successfully', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
 
     // Wait for SW registration
     const swRegistered = await page.evaluate(async () => {
@@ -21,7 +21,7 @@ test.describe('PWA', () => {
   })
 
   test('manifest.json is accessible', async ({ page }) => {
-    const response = await page.goto('/manifest.json')
+    const response = await page.goto('./manifest.json')
     expect(response?.status()).toBe(200)
   })
 })

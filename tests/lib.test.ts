@@ -113,11 +113,11 @@ describe('Package Layer Independence (QN6)', () => {
     expect(content).not.toMatch(/import\s.*['"]preact/)
   })
 
-  it('QN6: lib entry point only imports from types/ and parser/', () => {
+  it('QN6: lib entry point only imports from domain layer (types/, parser/, services/)', () => {
     const content = readFileSync(resolve(process.cwd(), 'src/lib/index.ts'), 'utf-8')
     const importLines = content.split('\n').filter(l => l.includes("from '@/"))
     for (const line of importLines) {
-      expect(line).toMatch(/from '@\/(types|parser)/)
+      expect(line).toMatch(/from '@\/(types|parser|services)/)
     }
   })
 

@@ -3,7 +3,7 @@ import path from 'path'
 
 test.describe('Deep Linking', () => {
   test('URL hash opens correct control', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('./')
 
     // Upload catalog first
     const fileInput = page.locator('input[type="file"]')

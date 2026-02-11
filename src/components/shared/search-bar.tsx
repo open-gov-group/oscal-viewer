@@ -95,7 +95,12 @@ export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryCha
             <div class="search-no-results">No results found</div>
           ) : (
             <>
-              <div class="search-results-count">{results.length} result{results.length !== 1 ? 's' : ''}</div>
+              <div class="search-results-count">
+                {results.length} result{results.length !== 1 ? 's' : ''}
+                {results.some(r => r.type === 'resolved-control') && (
+                  <span class="search-resolved-hint"> (includes resolved imports)</span>
+                )}
+              </div>
               {results.slice(0, 50).map((result, i) => (
                 <div
                   key={`${result.id}-${i}`}
@@ -105,7 +110,7 @@ export const SearchBar: FunctionComponent<SearchBarProps> = ({ query, onQueryCha
                   aria-selected={i === activeIndex}
                   onClick={() => handleSelect(result)}
                 >
-                  <span class="search-result-type">{result.type}</span>
+                  <span class={`search-result-type ${result.type === 'resolved-control' ? 'search-result-type--resolved' : ''}`}>{result.type === 'resolved-control' ? 'resolved' : result.type}</span>
                   <div class="search-result-content">
                     <span class="search-result-id">{result.id}</span>
                     <span class="search-result-title">{result.title}</span>

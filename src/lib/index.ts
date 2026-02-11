@@ -78,3 +78,6 @@ export { parseAssessmentResults } from '@/parser/assessment-results'
 export { parsePoam } from '@/parser/poam'
 export { detectDocumentType, detectVersion, detectFormat } from '@/parser/detect'
 export { xmlToJson } from '@/parser/xml-adapter'
+
+// Export functions
+export { exportToJson, exportToMarkdown, exportToCsv, csvEscape } from '@/services/exporter'

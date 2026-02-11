@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-02-10
+
+### Added
+
+#### Extended Search (Phase 11)
+
+- Resolved control search: Profile and SSP views now report resolved controls to the App via `onControlsResolved` callback
+- `indexResolvedControls()` indexes imported catalog controls for full-text search
+- "resolved" badge in search results for controls from imported catalogs
+- "(includes resolved imports)" hint in search results count
+
+#### Export (Phase 12)
+
+- **JSON Export**: OSCAL-envelope format (`{"catalog": {...}}`) with proper indentation
+- **Markdown Export**: Human-readable summary with metadata, controls, findings, milestones
+- **CSV Export**: Type-specific tabular format (6 document types) with proper field escaping
+- **Print/PDF Export**: Browser print dialog with enhanced print CSS
+- `ExportMenu` dropdown component with WAI-ARIA Menu pattern (keyboard navigation, click-outside-close)
+- `useExport` hook for Blob creation and download triggering
+- `exporter.ts` service with pure functions (Domain layer, zero dependencies)
+- Export functions added to npm package (`@open-gov-group/oscal-parser`)
+
+#### Print CSS Enhancements
+
+- A4 page layout with 2cm margins
+- Auto-expand all accordions for print
+- Page break avoidance for cards, tables, and accordion items
+- External link URLs shown after links
+- UI elements hidden (export menu, filter bar, copy buttons, offline banner)
+
+### Changed
+
+- `useSearch` accepts optional `resolvedControls` parameter for cross-document search
+- `DocumentViewer` passes `onControlsResolved` callback to ProfileView and SspView
+- Print media query expanded from 13 to 28 hidden selectors
+
+### Tests
+
+- 921 tests across 34 files (+67 tests, +2 files vs. v1.0.0)
+- 37 axe-core assertions (+1 for ExportMenu)
+- 39 exporter service tests (6 types x 3 formats + CSV escaping)
+- 17 ExportMenu component tests (rendering, keyboard, ARIA)
+- 10 resolved control indexing tests
+
 ## [1.0.0] - 2026-02-10
 
 First stable release of OSCAL Viewer — a zero-backend, client-only viewer for all

@@ -20,6 +20,7 @@ import { ComponentDefView } from '@/components/component-def/component-def-view'
 import { SspView } from '@/components/ssp/ssp-view'
 import { AssessmentResultsView } from '@/components/assessment-results/assessment-results-view'
 import { PoamView } from '@/components/poam/poam-view'
+import { ExportMenu } from '@/components/shared/export-menu'
 import type { Metadata, Property, Catalog, Control, Parameter, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones, OscalDocumentData } from '@/types/oscal'
 
 expect.extend(matchers)
@@ -625,6 +626,21 @@ describe('Accessibility - FilterBar', () => {
         onAddChip={() => {}}
       />
     )
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+
+describe('Accessibility - ExportMenu', () => {
+  const mockExportActions = {
+    exportJson: () => {},
+    exportMarkdown: () => {},
+    exportCsv: () => {},
+    exportPdf: () => {},
+  }
+
+  it('ExportMenu button has no a11y violations', async () => {
+    const { container } = render(<ExportMenu exportActions={mockExportActions} />)
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   })

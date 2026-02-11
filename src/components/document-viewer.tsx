@@ -7,7 +7,7 @@
  */
 import { lazy, Suspense } from 'preact/compat'
 import type { FunctionComponent } from 'preact'
-import type { OscalDocumentData } from '@/types/oscal'
+import type { OscalDocumentData, Control } from '@/types/oscal'
 import { LoadingSpinner } from '@/components/shared/loading-spinner'
 
 const CatalogView = lazy(() =>
@@ -33,19 +33,21 @@ interface DocumentViewerProps {
   data: OscalDocumentData
   /** Cross-document navigation callback, passed to views with import resolution (Profile, SSP). */
   onNavigate?: (url: string) => void
+  /** Callback when Profile/SSP views resolve imported controls (for cross-document search). */
+  onControlsResolved?: (controls: Control[]) => void
 }
 
-export const DocumentViewer: FunctionComponent<DocumentViewerProps> = ({ data, onNavigate }) => {
+export const DocumentViewer: FunctionComponent<DocumentViewerProps> = ({ data, onNavigate, onControlsResolved }) => {
   const renderView = () => {
     switch (data.type) {
       case 'catalog':
         return <CatalogView catalog={data.document} />
       case 'profile':
-        return <ProfileView profile={data.document} onNavigate={onNavigate} />
+        return <ProfileView profile={data.document} onNavigate={onNavigate} onControlsResolved={onControlsResolved} />
       case 'component-definition':
         return <ComponentDefView componentDef={data.document} />
       case 'system-security-plan':
-        return <SspView ssp={data.document} onNavigate={onNavigate} />
+        return <SspView ssp={data.document} onNavigate={onNavigate} onControlsResolved={onControlsResolved} />
       case 'assessment-results':
         return <AssessmentResultsView assessmentResults={data.document} />
       case 'plan-of-action-and-milestones':

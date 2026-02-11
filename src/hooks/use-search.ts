@@ -6,7 +6,7 @@
  * Minimum query length: 2 characters.
  */
 import { useState, useMemo, useCallback, useEffect, useRef } from 'preact/hooks'
-import type { OscalDocumentData, Catalog, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones } from '@/types/oscal'
+import type { OscalDocumentData, Catalog, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones, Control } from '@/types/oscal'
 
 /** A single search result shown in the SearchBar dropdown. */
 export interface SearchResult {
@@ -29,9 +29,10 @@ export interface UseSearchReturn {
 /**
  * Provides full-text search over a loaded OSCAL document.
  * @param data - The parsed document data, or null if no document is loaded.
+ * @param resolvedControls - Optional controls from Profile/SSP resolution to include in search.
  * @returns Search state with query, results, and setter.
  */
-export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
+export function useSearch(data: OscalDocumentData | null, resolvedControls?: Control[]): UseSearchReturn {
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -47,11 +48,13 @@ export function useSearch(data: OscalDocumentData | null): UseSearchReturn {
     }
   }, [query])
 
-  // Build flat search index when document changes (memoized)
+  // Build flat search index when document or resolved controls change (memoized)
   const index = useMemo(() => {
     if (!data) return []
-    return buildIndex(data)
-  }, [data])
+    const baseIndex = buildIndex(data)
+    const resolvedIndex = indexResolvedControls(resolvedControls)
+    return [...baseIndex, ...resolvedIndex]
+  }, [data, resolvedControls])
 
   // Filter index entries by debounced query (case-insensitive substring match)
   const results = useMemo(() => {
@@ -299,6 +302,23 @@ function indexPoam(poam: PlanOfActionAndMilestones): IndexEntry[] {
       type: 'poam-item',
       context: item.description,
       searchText: `${item.title} ${item.description} ${milestoneText}`.toLowerCase(),
+    })
+  }
+  return entries
+}
+
+/** Index resolved controls from Profile or SSP import resolution. */
+export function indexResolvedControls(controls?: Control[]): IndexEntry[] {
+  if (!controls || controls.length === 0) return []
+  const entries: IndexEntry[] = []
+  for (const control of controls) {
+    const prose = control.parts?.map(p => p.prose ?? '').join(' ') ?? ''
+    entries.push({
+      id: control.id,
+      title: control.title,
+      type: 'resolved-control',
+      context: 'Resolved from imported catalog',
+      searchText: `${control.id} ${control.title} ${prose}`.toLowerCase(),
     })
   }
   return entries
