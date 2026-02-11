@@ -21,7 +21,10 @@ import { SspView } from '@/components/ssp/ssp-view'
 import { AssessmentResultsView } from '@/components/assessment-results/assessment-results-view'
 import { PoamView } from '@/components/poam/poam-view'
 import { ExportMenu } from '@/components/shared/export-menu'
-import type { Metadata, Property, Catalog, Control, Parameter, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones, OscalDocumentData } from '@/types/oscal'
+import { CompareView } from '@/components/compare/compare-view'
+import { DiffBadge } from '@/components/compare/diff-badge'
+import type { Metadata, Property, Catalog, Control, Parameter, Profile, ComponentDefinition, SystemSecurityPlan, AssessmentResults, PlanOfActionAndMilestones, OscalDocumentData, OscalDocument } from '@/types/oscal'
+import type { DocumentDiffResult } from '@/types/diff'
 
 expect.extend(matchers)
 
@@ -666,5 +669,61 @@ describe('Accessibility - DocumentViewer', () => {
     })
     const results = await axe(container)
     expect(results).toHaveNoViolations()
+  })
+})
+
+describe('Accessibility - CompareView', () => {
+  const makeOscalDoc = (title: string, version: string): OscalDocument => ({
+    type: 'catalog',
+    version: '1.0.4',
+    data: {
+      type: 'catalog',
+      document: {
+        uuid: 'test-uuid',
+        metadata: { title, version, 'oscal-version': '1.0.4', 'last-modified': '2024-01-01T00:00:00Z' },
+      },
+    },
+  })
+
+  const diffResult: DocumentDiffResult = {
+    type: 'catalog',
+    metadata: {
+      titleChanged: true,
+      versionChanged: true,
+      oscalVersionChanged: false,
+      lastModifiedChanged: false,
+      left: { title: 'Doc A', version: '1.0', oscalVersion: '1.0.4', lastModified: '2024-01-01' },
+      right: { title: 'Doc B', version: '2.0', oscalVersion: '1.0.4', lastModified: '2024-01-01' },
+    },
+    summary: { added: 1, removed: 0, modified: 1, unchanged: 0, total: 2 },
+    sections: [{
+      title: 'Controls',
+      summary: { added: 1, removed: 0, modified: 1, unchanged: 0, total: 2 },
+      entries: [
+        { status: 'added', key: 'ac-2', label: 'ac-2 — Account Management', right: {} },
+        { status: 'modified', key: 'ac-1', label: 'ac-1 — Access Control', left: {}, right: {}, changes: ['Title changed'] },
+      ],
+    }],
+  }
+
+  it('CompareView has no a11y violations', async () => {
+    const { container } = render(
+      <CompareView docA={makeOscalDoc('Doc A', '1.0')} docB={makeOscalDoc('Doc B', '2.0')} diffResult={diffResult} onExit={() => {}} />
+    )
+    const axeResults = await axe(container)
+    expect(axeResults).toHaveNoViolations()
+  })
+
+  it('DiffBadge has no a11y violations', async () => {
+    const { container } = render(
+      <div>
+        <DiffBadge status="added" />
+        <DiffBadge status="removed" />
+        <DiffBadge status="modified" />
+        <DiffBadge status="unchanged" />
+      </div>
+    )
+    const axeResults = await axe(container)
+    expect(axeResults).toHaveNoViolations()
   })
 })

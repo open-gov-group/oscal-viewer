@@ -6,16 +6,26 @@
  * No backend — all processing happens client-side.
  */
 import { useState, useCallback, useEffect } from 'preact/hooks'
+import { lazy, Suspense } from 'preact/compat'
 import type { FunctionComponent } from 'preact'
 import type { OscalDocument, Control } from '@/types/oscal'
 import type { PresetEntry, AppConfig } from '@/types/config'
 import { parseOscalText } from '@/parser'
 import { useSearch } from '@/hooks/use-search'
 import type { SearchResult } from '@/hooks/use-search'
+import { useCompare } from '@/hooks/use-compare'
 import { DocumentViewer } from '@/components/document-viewer'
 import { SearchBar } from '@/components/shared/search-bar'
 import { ExportMenu } from '@/components/shared/export-menu'
 import { useExport } from '@/hooks/use-export'
+import { LoadingSpinner } from '@/components/shared/loading-spinner'
+
+const CompareView = lazy(() =>
+  import('@/components/compare/compare-view').then(m => ({ default: m.CompareView }))
+)
+const CompareDropzone = lazy(() =>
+  import('@/components/compare/compare-dropzone').then(m => ({ default: m.CompareDropzone }))
+)
 
 /** Root component. Manages global state: loaded document, errors, offline status, presets. */
 export const App: FunctionComponent = () => {
@@ -27,9 +37,17 @@ export const App: FunctionComponent = () => {
   const [urlInput, setUrlInput] = useState('')
   const [presets, setPresets] = useState<PresetEntry[]>([])
   const [resolvedControls, setResolvedControls] = useState<Control[]>([])
+  const [showCompareDropzone, setShowCompareDropzone] = useState(false)
 
-  // Reset resolved controls when the loaded document changes
-  useEffect(() => setResolvedControls([]), [document])
+  const compare = useCompare()
+  const compareMode = document !== null && compare.compareDocument !== null && compare.diffResult !== null
+
+  // Reset resolved controls and comparison state when the loaded document changes
+  useEffect(() => {
+    setResolvedControls([])
+    compare.clear()
+    setShowCompareDropzone(false)
+  }, [document])
 
   useEffect(() => {
     const goOffline = () => setOffline(true)
@@ -254,6 +272,11 @@ export const App: FunctionComponent = () => {
               onSelect={handleSearchSelect}
             />
             <ExportMenu exportActions={exportActions} />
+            {!compareMode && (
+              <button class="btn-compare" onClick={() => setShowCompareDropzone(!showCompareDropzone)}>
+                Compare with...
+              </button>
+            )}
             <button class="btn-clear" onClick={handleClear}>
               Load another file
             </button>
@@ -268,7 +291,16 @@ export const App: FunctionComponent = () => {
       )}
 
       <main id="main-content" class="main">
-        {!document ? (
+        {compareMode ? (
+          <Suspense fallback={<LoadingSpinner />}>
+            <CompareView
+              docA={document}
+              docB={compare.compareDocument!}
+              diffResult={compare.diffResult!}
+              onExit={() => { compare.clear(); setShowCompareDropzone(false) }}
+            />
+          </Suspense>
+        ) : !document ? (
           <div
             class={`dropzone ${isDragging ? 'dragging' : ''}`}
             onDrop={handleDrop}
@@ -348,6 +380,16 @@ export const App: FunctionComponent = () => {
             <div class="document-content">
               <DocumentViewer data={document.data} onNavigate={handleNavigate} onControlsResolved={setResolvedControls} />
             </div>
+            {showCompareDropzone && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <CompareDropzone
+                  onFile={(file) => compare.loadFile(file, document)}
+                  onUrl={(url) => compare.loadUrl(url, document)}
+                  loading={compare.loading}
+                  error={compare.error}
+                />
+              </Suspense>
+            )}
           </div>
         )}
 
