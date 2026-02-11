@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-02-11
+
+### Added
+
+#### Multi-Document Comparison (Phase 13)
+
+- **Diff-View**: Compare two OSCAL documents of the same type side-by-side
+- OSCAL-semantic diff algorithm: matches elements by stable IDs (control.id, param.id, uuid)
+- Support for all 6 document types: Catalog, Profile, ComponentDef, SSP, AR, POA&M
+- `diffByKey()` generic function with Map-based O(n+m) comparison
+- Type-specific diff functions: `diffCatalog()`, `diffProfile()`, `diffComponentDef()`, `diffSsp()`, `diffAssessmentResults()`, `diffPoam()`
+- `MetadataDiff` comparison (title, version, oscal-version, last-modified)
+- `CompareView` component with summary bar, metadata diff, and collapsible diff sections
+- `CompareDropzone` for loading second document (file drop + URL)
+- `DiffBadge` status indicator (added/removed/modified/unchanged) with WCAG-compliant colors
+- `DiffEntryCard` with expandable change details
+- "Compare with..." button in header when document is loaded
+- `useCompare` hook for comparison state management
+- Lazy-loaded CompareView (zero impact on initial bundle size)
+- ADR-011: Multi-Document Comparison architecture
+- 75 new tests (51 differ service + 24 compare UI)
+
 ## [1.1.0] - 2026-02-10
 
 ### Added
